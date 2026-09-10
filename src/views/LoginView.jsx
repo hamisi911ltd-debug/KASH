@@ -19,35 +19,35 @@ function Panel() {
   ];
   return (
     <div
-      className="hidden lg:flex flex-col justify-between w-[44%] p-12 text-white relative overflow-hidden"
-      style={{ background: `linear-gradient(155deg, ${C.navy}, ${C.navy3})` }}
+      className="hidden lg:flex flex-col justify-between w-[44%] p-12 relative overflow-hidden border-r"
+      style={{ background: `linear-gradient(160deg, ${C.surface}, ${C.surface2})`, borderColor: C.line }}
     >
-      <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full" style={{ background: "radial-gradient(circle, rgba(47,111,237,0.35), transparent 70%)" }} />
-      <div className="absolute -left-16 bottom-16 h-72 w-72 rounded-full" style={{ background: "radial-gradient(circle, rgba(14,166,120,0.22), transparent 70%)" }} />
+      <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full" style={{ background: "radial-gradient(circle, rgba(30,108,168,0.12), transparent 70%)" }} />
+      <div className="absolute -left-20 bottom-10 h-72 w-72 rounded-full" style={{ background: "radial-gradient(circle, rgba(21,149,138,0.10), transparent 70%)" }} />
       <div className="relative">
-        <KashLogo size={30} onDark />
-        <p className="mt-3 text-sm text-white/55">One Platform. Many Solutions.</p>
+        <KashLogo size={30} />
+        <p className="mt-3 text-sm" style={{ color: C.muted }}>One Platform. Many Solutions.</p>
       </div>
 
       <div className="relative space-y-7">
         <div>
-          <p className="text-[2rem] leading-tight font-bold font-display">
+          <p className="text-[2rem] leading-tight font-bold font-display" style={{ color: C.ink }}>
             Track transport, food and hospitality from one platform.
           </p>
-          <p className="mt-3 text-sm font-semibold tracking-wide text-white/50">Manage &nbsp;·&nbsp; Track &nbsp;·&nbsp; Grow</p>
+          <p className="mt-3 text-sm font-bold tracking-wide" style={{ color: C.blue }}>Manage &nbsp;·&nbsp; Track &nbsp;·&nbsp; Grow</p>
         </div>
         <div className="grid grid-cols-3 gap-3">
           {stats.map((s) => (
-            <div key={s.label} className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
-              <s.icon size={18} className="mb-2" />
-              <p className="text-[11px] text-white/55">{s.label}</p>
-              <p className="text-sm font-semibold mt-0.5 leading-snug">{s.value}</p>
+            <div key={s.label} className="rounded-xl p-4 border" style={{ background: C.surface, borderColor: C.line, boxShadow: C.shadowSm }}>
+              <s.icon size={18} className="mb-2" style={{ color: C.blue }} />
+              <p className="text-[11px]" style={{ color: C.muted }}>{s.label}</p>
+              <p className="text-sm font-bold mt-0.5 leading-snug" style={{ color: C.ink }}>{s.value}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <p className="relative text-xs text-white/40">© {new Date().getFullYear()} {data.company.name}</p>
+      <p className="relative text-xs" style={{ color: C.faint }}>© {new Date().getFullYear()} {data.company.name}</p>
     </div>
   );
 }

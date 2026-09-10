@@ -30,7 +30,7 @@ function NavLinks({ role, activeView, onNavigate }) {
         return (
           <div key={group.key} className="mb-2">
             {group.label && (
-              <p className="px-3 pt-4 pb-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <p className="px-3 pt-4 pb-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: C.faint }}>
                 {group.label}
               </p>
             )}
@@ -41,11 +41,13 @@ function NavLinks({ role, activeView, onNavigate }) {
                 <button
                   key={item.key}
                   onClick={() => onNavigate(item.key)}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-150"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150"
                   style={{
                     background: active ? C.blue : "transparent",
-                    color: active ? "#fff" : "rgba(255,255,255,0.62)",
+                    color: active ? "#fff" : C.ink2,
                   }}
+                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = C.surface2; }}
+                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
                 >
                   <Icon size={17} strokeWidth={active ? 2.4 : 2} />
                   <span className="truncate">{item.label}</span>
@@ -60,7 +62,7 @@ function NavLinks({ role, activeView, onNavigate }) {
 }
 
 function Brand({ compact }) {
-  return <KashLogo size={compact ? 24 : 26} tagline={!compact} onDark />;
+  return <KashLogo size={compact ? 24 : 26} tagline={!compact} />;
 }
 
 /* Account block at the foot of the sidebar - click to reveal Settings / role / Sign out. */
@@ -69,7 +71,7 @@ function AccountMenu({ session, role, onNavigate, onSignOut, onSwitchRole }) {
   const ref = useRef(null);
   useOnDismiss(ref, () => setOpen(false), open);
   return (
-    <div className="relative px-3 py-3 border-t" style={{ borderColor: "rgba(255,255,255,0.08)" }} ref={ref}>
+    <div className="relative px-3 py-3 border-t" style={{ borderColor: C.line }} ref={ref}>
       {open && (
         <div
           className="n1-pop absolute left-3 right-3 bottom-full mb-2 rounded-xl border py-1.5"
@@ -111,14 +113,14 @@ function AccountMenu({ session, role, onNavigate, onSignOut, onSwitchRole }) {
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl transition-colors"
-        style={{ background: open ? "rgba(255,255,255,0.08)" : "transparent" }}
+        style={{ background: open ? C.surface2 : "transparent" }}
       >
         <Avatar name={session?.name} size={34} />
         <div className="min-w-0 flex-1 text-left">
-          <p className="text-white text-xs font-semibold truncate">{session?.name}</p>
-          <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.45)" }}>{role}</p>
+          <p className="text-xs font-bold truncate" style={{ color: C.ink }}>{session?.name}</p>
+          <p className="text-[11px] truncate" style={{ color: C.muted }}>{role}</p>
         </div>
-        {open ? <ChevronDown size={14} style={{ color: "rgba(255,255,255,0.5)" }} /> : <ChevronUp size={14} style={{ color: "rgba(255,255,255,0.5)" }} />}
+        {open ? <ChevronDown size={14} style={{ color: C.faint }} /> : <ChevronUp size={14} style={{ color: C.faint }} />}
       </button>
     </div>
   );
@@ -129,7 +131,7 @@ function AccountMenu({ session, role, onNavigate, onSignOut, onSwitchRole }) {
 
 export function Sidebar({ role, activeView, onNavigate, onSignOut, onSwitchRole, session }) {
   return (
-    <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0" style={{ background: C.navy }}>
+    <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen border-r" style={{ background: C.surface, borderColor: C.line }}>
       <div className="px-5 py-6">
         <Brand />
       </div>
@@ -144,10 +146,10 @@ export function MobileDrawer({ open, onClose, role, activeView, onNavigate, onSi
   return (
     <div className="fixed inset-0 lg:hidden" style={{ zIndex: 95 }}>
       <div className="absolute inset-0 n1-fade" style={{ background: "rgba(6,10,20,0.6)" }} onClick={onClose} />
-      <div className="n1-pop absolute left-0 top-0 bottom-0 w-72 flex flex-col" style={{ background: C.navy }}>
+      <div className="n1-pop absolute left-0 top-0 bottom-0 w-72 flex flex-col" style={{ background: C.surface }}>
         <div className="px-5 py-6 flex items-center justify-between">
           <Brand />
-          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.6)" }}><X size={18} /></button>
+          <button onClick={onClose} style={{ color: C.muted }}><X size={18} /></button>
         </div>
         <NavLinks role={role} activeView={activeView} onNavigate={(k) => { onNavigate(k); onClose(); }} />
         <AccountMenu session={session} role={role} onNavigate={(k) => { onNavigate(k); onClose(); }} onSignOut={onSignOut} onSwitchRole={onSwitchRole} />
@@ -300,7 +302,7 @@ export function Topbar({
 
   return (
     <header
-      className="sticky top-0 flex items-center gap-2.5 px-4 lg:px-8 py-3.5 border-b n1-no-print"
+      className="shrink-0 flex items-center gap-2.5 px-4 lg:px-8 py-3 border-b n1-no-print"
       style={{ zIndex: 50, background: C.surface, borderColor: C.line }}
     >
       <button onClick={onMenu} className="lg:hidden" style={{ color: C.ink }}><Menu size={20} /></button>

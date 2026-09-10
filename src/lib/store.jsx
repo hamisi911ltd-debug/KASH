@@ -209,7 +209,7 @@ export function StoreProvider({ children }) {
   });
   const [theme, setThemeState] = useState(() => {
     try {
-      return localStorage.getItem(THEME_KEY) || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      return localStorage.getItem(THEME_KEY) || "light";
     } catch {
       return "light";
     }

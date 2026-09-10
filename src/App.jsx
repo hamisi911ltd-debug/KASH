@@ -75,8 +75,11 @@ export default function App() {
   const caps = useMemo(() => capsForRole(role), [role]);
   const forms = useMemo(() => buildForms(data), [data]);
   const quickActions = useMemo(
-    () => QUICK_ACTION_KEYS.map((k) => forms[k]).filter(Boolean).filter(() => caps.write),
-    [forms, caps.write]
+    () =>
+      QUICK_ACTION_KEYS.map((k) => forms[k])
+        .filter(Boolean)
+        .filter((f) => (f.key === "payment" ? caps.payments : caps.write)),
+    [forms, caps.write, caps.payments]
   );
 
   /* --- navigation guard: bounce to a permitted view if the role loses access --- */
@@ -226,7 +229,7 @@ export default function App() {
 
   return (
     <ActionsContext.Provider value={actionsValue}>
-      <div className="min-h-screen w-full flex n1-theme-anim" style={{ background: C.bg, color: C.ink }}>
+      <div className="h-screen w-full flex overflow-hidden n1-theme-anim" style={{ background: C.bg, color: C.ink }}>
         <Sidebar
           role={role}
           activeView={activeView}
@@ -246,7 +249,7 @@ export default function App() {
           session={session}
         />
 
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 h-screen">
           <Topbar
             role={role}
             session={session}
@@ -257,7 +260,7 @@ export default function App() {
             quickActions={quickActions}
           />
           <DivisionTabs role={role} activeView={activeView} onNavigate={navigate} />
-          <main className="flex-1 overflow-y-auto n1-scroll p-4 md:p-8 pb-24 lg:pb-8 n1-print-full">
+          <main className="flex-1 min-h-0 overflow-y-auto n1-scroll p-4 md:p-8 pb-24 lg:pb-8 n1-print-full">
             <div className="max-w-[1400px] mx-auto">
               <ActiveView />
             </div>
