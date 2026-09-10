@@ -267,7 +267,7 @@ export default function App() {
             quickActions={quickActions}
           />
           <DivisionTabs role={role} activeView={activeView} onNavigate={navigate} />
-          <main className="flex-1 min-h-0 overflow-y-auto n1-scroll p-4 md:p-8 pb-24 lg:pb-8 n1-print-full">
+          <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden n1-scroll p-3 sm:p-4 md:p-8 pb-24 lg:pb-8 n1-print-full">
             <div className="max-w-[1400px] mx-auto">
               <ActiveView />
             </div>

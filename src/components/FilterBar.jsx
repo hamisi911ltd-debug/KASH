@@ -18,13 +18,13 @@ import { C } from "../lib/constants";
 export default function FilterBar({ search, selects = [], range, onClear, dirty, count }) {
   const field = "rounded-lg border px-3 py-2 text-sm outline-none";
   return (
-    <div className="flex flex-wrap items-center gap-2.5 mb-4">
+    <div className="flex flex-wrap items-center gap-2 mb-4">
       <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: C.muted }}>
         <SlidersHorizontal size={13} /> Filter
       </span>
 
       {search && (
-        <div className="flex items-center gap-2 rounded-lg border px-3 py-2 min-w-[180px] flex-1 sm:flex-none sm:w-56" style={{ borderColor: C.line, background: C.surface }}>
+        <div className="flex items-center gap-2 rounded-lg border px-3 py-2 w-full sm:w-56 order-first" style={{ borderColor: C.line, background: C.surface }}>
           <Search size={14} style={{ color: C.muted }} />
           <input
             value={search.value}
@@ -44,7 +44,7 @@ export default function FilterBar({ search, selects = [], range, onClear, dirty,
           key={sel.key}
           value={sel.value}
           onChange={(e) => sel.onChange(e.target.value)}
-          className={field}
+          className={`${field} flex-1 min-w-[46%] sm:min-w-0 sm:flex-none`}
           style={{ borderColor: sel.value && sel.value !== sel.all ? C.blue : C.line, background: C.surface, color: C.ink }}
           aria-label={sel.label}
         >
@@ -55,10 +55,10 @@ export default function FilterBar({ search, selects = [], range, onClear, dirty,
       ))}
 
       {range && (
-        <div className="flex items-center gap-1.5">
-          <input type="date" value={range.from || ""} onChange={(e) => range.onFrom(e.target.value)} className={field} style={{ borderColor: C.line, background: C.surface, color: C.ink }} />
-          <span className="text-xs" style={{ color: C.faint }}>to</span>
-          <input type="date" value={range.to || ""} onChange={(e) => range.onTo(e.target.value)} className={field} style={{ borderColor: C.line, background: C.surface, color: C.ink }} />
+        <div className="flex items-center gap-1.5 w-full sm:w-auto">
+          <input type="date" value={range.from || ""} onChange={(e) => range.onFrom(e.target.value)} className={`${field} flex-1 sm:flex-none min-w-0`} style={{ borderColor: C.line, background: C.surface, color: C.ink }} />
+          <span className="text-xs shrink-0" style={{ color: C.faint }}>to</span>
+          <input type="date" value={range.to || ""} onChange={(e) => range.onTo(e.target.value)} className={`${field} flex-1 sm:flex-none min-w-0`} style={{ borderColor: C.line, background: C.surface, color: C.ink }} />
         </div>
       )}
 

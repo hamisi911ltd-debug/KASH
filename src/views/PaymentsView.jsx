@@ -102,7 +102,7 @@ export default function PaymentsView() {
         actions={<Button size="sm" onClick={() => openForm("payment")}><Plus size={14} /> Record payment</Button>}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard icon={ArrowDownLeft} label={`Received · ${range.label}`} value={formatKES(received)} tint={C.emerald} />
         <StatCard icon={ArrowUpRight} label={`Paid out · ${range.label}`} value={formatKES(paidOut)} tint={C.coral} />
         <StatCard icon={Clock} label="Awaiting approval" value={pending.length} sub={pending.length ? formatKES(pending.reduce((s, p) => s + p.amount, 0)) : "all clear"} tint={C.amber} />
@@ -130,7 +130,7 @@ export default function PaymentsView() {
       )}
 
       <Card padded={false}>
-        <div className="p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
+        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
           <SectionTitle title={`${filtered.length} payment${filtered.length === 1 ? "" : "s"}`} />
           {!mine && (
             <Segmented
@@ -140,7 +140,7 @@ export default function PaymentsView() {
             />
           )}
         </div>
-        <div className="px-5 pb-5">
+        <div className="px-3 sm:px-5 pb-5">
           <FilterBar
             search={{ value: q, onChange: setQ, placeholder: "Party, reference, person..." }}
             selects={[

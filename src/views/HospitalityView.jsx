@@ -87,7 +87,7 @@ export default function HospitalityView() {
         )}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard icon={TrendingUp} label={`Revenue · ${range.label}`} value={formatKES(hosp?.income || 0)} trend={hosp?.incomeDelta} tint={C.emerald} />
         <StatCard icon={Coins} label="Net profit" value={formatKES(hosp?.profit || 0)} sub={`${Math.round(hosp?.margin || 0)}% margin`} tint={C.blue} />
         <StatCard icon={BedDouble} label="Occupancy today" value={`${occNow}%`} sub={`avg ${avgOcc}% / 12 weeks`} tint={C.coral} />
@@ -144,7 +144,7 @@ export default function HospitalityView() {
       </Card>
 
       <Card padded={false}>
-        <div className="p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
+        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
           <SectionTitle title="Bookings" />
           <Segmented
             options={[
@@ -155,7 +155,7 @@ export default function HospitalityView() {
             onChange={setTab}
           />
         </div>
-        <div className="px-5 pb-5">
+        <div className="px-3 sm:px-5 pb-5">
           {(() => {
             const ql = q.trim().toLowerCase();
             const base = tab === "bookings" ? bookingsInRange : data.bookings;

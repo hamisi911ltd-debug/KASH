@@ -106,7 +106,7 @@ export default function DataTable({
     downloadCSV(exportName, cols, sorted);
   };
 
-  const pad = dense ? "px-4 py-2" : "px-5 py-3";
+  const pad = dense ? "px-3 py-2" : "px-3 py-2.5 sm:px-5 sm:py-3";
 
   return (
     <div>
@@ -123,7 +123,7 @@ export default function DataTable({
       )}
 
       <div className="overflow-x-auto n1-scroll rounded-2xl border" style={{ borderColor: C.line }}>
-        <table className="w-full text-sm" style={{ minWidth: columns.length > 5 ? 720 : undefined }}>
+        <table className="w-full text-[13px] sm:text-sm" style={{ minWidth: columns.length > 4 ? 640 : undefined }}>
           <thead>
             <tr style={{ background: C.surface2 }}>
               {columns.map((col) => {

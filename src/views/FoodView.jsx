@@ -101,7 +101,7 @@ export default function FoodView() {
         )}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard icon={TrendingUp} label={`Revenue · ${range.label}`} value={formatKES(food?.income || 0)} trend={food?.incomeDelta} tint={C.emerald} />
         <StatCard icon={Coins} label="Net profit" value={formatKES(food?.profit || 0)} sub={`${Math.round(food?.margin || 0)}% margin`} tint={C.blue} />
         <StatCard icon={ShoppingBag} label="Orders" value={ordersInRange.length} sub={`avg ${formatKES(avgOrder)}`} tint={C.amber} />
@@ -127,7 +127,7 @@ export default function FoodView() {
       </div>
 
       <Card padded={false}>
-        <div className="p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
+        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
           <SectionTitle title={tab === "orders" ? "Orders" : "Menu"} />
           <Segmented
             options={[
@@ -138,7 +138,7 @@ export default function FoodView() {
             onChange={setTab}
           />
         </div>
-        <div className="px-5 pb-5">
+        <div className="px-3 sm:px-5 pb-5">
           <FilterBar
             search={{ value: q, onChange: setQ, placeholder: tab === "orders" ? "Customer or item..." : "Menu item..." }}
             selects={

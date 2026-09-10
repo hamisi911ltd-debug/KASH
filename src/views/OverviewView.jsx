@@ -134,7 +134,7 @@ export default function OverviewView() {
       {/* what happened + what to check */}
       <div className="grid lg:grid-cols-2 gap-4">
         <Card padded={false}>
-          <div className="p-5 pb-3">
+          <div className="p-4 sm:p-5 pb-3">
             <SectionTitle
               title="Latest activity"
               action={<Button variant="ghost" size="sm" onClick={() => navigate("reports")}>See all</Button>}

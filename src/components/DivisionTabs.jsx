@@ -11,7 +11,7 @@ export default function DivisionTabs({ role, activeView, onNavigate }) {
 
   return (
     <div
-      className="shrink-0 flex gap-2 px-4 lg:px-8 py-2.5 overflow-x-auto n1-scroll border-b n1-no-print"
+      className="shrink-0 flex gap-1.5 sm:gap-2 px-3 sm:px-4 lg:px-8 py-2 overflow-x-auto n1-scroll border-b n1-no-print"
       style={{ background: C.surface, borderColor: C.line }}
     >
       {tabs.map((t) => {
@@ -21,14 +21,14 @@ export default function DivisionTabs({ role, activeView, onNavigate }) {
           <button
             key={t.key}
             onClick={() => onNavigate(t.key)}
-            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold shrink-0 transition-all active:scale-[0.97]"
+            className="flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shrink-0 transition-all active:scale-[0.97]"
             style={
               active
                 ? { background: t.color, color: "#fff", boxShadow: C.shadowSm }
                 : { background: C.surface2, color: C.ink2 }
             }
           >
-            <Icon size={16} strokeWidth={2.4} />
+            <Icon size={15} strokeWidth={2.4} />
             {t.label}
           </button>
         );

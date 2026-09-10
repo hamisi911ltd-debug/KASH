@@ -95,7 +95,7 @@ export default function UpdatesView() {
         </Card>
 
         <Card padded={false}>
-          <div className="p-5 pb-3">
+          <div className="p-4 sm:p-5 pb-3">
             <SectionTitle
               title="Reminders"
               action={
@@ -107,7 +107,7 @@ export default function UpdatesView() {
               }
             />
           </div>
-          <div className="px-5 pb-3">
+          <div className="px-3 sm:px-5 pb-3">
             <ChipRow options={["All", ...DIVISIONS]} value={divFilter} onChange={setDivFilter} />
           </div>
           <div className="max-h-[380px] overflow-y-auto n1-scroll px-5 pb-5 space-y-1">

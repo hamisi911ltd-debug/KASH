@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { C } from "../lib/constants";
 import { formatKES, formatCompact } from "../lib/format";
-import { useChartPalette } from "../lib/hooks.js";
+import { useChartPalette, useMediaQuery } from "../lib/hooks.js";
 import { EmptyState } from "./ui.jsx";
 
 function TooltipBox({ active, payload, label, pal, money = true }) {
@@ -38,17 +38,24 @@ const axisProps = (pal) => ({
   tickLine: false,
 });
 
+/* Shrink chart height on small screens so a page fits without endless scroll. */
+function useChartHeight(h) {
+  const small = useMediaQuery("(max-width: 640px)");
+  return small ? Math.max(160, Math.round(h * 0.72)) : h;
+}
+
 /* ---------------------------------------------------------- Area trend */
 
 export function TrendArea({ data, keys, height = 260, money = true }) {
   const pal = useChartPalette();
+  const H = useChartHeight(height);
   if (!data?.length) return <EmptyState text="No data for this range." />;
   const series = keys || [
     { key: "income", label: "Income", color: pal.blue },
     { key: "expense", label: "Expenses", color: pal.coral },
   ];
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" height={H}>
       <AreaChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
         <defs>
           {series.map((s) => (
@@ -86,11 +93,12 @@ export function BarSeries({
   money = true, horizontal = false, unit = "", maxValue,
 }) {
   const pal = useChartPalette();
+  const H = useChartHeight(height);
   if (!data?.length) return <EmptyState text="No data yet." />;
   const fill = color || pal.blue;
   const fmt = unit ? (v) => `${Math.round(v)}${unit}` : (v) => formatCompact(v);
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" height={H}>
       <BarChart
         data={data}
         layout={horizontal ? "vertical" : "horizontal"}
@@ -120,9 +128,10 @@ export function BarSeries({
 
 export function GroupedBars({ data, series, xKey = "label", height = 240, money = true }) {
   const pal = useChartPalette();
+  const H = useChartHeight(height);
   if (!data?.length) return <EmptyState text="No data for this range." />;
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" height={H}>
       <BarChart data={data} margin={{ top: 6, right: 12, left: 4, bottom: 0 }} barCategoryGap="20%" barGap={2}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={pal.grid} />
         <XAxis dataKey={xKey} {...axisProps(pal)} interval="preserveStartEnd" minTickGap={8} />
@@ -140,9 +149,10 @@ export function GroupedBars({ data, series, xKey = "label", height = 240, money 
 
 export function LineSeries({ data, dataKey = "rate", xKey = "label", color, height = 220, suffix = "%", money = false }) {
   const pal = useChartPalette();
+  const H = useChartHeight(height);
   if (!data?.length) return <EmptyState text="No data yet." />;
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" height={H}>
       <LineChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={pal.grid} />
         <XAxis dataKey={xKey} {...axisProps(pal)} minTickGap={18} />
@@ -158,13 +168,14 @@ export function LineSeries({ data, dataKey = "rate", xKey = "label", color, heig
 
 export function DonutChart({ data, height = 200, money = true, centerLabel, centerValue }) {
   const pal = useChartPalette();
+  const H = useChartHeight(height);
   const total = (data || []).reduce((s, d) => s + d.value, 0);
   if (!total) return <EmptyState text="No revenue in this range." />;
   const colorFor = (name) =>
     ({ Transport: pal.emerald, Food: pal.amber, Hospitality: pal.coral, General: pal.violet }[name] || pal.blue);
   return (
     <div className="relative">
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={H}>
         <PieChart>
           <Pie data={data} dataKey="value" nameKey="name" isAnimationActive={false} innerRadius="62%" outerRadius="92%" paddingAngle={2} strokeWidth={0}>
             {data.map((d) => (
@@ -190,7 +201,7 @@ export function Sparkline({ data, dataKey = "value", color, height = 44 }) {
   const pal = useChartPalette();
   if (!data?.length) return null;
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" height={H}>
       <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id={`spark-${dataKey}`} x1="0" y1="0" x2="0" y2="1">

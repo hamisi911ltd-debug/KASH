@@ -75,7 +75,7 @@ export default function UsersView() {
         actions={caps.manageUsers && <Button size="sm" onClick={() => openForm("user")}><Plus size={14} /> Invite user</Button>}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard icon={UsersIcon} label="Total users" value={data.users.length} tint={C.blue} />
         <StatCard icon={ShieldCheck} label="Active" value={active} tint={C.emerald} />
         <StatCard icon={Mail} label="Pending invites" value={invited} tint={C.amber} />
@@ -83,8 +83,8 @@ export default function UsersView() {
       </div>
 
       <Card padded={false}>
-        <div className="p-5 pb-3"><SectionTitle title={`Team · ${data.users.length}`} /></div>
-        <div className="px-5 pb-5">
+        <div className="p-4 sm:p-5 pb-3"><SectionTitle title={`Team · ${data.users.length}`} /></div>
+        <div className="px-3 sm:px-5 pb-5">
           <FilterBar
             search={{ value: q, onChange: setQ, placeholder: "Name or email..." }}
             selects={[

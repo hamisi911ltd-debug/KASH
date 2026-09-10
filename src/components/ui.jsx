@@ -37,7 +37,7 @@ export function Badge({ children, tone = "slate", dot = false, size = "md", clas
 export function Card({ children, className = "", padded = true, hover = false, as: As = "div", ...rest }) {
   return (
     <As
-      className={`rounded-2xl border ${padded ? "p-5" : ""} ${hover ? "transition-transform duration-200 hover:-translate-y-0.5" : ""} ${className}`}
+      className={`rounded-2xl border ${padded ? "p-4 sm:p-5" : ""} ${hover ? "transition-transform duration-200 hover:-translate-y-0.5" : ""} ${className}`}
       style={{ background: C.surface, borderColor: C.line, boxShadow: C.shadowSm }}
       {...rest}
     >
@@ -78,11 +78,11 @@ export function StatCard({ icon: Icon, label, value, sub, tint = C.blue, trend, 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium truncate" style={{ color: C.muted }}>{label}</p>
-          <p className="mt-2 text-xl font-bold truncate font-display" style={{ color: C.ink }}>{value}</p>
+          <p className="mt-1.5 sm:mt-2 text-lg sm:text-xl font-bold truncate font-display" style={{ color: C.ink }}>{value}</p>
           {sub && <p className="mt-1 text-xs truncate" style={{ color: C.faint }}>{sub}</p>}
         </div>
-        <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: tint + "1f" }}>
-          <Icon size={18} style={{ color: tint }} />
+        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: tint + "1f" }}>
+          <Icon size={17} style={{ color: tint }} />
         </div>
       </div>
       {trend !== undefined && (
@@ -100,7 +100,7 @@ export function SectionTitle({ title, subtitle, action, size = "md" }) {
   return (
     <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
       <div>
-        <h2 className={`font-bold font-display ${size === "lg" ? "text-lg" : "text-base"}`} style={{ color: C.ink }}>{title}</h2>
+        <h2 className={`font-bold font-display ${size === "lg" ? "text-base sm:text-lg" : "text-sm sm:text-base"}`} style={{ color: C.ink }}>{title}</h2>
         {subtitle && <p className="text-xs mt-0.5" style={{ color: C.muted }}>{subtitle}</p>}
       </div>
       {action}
@@ -240,9 +240,9 @@ export function ProgressBar({ value, tone = C.blue, height = 8, track }) {
 /* ---------------------------------------------------------- Segmented control */
 
 export function Segmented({ options, value, onChange, size = "sm" }) {
-  const pad = size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm";
+  const pad = size === "sm" ? "px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs" : "px-3 sm:px-4 py-2 text-xs sm:text-sm";
   return (
-    <div className="inline-flex rounded-xl p-1 gap-0.5" style={{ background: C.surface2 }}>
+    <div className="inline-flex max-w-full overflow-x-auto n1-scroll rounded-xl p-1 gap-0.5" style={{ background: C.surface2 }}>
       {options.map((opt) => {
         const val = typeof opt === "string" ? opt : opt.value;
         const label = typeof opt === "string" ? opt : opt.label;
@@ -252,7 +252,7 @@ export function Segmented({ options, value, onChange, size = "sm" }) {
             key={val}
             type="button"
             onClick={() => onChange(val)}
-            className={`rounded-lg font-semibold transition-all ${pad}`}
+            className={`rounded-lg font-semibold transition-all whitespace-nowrap shrink-0 ${pad}`}
             style={active ? { background: C.surface, color: C.ink, boxShadow: C.shadowSm } : { color: C.muted }}
           >
             {label}
@@ -296,7 +296,7 @@ export function Kbd({ children }) {
 
 export function ChipRow({ options, value, onChange }) {
   return (
-    <div className="flex gap-2 flex-wrap">
+    <div className="flex gap-2 flex-wrap overflow-x-auto n1-scroll -mx-1 px-1">
       {options.map((opt) => {
         const val = typeof opt === "string" ? opt : opt.value;
         const label = typeof opt === "string" ? opt : opt.label;
@@ -306,7 +306,7 @@ export function ChipRow({ options, value, onChange }) {
             key={val}
             type="button"
             onClick={() => onChange(val)}
-            className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
+            className="px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-colors whitespace-nowrap"
             style={active ? { background: C.blue, color: "#fff" } : { background: C.surface2, color: C.muted }}
           >
             {label}

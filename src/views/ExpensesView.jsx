@@ -80,7 +80,7 @@ export default function ExpensesView() {
         actions={caps.write && <Button size="sm" onClick={() => openForm("expense")}><Plus size={14} /> New expense</Button>}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {totalsByDivision.map((d) => (
           <StatCard
             key={d.division}
@@ -107,7 +107,7 @@ export default function ExpensesView() {
       </div>
 
       <Card padded={false}>
-        <div className="p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
+        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
           <SectionTitle title={`${filtered.length} expense line${filtered.length === 1 ? "" : "s"}`} />
           <Segmented
             options={[
@@ -119,10 +119,10 @@ export default function ExpensesView() {
             onChange={setScope}
           />
         </div>
-        <div className="px-5 pb-4">
+        <div className="px-3 sm:px-5 pb-4">
           <ChipRow options={["All", ...DIVISIONS]} value={division} onChange={setDivision} />
         </div>
-        <div className="px-5 pb-5">
+        <div className="px-3 sm:px-5 pb-5">
           <FilterBar
             search={{ value: q, onChange: setQ, placeholder: "Category, vendor, note..." }}
             selects={[

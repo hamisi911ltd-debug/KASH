@@ -302,14 +302,14 @@ export function Topbar({
 
   return (
     <header
-      className="shrink-0 flex items-center gap-2.5 px-4 lg:px-8 py-3 border-b n1-no-print"
+      className="shrink-0 flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 lg:px-8 py-2.5 sm:py-3 border-b n1-no-print"
       style={{ zIndex: 50, background: C.surface, borderColor: C.line }}
     >
       <button onClick={onMenu} className="lg:hidden" style={{ color: C.ink }}><Menu size={20} /></button>
 
       <button
         onClick={onOpenPalette}
-        className="flex-1 flex items-center gap-2 max-w-md rounded-lg px-3 py-2 text-left transition-colors"
+        className="flex-1 min-w-0 flex items-center gap-2 max-w-md rounded-lg px-3 py-2 text-left transition-colors"
         style={{ background: C.surface2 }}
       >
         <Search size={16} style={{ color: C.muted }} />
@@ -325,7 +325,7 @@ export function Topbar({
         <Calendar size={14} /> {formatDateLong(new Date())}
       </div>
 
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
         <IconButton icon={theme === "dark" ? Sun : Moon} onClick={toggleTheme} title="Toggle theme" />
         <NotificationsMenu onNavigate={onNavigate} />
         <QuickCreateMenu actions={quickActions} onPick={onQuickAction} />

@@ -127,7 +127,7 @@ export default function TransportView() {
         )}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard icon={TrendingUp} label={`Revenue · ${range.label}`} value={formatKES(transport?.income || 0)} trend={transport?.incomeDelta} tint={C.emerald} />
         <StatCard icon={Coins} label="Net profit" value={formatKES(transport?.profit || 0)} sub={`${Math.round(transport?.margin || 0)}% margin`} tint={C.blue} />
         <StatCard icon={Truck} label="Fleet" value={`${activeVehicles}/${data.vehicles.length}`} sub="active vehicles" tint={C.violet} />
@@ -153,7 +153,7 @@ export default function TransportView() {
       </div>
 
       <Card padded={false}>
-        <div className="p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
+        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
           <SectionTitle title={{ trips: "Trips", vehicles: "Vehicles", drivers: "Drivers" }[tab]} />
           <Segmented
             options={[
@@ -165,7 +165,7 @@ export default function TransportView() {
             onChange={setTab}
           />
         </div>
-        <div className="px-5 pb-5">
+        <div className="px-3 sm:px-5 pb-5">
           <FilterBar
             search={{ value: q, onChange: setQ, placeholder: tab === "trips" ? "Route, client, vehicle..." : tab === "vehicles" ? "Reg or model..." : "Name or phone..." }}
             selects={

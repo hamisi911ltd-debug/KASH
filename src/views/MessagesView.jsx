@@ -4,12 +4,13 @@
    tab keeps the shared reminder list.
    ============================================================ */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Send, Search, MessagesSquare, Clock, Pencil, Trash2 } from "lucide-react";
+import { Plus, Send, Search, MessagesSquare, Clock, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { C, DIVISIONS } from "../lib/constants";
 import { relativeTime, formatDateLong } from "../lib/format";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
+import { useMediaQuery } from "../lib/hooks.js";
 import { Card, SectionTitle, Badge, Button, Avatar, Segmented, EmptyState, ChipRow } from "../components/ui.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 
@@ -43,8 +44,12 @@ function Messages() {
       });
   }, [data.users, data.messages, me]);
 
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const filtered = contacts.filter((c) => !q || c.user.name.toLowerCase().includes(q.toLowerCase()));
-  const active = contacts.find((c) => c.user.name === activeName) || filtered[0] || contacts[0];
+  const active = contacts.find((c) => c.user.name === activeName) || (isDesktop ? filtered[0] || contacts[0] : null);
+  // on phones we show either the list or the open thread, not both
+  const showList = isDesktop || !activeName;
+  const showThread = isDesktop || !!activeName;
 
   // mark the open conversation's incoming messages read
   useEffect(() => {
@@ -72,23 +77,23 @@ function Messages() {
 
   return (
     <Card padded={false}>
-      <div className="grid md:grid-cols-[300px_1fr]" style={{ minHeight: 520 }}>
+      <div className="md:grid md:grid-cols-[300px_1fr]" style={{ minHeight: 480 }}>
         {/* people */}
-        <div className="border-b md:border-b-0 md:border-r flex flex-col" style={{ borderColor: C.line }}>
-          <div className="p-4 pb-3">
+        <div className={`${showList ? "flex" : "hidden md:flex"} border-b md:border-b-0 md:border-r flex-col`} style={{ borderColor: C.line }}>
+          <div className="p-3 sm:p-4 pb-3">
             <div className="flex items-center gap-2 rounded-lg border px-3 py-2" style={{ borderColor: C.line, background: C.surface }}>
               <Search size={14} style={{ color: C.muted }} />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people..." className="bg-transparent text-sm flex-1 outline-none" style={{ color: C.ink }} />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto n1-scroll max-h-[460px]">
+          <div className="flex-1 overflow-y-auto n1-scroll max-h-[70vh] md:max-h-[460px]">
             {filtered.map((c) => {
               const on = active?.user.name === c.user.name;
               return (
                 <button
                   key={c.user.name}
                   onClick={() => setActiveName(c.user.name)}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b"
+                  className="w-full flex items-center gap-3 px-3 sm:px-4 py-3 text-left transition-colors border-b"
                   style={{ borderColor: C.line, background: on ? C.blueSoft : "transparent" }}
                 >
                   <Avatar name={c.user.name} size={38} />
@@ -114,20 +119,23 @@ function Messages() {
         </div>
 
         {/* conversation */}
-        <div className="flex flex-col" style={{ minHeight: 520 }}>
+        <div className={`${showThread ? "flex" : "hidden md:flex"} flex-col`} style={{ minHeight: 420 }}>
           {!active ? (
-            <EmptyState icon={MessagesSquare} text="Pick someone to start" />
+            <div className="hidden md:block"><EmptyState icon={MessagesSquare} text="Pick someone to start" /></div>
           ) : (
             <>
-              <div className="flex items-center gap-3 px-5 py-3.5 border-b" style={{ borderColor: C.line }}>
+              <div className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 border-b" style={{ borderColor: C.line }}>
+                <button onClick={() => setActiveName(null)} className="md:hidden -ml-1 h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ color: C.ink }}>
+                  <ArrowLeft size={18} />
+                </button>
                 <Avatar name={active.user.name} size={36} />
-                <div>
-                  <p className="text-sm font-bold" style={{ color: C.ink }}>{active.user.name}</p>
-                  <p className="text-xs" style={{ color: C.muted }}>{active.user.role} · {active.user.division}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold truncate" style={{ color: C.ink }}>{active.user.name}</p>
+                  <p className="text-xs truncate" style={{ color: C.muted }}>{active.user.role} · {active.user.division}</p>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto n1-scroll px-5 py-4 space-y-2.5" style={{ background: C.surface2, maxHeight: 420 }}>
+              <div className="flex-1 overflow-y-auto n1-scroll px-4 sm:px-5 py-4 space-y-2.5" style={{ background: C.surface2, maxHeight: "60vh" }}>
                 {active.thread.length === 0 && (
                   <p className="text-center text-xs py-8" style={{ color: C.faint }}>No messages yet. Say hello.</p>
                 )}
@@ -162,7 +170,7 @@ function Messages() {
                 <div ref={endRef} />
               </div>
 
-              <form onSubmit={send} className="flex items-end gap-2 p-3 border-t" style={{ borderColor: C.line }}>
+              <form onSubmit={send} className="flex items-end gap-2 p-2.5 sm:p-3 border-t" style={{ borderColor: C.line }}>
                 <textarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
@@ -172,7 +180,7 @@ function Messages() {
                   className="flex-1 rounded-xl border px-3 py-2.5 text-sm outline-none resize-none n1-scroll"
                   style={{ borderColor: C.line, background: C.surface, color: C.ink, maxHeight: 120 }}
                 />
-                <Button type="submit" onClick={send} disabled={!draft.trim()}><Send size={14} /> Send</Button>
+                <Button type="submit" onClick={send} disabled={!draft.trim()} className="shrink-0"><Send size={14} /> <span className="hidden sm:inline">Send</span></Button>
               </form>
             </>
           )}
@@ -180,7 +188,7 @@ function Messages() {
       </div>
 
       {totalUnread > 0 && (
-        <p className="px-5 py-2 text-xs border-t" style={{ borderColor: C.line, color: C.muted }}>
+        <p className="px-4 sm:px-5 py-2 text-xs border-t" style={{ borderColor: C.line, color: C.muted }}>
           {totalUnread} unread message{totalUnread === 1 ? "" : "s"} across {contacts.filter((c) => c.unread).length} chat{contacts.filter((c) => c.unread).length === 1 ? "" : "s"}.
         </p>
       )}
@@ -203,7 +211,7 @@ function Reminders() {
 
   return (
     <Card padded={false}>
-      <div className="p-5 pb-3">
+      <div className="p-4 sm:p-5 pb-3">
         <SectionTitle
           title="Reminders"
           action={
@@ -215,7 +223,7 @@ function Reminders() {
           }
         />
       </div>
-      <div className="px-5 pb-3">
+      <div className="px-3 sm:px-5 pb-3">
         <ChipRow options={["All", ...DIVISIONS]} value={div} onChange={setDiv} />
       </div>
       <div className="px-5 pb-5 space-y-1">

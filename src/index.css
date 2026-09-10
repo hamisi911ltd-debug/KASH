@@ -243,6 +243,22 @@ input[type="checkbox"] {
   }
 }
 
+
+/* ---------- mobile: scale the whole UI down ---------- */
+@media (max-width: 640px) {
+  html { font-size: 14.5px; }
+  .font-display { letter-spacing: -0.02em; }
+  .n1-modal, .n1-pop { border-radius: 16px; }
+  /* charts never force the page wide */
+  .recharts-responsive-container { min-width: 0 !important; }
+}
+@media (max-width: 380px) {
+  html { font-size: 13.5px; }
+}
+
+/* wide blocks scroll inside themselves, never the page */
+.n1-xscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
 /* Keep the mobile bottom bar clear of the iOS home indicator. */
 .n1-safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
