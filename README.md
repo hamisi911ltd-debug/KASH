@@ -88,7 +88,14 @@ src/
   App.jsx     shell + router + modal orchestration
 ```
 
+## Charts
+
+Every time-series chart is a **vertical bar chart** built from the live ledger
+(`weeklySeries` / `seriesByMonth` in `src/lib/derive.js`) and recomputes the moment
+a record is added or edited. Rankings (top routes, best sellers, spend by category)
+stay horizontal for label legibility.
+
 ## Legacy
 
-`legacy/kash-dashboard.original.jsx` is the original single-file prototype
+`legacy/nexora-one-dashboard.original.jsx` is the original single-file prototype
 this project was built from, kept for reference.
