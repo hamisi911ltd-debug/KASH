@@ -14,7 +14,7 @@ const StoreContext = createContext(null);
 
 const COLLECTIONS = [
   "drivers", "vehicles", "trips", "menu", "orders",
-  "rooms", "bookings", "expenses", "users", "reminders", "notifications",
+  "rooms", "bookings", "expenses", "payments", "users", "reminders", "notifications",
 ];
 
 const DEFAULT_PREFS = {
@@ -144,6 +144,23 @@ const normalisers = {
       status: v.status || "Confirmed",
     };
   },
+  payments: (v) => {
+    const direction = v.direction === "in" ? "in" : "out";
+    return {
+      date: v.date || TODAY,
+      direction,
+      amount: num(v.amount),
+      party: (v.party || "").trim(),
+      division: v.division || "General",
+      category: direction === "out" ? (v.category || "Other") : "Payment received",
+      method: v.method || "M-Pesa",
+      phone: (v.phone || "").trim(),
+      reference: (v.reference || "").trim(),
+      notes: (v.notes || "").trim(),
+      status: v.status || "Recorded",
+      createdBy: v.createdBy || "",
+    };
+  },
   expenses: (v) => ({
     date: v.date || TODAY,
     division: v.division || "General",
@@ -173,13 +190,13 @@ const normalisers = {
 
 const ID_PREFIX = {
   trips: "t", vehicles: "v", drivers: "d", orders: "o", menu: "m",
-  rooms: "r", bookings: "b", expenses: "e", users: "u", reminders: "rem", notifications: "n",
+  rooms: "r", bookings: "b", expenses: "e", payments: "pay", users: "u", reminders: "rem", notifications: "n",
 };
 
 /* Human labels used in toasts and confirmation copy. */
 export const SINGULAR = {
   trips: "Trip", vehicles: "Vehicle", drivers: "Driver", orders: "Order", menu: "Menu item",
-  rooms: "Room", bookings: "Booking", expenses: "Expense", users: "User", reminders: "Reminder",
+  rooms: "Room", bookings: "Booking", expenses: "Expense", payments: "Payment", users: "User", reminders: "Reminder",
 };
 
 /* ---------------------------------------------------------- provider */

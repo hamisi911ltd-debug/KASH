@@ -8,36 +8,36 @@
    ============================================================ */
 :root,
 html.light {
-  --bg: #F4EEE1;
+  --bg: #F5F7FA;
   --surface: #ffffff;
-  --surface-2: #F1EADA;
-  --surface-3: #E9E0CC;
-  --line: #E7DECB;
-  --line-strong: #D8CCB2;
-  --ink: #1E2E36;
-  --ink-2: #3A4A52;
-  --muted: #6B7A83;
-  --faint: #9AA6AC;
+  --surface-2: #EFF3F8;
+  --surface-3: #E3EAF3;
+  --line: #E4E9F0;
+  --line-strong: #D2DBE6;
+  --ink: #142230;
+  --ink-2: #33414F;
+  --muted: #647689;
+  --faint: #93A1B2;
 
   --blue: #1E6CA8;
-  --blue-soft: #E4EDF5;
-  --emerald: #159C8C;
-  --emerald-soft: #DFF1EE;
-  --amber: #DFA21C;
-  --amber-soft: #FAF0DA;
+  --blue-soft: #E4EEF7;
+  --emerald: #12958A;
+  --emerald-soft: #DDF0ED;
+  --amber: #CE9114;
+  --amber-soft: #F9EFD6;
   --coral: #C82E58;
-  --coral-soft: #F9E5EB;
+  --coral-soft: #FAE5EC;
   --violet: #4B6C8A;
-  --violet-soft: #E6ECF2;
-  --slate-soft: #EEE8DA;
+  --violet-soft: #E6ECF3;
+  --slate-soft: #EDF1F7;
 
   --navy: #0C2A3D;
   --navy-2: #123950;
   --navy-3: #184963;
 
-  --shadow-sm: 0 1px 2px rgba(30, 46, 54, 0.06);
-  --shadow-md: 0 4px 16px -4px rgba(30, 46, 54, 0.12);
-  --shadow-lg: 0 18px 44px -12px rgba(30, 46, 54, 0.22);
+  --shadow-sm: 0 1px 2px rgba(20, 34, 48, 0.06);
+  --shadow-md: 0 6px 18px -6px rgba(20, 34, 48, 0.14);
+  --shadow-lg: 0 20px 48px -14px rgba(20, 34, 48, 0.24);
   --ring: rgba(30, 108, 168, 0.4);
 }
 

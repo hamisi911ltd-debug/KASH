@@ -157,6 +157,17 @@ export function buildLedger(data) {
     });
   });
 
+  (data.payments || []).forEach((p) => {
+    if (p.status !== "Recorded") return; // pending M-Pesa prompts don't hit the books yet
+    const kind = p.direction === "in" ? "income" : "expense";
+    lines.push({
+      id: `${p.id}-pmt`, refId: p.id, date: p.date, division: p.division || "General", kind,
+      category: p.direction === "in" ? "Payment received" : p.category || "Payment",
+      desc: `${p.direction === "in" ? "From" : "To"} ${p.party}${p.reference ? ` (${p.reference})` : ""}`,
+      amount: Number(p.amount) || 0, source: "payment", method: p.method,
+    });
+  });
+
   return lines.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
@@ -555,6 +566,10 @@ export function searchAll(data, query, limit = 24) {
   });
   data.menu.forEach((m) => {
     if (m.name.toLowerCase().includes(q)) add("Menu item", "food", m.name, m.category, m.id);
+  });
+  (data.payments || []).forEach((p) => {
+    if (`${p.party} ${p.reference || ""} ${p.notes || ""}`.toLowerCase().includes(q))
+      add("Payment", "payments", `${p.direction === "in" ? "+" : "-"} ${p.party}`, `${p.method} - ${p.date}`, p.id);
   });
   return hits.slice(0, limit);
 }

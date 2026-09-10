@@ -41,15 +41,15 @@ export const C = {
 export const CHART_PALETTE = {
   light: {
     blue: "#1E6CA8",
-    emerald: "#159C8C",
-    amber: "#DFA21C",
+    emerald: "#12958A",
+    amber: "#CE9114",
     coral: "#C82E58",
     violet: "#4B6C8A",
-    grid: "#E7DFCD",
-    axis: "#6B7A83",
+    grid: "#E8EDF4",
+    axis: "#647689",
     tooltipBg: "#ffffff",
-    tooltipLine: "#E6DECC",
-    tooltipInk: "#1E2E36",
+    tooltipLine: "#E4E9F0",
+    tooltipInk: "#142230",
   },
   dark: {
     blue: "#5AA0D6",
@@ -88,22 +88,22 @@ export const ROLES = [
 export const ROLE_VIEWS = {
   "Super Admin": "*",
   Admin: "*",
-  "Transport Manager": ["overview", "transport", "expenses", "reports", "updates", "settings"],
-  "Food Manager": ["overview", "food", "expenses", "reports", "updates", "settings"],
-  "Hospitality Manager": ["overview", "hospitality", "expenses", "reports", "updates", "settings"],
-  Accountant: ["overview", "all", "expenses", "reports", "updates", "settings"],
-  Staff: ["overview", "updates", "settings"],
+  "Transport Manager": ["overview", "transport", "payments", "expenses", "reports", "updates", "settings"],
+  "Food Manager": ["overview", "food", "payments", "expenses", "reports", "updates", "settings"],
+  "Hospitality Manager": ["overview", "hospitality", "payments", "expenses", "reports", "updates", "settings"],
+  Accountant: ["overview", "all", "payments", "expenses", "reports", "updates", "settings"],
+  Staff: ["overview", "payments", "updates", "settings"],
 };
 
 /* Roles allowed to create/edit/delete records, and to manage people. */
 export const ROLE_CAPS = {
-  "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true },
-  Admin: { write: true, manageUsers: true, deleteAny: true, settings: true },
-  "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false },
-  "Food Manager": { write: true, manageUsers: false, deleteAny: true, settings: false },
-  "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false },
-  Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false },
-  Staff: { write: false, manageUsers: false, deleteAny: false, settings: false },
+  "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
+  Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
+  "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
+  "Food Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
+  "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
+  Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
+  Staff: { write: false, manageUsers: false, deleteAny: false, settings: false, payments: true },
 };
 
 export const PERIODS = ["Today", "Last 7 days", "This Month", "Last 90 days", "This Year", "All Time"];
@@ -124,6 +124,11 @@ export const EXPENSE_CATEGORIES = [
 ];
 
 export const VEHICLE_TYPES = ["Bus", "Shuttle", "Truck", "Van", "Saloon"];
+export const PAYMENT_DIRECTIONS = [
+  { value: "out", label: "Money out - pay someone" },
+  { value: "in", label: "Money in - receive a payment" },
+];
+export const PAYMENT_RECORD_STATUSES = ["Recorded", "Pending", "Failed"];
 export const ROOM_TYPES = ["Standard", "Deluxe", "Executive Suite", "Family"];
 export const TRIP_STATUSES = ["Scheduled", "In Transit", "Completed", "Cancelled"];
 export const ORDER_STATUSES = ["Preparing", "Out for Delivery", "Delivered", "Cancelled"];
@@ -136,6 +141,7 @@ export const ROOM_STATUSES = ["Available", "Cleaning", "Maintenance"];
 /* Status -> badge tone. Occupied/In Transit read as "working", not "bad". */
 const STATUS_TONES = {
   Completed: "emerald",
+  Recorded: "emerald",
   Delivered: "emerald",
   "Checked In": "emerald",
   Active: "emerald",
@@ -157,6 +163,7 @@ const STATUS_TONES = {
   "Checked Out": "slate",
   "Off Duty": "slate",
   Cancelled: "coral",
+  Failed: "coral",
   Inactive: "coral",
   Suspended: "coral",
   Overdue: "coral",

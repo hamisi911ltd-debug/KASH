@@ -12,13 +12,20 @@ import { GroupedBars, BarSeries } from "../components/Charts.jsx";
 import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
-import { statusTone } from "../lib/constants";
+import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
+import { statusTone, ORDER_STATUSES, PAYMENT_STATUSES } from "../lib/constants";
 
 export default function FoodView() {
   const { data, prefs } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
   const pal = useChartPalette();
   const [tab, setTab] = useState("orders");
+  const [q, setQ] = useState("");
+  const [oStatus, setOStatus] = useState("All");
+  const [pStatus, setPStatus] = useState("All");
+  const [channel, setChannel] = useState("All");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
 
   const range = useMemo(() => resolvePeriod(prefs.period, prefs.customRange, new Date(TODAY)), [prefs]);
   const m = useMemo(() => computeMetrics(data, range), [data, range]);
@@ -39,6 +46,20 @@ export default function FoodView() {
 
   const openOrders = ordersInRange.filter((o) => ["Preparing", "Out for Delivery"].includes(o.orderStatus)).length;
   const avgOrder = ordersInRange.length ? Math.round(ordersInRange.reduce((s, o) => s + o.amount, 0) / ordersInRange.length) : 0;
+
+  const ql = q.trim().toLowerCase();
+  const shownOrders = useMemo(() => ordersInRange
+    .filter((o) => oStatus === "All" || o.orderStatus === oStatus)
+    .filter((o) => pStatus === "All" || o.paymentStatus === pStatus)
+    .filter((o) => channel === "All" || o.channel === channel)
+    .filter((o) => (!from || o.date >= from) && (!to || o.date <= to))
+    .filter((o) => !ql || `${o.customer} ${o.item}`.toLowerCase().includes(ql)),
+    [ordersInRange, oStatus, pStatus, channel, from, to, ql]);
+  const shownMenu = useMemo(() => data.menu
+    .filter((mi) => !ql || `${mi.name} ${mi.category}`.toLowerCase().includes(ql)),
+    [data.menu, ql]);
+  const dirty = ql || oStatus !== "All" || pStatus !== "All" || channel !== "All" || from || to;
+  const clearFilters = () => { setQ(""); setOStatus("All"); setPStatus("All"); setChannel("All"); setFrom(""); setTo(""); };
 
   const orderColumns = [
     { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
@@ -118,18 +139,33 @@ export default function FoodView() {
           />
         </div>
         <div className="px-5 pb-5">
+          <FilterBar
+            search={{ value: q, onChange: setQ, placeholder: tab === "orders" ? "Customer or item..." : "Menu item..." }}
+            selects={
+              tab === "orders"
+                ? [
+                    selectFilter("os", "Order status", ORDER_STATUSES, oStatus, setOStatus),
+                    selectFilter("ps", "Payment", PAYMENT_STATUSES, pStatus, setPStatus),
+                    selectFilter("ch", "Channel", ["Walk-in", "Phone", "WhatsApp", "Online", "Corporate"], channel, setChannel),
+                  ]
+                : []
+            }
+            range={tab === "orders" ? { from, to, onFrom: setFrom, onTo: setTo } : undefined}
+            dirty={!!dirty}
+            onClear={clearFilters}
+          />
           {tab === "orders" ? (
             <DataTable
               columns={orderColumns}
-              rows={ordersInRange}
+              rows={shownOrders}
               actions={rowActions("orders")}
-              exportName={`food-orders-${range.label}`}
+              exportName={`kash-orders-${range.label}`}
               initialSort={{ key: "date", dir: "desc" }}
               emptyIcon={ShoppingBag}
-              emptyText="No orders in this period."
+              emptyText="No orders match these filters."
             />
           ) : (
-            <DataTable columns={menuColumns} rows={data.menu} actions={rowActions("menu")} exportName="menu" emptyIcon={BookMarked} emptyText="No menu items yet." />
+            <DataTable columns={menuColumns} rows={shownMenu} actions={rowActions("menu")} exportName="kash-menu" emptyIcon={BookMarked} emptyText="No menu items match." />
           )}
         </div>
       </Card>

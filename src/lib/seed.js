@@ -282,6 +282,56 @@ function buildExpenses() {
   return list.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
+/* ---------------------------------------------------------- payments (worker-initiated) */
+
+const PAY_OUT = [
+  { party: "Karim Butchery", division: "Food", category: "Supplies" },
+  { party: "City Market produce", division: "Food", category: "Supplies" },
+  { party: "Autoworks Garage", division: "Transport", category: "Maintenance" },
+  { party: "Shell Kilimani", division: "Transport", category: "Fuel" },
+  { party: "Linen & Co.", division: "Hospitality", category: "Supplies" },
+  { party: "Kenya Power", division: "Hospitality", category: "Utilities" },
+  { party: "Digital Hub Agency", division: "General", category: "Marketing" },
+  { party: "Casual crew wages", division: "General", category: "Salaries" },
+];
+const PAY_IN = [
+  { party: "Zenith Africa Ltd", division: "Transport" },
+  { party: "Rift Valley Sacco", division: "Food" },
+  { party: "Walk-in customer", division: "Food" },
+  { party: "Njeri Consulting Ltd", division: "Hospitality" },
+  { party: "Coastal Weddings Co.", division: "Food" },
+  { party: "Private charter", division: "Transport" },
+];
+const PAY_STAFF = ["Mercy Adhiambo", "Peter Mwangi", "Aisha Noor", "Daniel Kiprop", "Victor Kimani"];
+
+function buildPayments() {
+  const list = [];
+  for (let offset = 90; offset >= 0; offset--) {
+    if (!chance(0.35)) continue;
+    const out = chance(0.62);
+    const src = out ? pick(PAY_OUT) : pick(PAY_IN);
+    const method = pick(["M-Pesa", "M-Pesa", "Cash", "Bank Transfer"]);
+    const amount = out ? round50(between(1500, 45000)) : round50(between(3000, 60000));
+    const status = offset === 0 && method === "M-Pesa" && chance(0.4) ? "Pending" : chance(0.03) ? "Failed" : "Recorded";
+    list.push({
+      id: genId("pay"),
+      date: dayOf(offset),
+      direction: out ? "out" : "in",
+      amount,
+      party: src.party,
+      division: src.division,
+      category: out ? src.category : "Payment received",
+      method,
+      phone: method === "M-Pesa" ? `+254 7${between(10, 99)} ${between(100, 999)} ${between(100, 999)}` : "",
+      reference: method === "M-Pesa" ? `QK${between(10, 99)}${Math.random().toString(36).slice(2, 7).toUpperCase()}` : "",
+      notes: out ? `Paid ${src.party}` : `Received from ${src.party}`,
+      status,
+      createdBy: pick(PAY_STAFF),
+    });
+  }
+  return list.sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
 /* ---------------------------------------------------------- people & comms */
 
 export const SEED_USERS = [
@@ -289,7 +339,7 @@ export const SEED_USERS = [
   { id: "u2", name: "Peter Mwangi", email: "peter.m@kash.co.ke", role: "Transport Manager", division: "Transport", status: "Active", lastActive: TODAY },
   { id: "u3", name: "Aisha Noor", email: "aisha.n@kash.co.ke", role: "Food Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
   { id: "u4", name: "Daniel Kiprop", email: "daniel.k@kash.co.ke", role: "Hospitality Manager", division: "Hospitality", status: "Active", lastActive: dayOf(2) },
-  { id: "u5", name: "Mercy Adhiambo", email: "mercy.a@kash.co.ke", role: "Staff", division: "Food", status: "Invited", lastActive: null },
+  { id: "u5", name: "Mercy Adhiambo", email: "mercy.a@kash.co.ke", role: "Staff", division: "Food", status: "Active", lastActive: TODAY },
   { id: "u6", name: "Victor Kimani", email: "victor.k@kash.co.ke", role: "Accountant", division: "All", status: "Active", lastActive: dayOf(1) },
 ];
 
@@ -343,6 +393,7 @@ export function buildSeedData() {
     rooms: SEED_ROOMS,
     bookings: buildBookings(),
     expenses: buildExpenses(),
+    payments: buildPayments(),
     users: SEED_USERS,
     reminders: SEED_REMINDERS,
     notifications: buildNotifications(),

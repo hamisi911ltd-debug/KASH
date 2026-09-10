@@ -12,6 +12,7 @@ import { useStore } from "../lib/store.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
 import { GroupedBars, BarSeries } from "../components/Charts.jsx";
 import DataTable from "../components/DataTable.jsx";
+import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import { useChartPalette } from "../lib/hooks.js";
 
@@ -22,19 +23,28 @@ export default function ReportsView() {
   const pal = useChartPalette();
   const [division, setDivision] = useState("All");
   const [kind, setKind] = useState("all"); // all | income | expense
+  const [q, setQ] = useState("");
+  const [category, setCategory] = useState("All");
+  const [source, setSource] = useState("All");
 
   const period = prefs.period;
   const range = useMemo(() => resolvePeriod(period, prefs.customRange, new Date(TODAY)), [period, prefs.customRange]);
 
   const ledger = useMemo(() => buildLedger(data), [data]);
+  const ql = q.trim().toLowerCase();
   const rows = useMemo(
     () =>
       ledger
         .filter((l) => inRange(l.date, range.from, range.to))
         .filter((l) => division === "All" || l.division === division)
-        .filter((l) => kind === "all" || l.kind === kind),
-    [ledger, range, division, kind]
+        .filter((l) => kind === "all" || l.kind === kind)
+        .filter((l) => category === "All" || l.category === category)
+        .filter((l) => source === "All" || (l.source || "manual") === source)
+        .filter((l) => !ql || `${l.desc} ${l.category} ${l.division}`.toLowerCase().includes(ql)),
+    [ledger, range, division, kind, category, source, ql]
   );
+  const allCategories = useMemo(() => [...new Set(ledger.map((l) => l.category))].sort(), [ledger]);
+  const tableDirty = ql || category !== "All" || source !== "All";
 
   const income = rows.filter((r) => r.kind === "income").reduce((s, r) => s + r.amount, 0);
   const expense = rows.filter((r) => r.kind === "expense").reduce((s, r) => s + r.amount, 0);
@@ -198,12 +208,28 @@ export default function ReportsView() {
       <Card padded={false}>
         <div className="p-5 pb-3"><SectionTitle title={`Transactions · ${rows.length}`} /></div>
         <div className="px-5 pb-5">
+          <FilterBar
+            search={{ value: q, onChange: setQ, placeholder: "Description, category..." }}
+            selects={[
+              selectFilter("cat", "Category", allCategories, category, setCategory),
+              { key: "src", label: "Source", all: "All", value: source, onChange: setSource, options: [
+                { value: "All", label: "Any source" },
+                { value: "manual", label: "Keyed in" },
+                { value: "trip", label: "From trips" },
+                { value: "order", label: "From orders" },
+                { value: "booking", label: "From bookings" },
+                { value: "payment", label: "From payments" },
+              ] },
+            ]}
+            dirty={!!tableDirty}
+            onClear={() => { setQ(""); setCategory("All"); setSource("All"); }}
+          />
           <DataTable
             columns={columns}
             rows={rows}
             pageSize={15}
             initialSort={{ key: "date", dir: "desc" }}
-            emptyText="No records for this filter."
+            emptyText="No records match these filters."
           />
         </div>
       </Card>

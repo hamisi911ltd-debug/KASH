@@ -4,9 +4,10 @@
    treatment so the app feels like a single coherent product.
    ============================================================ */
 import React, { useEffect, useRef, useState } from "react";
-import { X, AlertTriangle } from "lucide-react";
+import { X, AlertTriangle, Smartphone, CheckCircle2 } from "lucide-react";
 import { C } from "../lib/constants";
-import { Button } from "./ui.jsx";
+import { Button, Spinner } from "./ui.jsx";
+import { formatKES } from "../lib/format";
 
 function Overlay({ onClose, children, align = "center" }) {
   useEffect(() => {
@@ -219,6 +220,75 @@ export function ConfirmDialog({ title, message, confirmLabel = "Delete", tone = 
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button variant={tone} onClick={() => { onConfirm(); onClose(); }}>{confirmLabel}</Button>
+        </div>
+      </div>
+    </Overlay>
+  );
+}
+
+/* ---------------------------------------------------------- M-Pesa STK prompt */
+
+/**
+ * Simulated M-Pesa STK push. Shows while a payment sits Pending; auto-confirms
+ * after a few seconds, or the user can confirm / cancel. `onConfirm` records
+ * the payment into the ledger, `onCancel` marks it failed.
+ */
+export function MpesaPrompt({ payment, onConfirm, onCancel }) {
+  const [phase, setPhase] = useState("waiting"); // waiting | done
+  useEffect(() => {
+    const t = setTimeout(() => setPhase("done"), 4200);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    if (phase !== "done") return;
+    const t = setTimeout(() => onConfirm(), 900);
+    return () => clearTimeout(t);
+  }, [phase, onConfirm]);
+
+  return (
+    <Overlay onClose={() => {}}>
+      <div
+        className="n1-pop w-full max-w-sm rounded-2xl p-6 text-center"
+        style={{ background: C.surface, boxShadow: C.shadowLg }}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div
+          className="h-14 w-14 rounded-2xl mx-auto flex items-center justify-center"
+          style={{ background: phase === "done" ? C.emeraldSoft : C.blueSoft }}
+        >
+          {phase === "done" ? (
+            <CheckCircle2 size={26} style={{ color: C.emerald }} />
+          ) : (
+            <Smartphone size={24} style={{ color: C.blue }} />
+          )}
+        </div>
+
+        <h3 className="mt-4 text-base font-bold font-display" style={{ color: C.ink }}>
+          {phase === "done" ? "Payment confirmed" : "Check your phone"}
+        </h3>
+        <p className="mt-1.5 text-sm" style={{ color: C.muted }}>
+          {phase === "done" ? (
+            <>Recording {formatKES(payment.amount)} {payment.direction === "in" ? "from" : "to"} <b>{payment.party}</b>.</>
+          ) : (
+            <>An M-Pesa request for <b>{formatKES(payment.amount)}</b> was sent to <b>{payment.phone}</b>. Enter your PIN to approve.</>
+          )}
+        </p>
+
+        {phase === "waiting" && (
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs" style={{ color: C.faint }}>
+            <Spinner size={13} color={C.blue} /> Waiting for approval...
+          </div>
+        )}
+
+        <div className="flex justify-center gap-2 mt-6">
+          {phase === "waiting" ? (
+            <>
+              <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+              <Button onClick={onConfirm}>I've approved it</Button>
+            </>
+          ) : (
+            <Button onClick={onConfirm}>Done</Button>
+          )}
         </div>
       </div>
     </Overlay>

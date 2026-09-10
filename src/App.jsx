@@ -20,9 +20,10 @@ import ReportsView from "./views/ReportsView.jsx";
 import UsersView from "./views/UsersView.jsx";
 import UpdatesView from "./views/UpdatesView.jsx";
 import SettingsView from "./views/SettingsView.jsx";
+import PaymentsView from "./views/PaymentsView.jsx";
 
 import { Sidebar, MobileDrawer, MobileBottomNav, Topbar } from "./components/Layout.jsx";
-import { FormModal, ConfirmDialog } from "./components/Modal.jsx";
+import { FormModal, ConfirmDialog, MpesaPrompt } from "./components/Modal.jsx";
 import Toasts from "./components/Toasts.jsx";
 import CommandPalette from "./components/CommandPalette.jsx";
 import DivisionTabs from "./components/DivisionTabs.jsx";
@@ -34,6 +35,7 @@ const VIEWS = {
   transport: TransportView,
   food: FoodView,
   hospitality: HospitalityView,
+  payments: PaymentsView,
   expenses: ExpensesView,
   reports: ReportsView,
   users: UsersView,
@@ -50,6 +52,7 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [modal, setModal] = useState(null); // { formKey, initial? }
   const [confirm, setConfirm] = useState(null); // { collection, id, label }
+  const [mpesa, setMpesa] = useState(null); // pending M-Pesa payment record
 
   /* Deep-link: ?role=Accountant&view=reports opens straight into a role/view
      (handy for demos and screenshots). Runs once. */
@@ -99,12 +102,13 @@ export default function App() {
 
   /* --- CRUD wired to forms --- */
   const openForm = useCallback((formKey, initial = null) => {
-    if (!caps.write) {
-      toast("Your role is read-only", { tone: "warn" });
+    const allowed = formKey === "payment" ? caps.payments : caps.write;
+    if (!allowed) {
+      toast("You can't do that with your role", { tone: "warn" });
       return;
     }
     setModal({ formKey, initial });
-  }, [caps.write, toast]);
+  }, [caps.write, caps.payments, toast]);
 
   const editRecord = useCallback(
     (collection, id) => {
@@ -130,22 +134,67 @@ export default function App() {
     (values) => {
       const form = forms[modal.formKey];
       if (!form) return;
+
       if (modal.initial) {
         updateRecord(form.collection, modal.initial.id, values);
         toast(`${SINGULAR[form.collection] || "Record"} updated`);
-      } else {
-        addRecord(form.collection, values);
-        toast(form.successToast || `${SINGULAR[form.collection] || "Record"} added`);
-        if (form.notify) {
+        return;
+      }
+
+      // New payment: M-Pesa fires an approval prompt; everything else records now.
+      if (form.collection === "payments") {
+        const reference = values.reference || `MP${Math.random().toString(36).slice(2, 9).toUpperCase()}`;
+        const isMpesa = values.method === "M-Pesa";
+        const rec = addRecord("payments", {
+          ...values,
+          reference,
+          createdBy: session?.name || "",
+          status: isMpesa ? "Pending" : "Recorded",
+        });
+        if (isMpesa) {
+          setMpesa(rec);
+        } else {
+          toast("Payment recorded");
           notifyIfEnabled(form.notify.channel, form.notify.message(values), {
             type: form.notify.type,
-            division: form.notify.division,
+            division: values.division || form.notify.division,
           });
         }
+        return;
+      }
+
+      addRecord(form.collection, values);
+      toast(form.successToast || `${SINGULAR[form.collection] || "Record"} added`);
+      if (form.notify) {
+        notifyIfEnabled(form.notify.channel, form.notify.message(values), {
+          type: form.notify.type,
+          division: form.notify.division,
+        });
       }
     },
-    [forms, modal, addRecord, updateRecord, toast, notifyIfEnabled]
+    [forms, modal, addRecord, updateRecord, toast, notifyIfEnabled, session]
   );
+
+  const confirmMpesa = useCallback(() => {
+    if (!mpesa) return;
+    patchRecord("payments", mpesa.id, { status: "Recorded" });
+    toast("Payment confirmed & recorded");
+    notifyIfEnabled(
+      "expenses",
+      mpesa.direction === "in"
+        ? `Payment received from ${mpesa.party} - KSh ${Number(mpesa.amount).toLocaleString()}`
+        : `Payment sent to ${mpesa.party} - KSh ${Number(mpesa.amount).toLocaleString()}`,
+      { type: "payment", division: mpesa.division }
+    );
+    setMpesa(null);
+  }, [mpesa, patchRecord, toast, notifyIfEnabled]);
+
+  const cancelMpesa = useCallback(() => {
+    if (!mpesa) return;
+    patchRecord("payments", mpesa.id, { status: "Failed" });
+    toast("Payment cancelled", { tone: "warn" });
+    setMpesa(null);
+  }, [mpesa, patchRecord, toast]);
 
   const confirmDelete = useCallback(() => {
     const restore = removeRecord(confirm.collection, confirm.id);
@@ -183,6 +232,7 @@ export default function App() {
           activeView={activeView}
           onNavigate={navigate}
           onSignOut={() => setSession(null)}
+          onSwitchRole={(r) => setSession((s) => ({ ...s, role: r }))}
           session={session}
         />
         <MobileDrawer
@@ -192,6 +242,7 @@ export default function App() {
           activeView={activeView}
           onNavigate={navigate}
           onSignOut={() => setSession(null)}
+          onSwitchRole={(r) => setSession((s) => ({ ...s, role: r }))}
           session={session}
         />
 
@@ -201,8 +252,6 @@ export default function App() {
             session={session}
             onMenu={() => setDrawerOpen(true)}
             onNavigate={navigate}
-            onSignOut={() => setSession(null)}
-            onSwitchRole={(r) => setSession((s) => ({ ...s, role: r }))}
             onOpenPalette={() => setPaletteOpen(true)}
             onQuickAction={(k) => openForm(k)}
             quickActions={quickActions}
@@ -236,6 +285,8 @@ export default function App() {
             onClose={() => setConfirm(null)}
           />
         )}
+
+        {mpesa && <MpesaPrompt payment={mpesa} onConfirm={confirmMpesa} onCancel={cancelMpesa} />}
 
         <CommandPalette
           open={paletteOpen}

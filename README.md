@@ -48,6 +48,9 @@ You can also deep-link a role for demos/screenshots:
   week-over-week change, a card per service (tap to open), one live 12-week
   *money in vs money out* bar chart, latest activity in plain words, and a short
   "needs a look" list.
+- **Filters** — every list (Transport, Food, Hospitality, Payments, Expenses, Reports,
+  Users) has a filter row: search, status / method / category / division dropdowns and a
+  date range, with one-tap Clear.
 - **Top tabs** — Home / Transport / Food / Hospitality sit as big buttons above every
   page (and as the mobile bottom bar); the sidebar keeps the rest.
 - **All Services** — the three divisions side by side.
@@ -90,6 +93,16 @@ src/
   views/      one file per screen
   App.jsx     shell + router + modal orchestration
 ```
+
+## Payments (worker-initiated)
+
+Every role - including Staff - has a **Payments** page. A worker taps **Record
+payment**, chooses money out or money in, enters the amount and who it's with,
+and picks a method. An **M-Pesa** payment fires a simulated STK prompt and only
+lands in the books once approved; Cash / Bank record straight away. Recorded
+payments flow into the same ledger as everything else, so they show up in
+Overview, Reports and the division P&L. Staff see only their own; managers and
+admins see everyone's, with filters.
 
 ## Charts
 

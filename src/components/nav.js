@@ -1,7 +1,7 @@
 /* Navigation model, shared by the sidebar, top tabs, mobile nav and command palette. */
 import {
   LayoutDashboard, LayoutGrid, Truck, UtensilsCrossed, BedDouble,
-  Users, BarChart3, Wallet, Bell, Settings,
+  Users, BarChart3, Wallet, Bell, Settings, ArrowLeftRight,
 } from "lucide-react";
 import { C } from "../lib/constants";
 
@@ -11,6 +11,7 @@ export const NAV = [
   { key: "transport", label: "Transport", icon: Truck, group: "divisions" },
   { key: "food", label: "Food", icon: UtensilsCrossed, group: "divisions" },
   { key: "hospitality", label: "Hospitality", icon: BedDouble, group: "divisions" },
+  { key: "payments", label: "Payments", icon: ArrowLeftRight, group: "finance" },
   { key: "expenses", label: "Expenses", icon: Wallet, group: "finance" },
   { key: "reports", label: "Reports", icon: BarChart3, group: "finance" },
   { key: "users", label: "Users & Roles", icon: Users, group: "admin" },

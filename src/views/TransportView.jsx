@@ -14,13 +14,21 @@ import { GroupedBars, BarSeries } from "../components/Charts.jsx";
 import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
-import { statusTone } from "../lib/constants";
+import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
+import { statusTone, TRIP_STATUSES, VEHICLE_STATUSES, DRIVER_STATUSES } from "../lib/constants";
 
 export default function TransportView() {
   const { data, prefs } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
   const pal = useChartPalette();
   const [tab, setTab] = useState("trips");
+  const [q, setQ] = useState("");
+  const [tStatus, setTStatus] = useState("All");
+  const [tVehicle, setTVehicle] = useState("All");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [vStatus, setVStatus] = useState("All");
+  const [dStatus, setDStatus] = useState("All");
 
   const range = useMemo(() => resolvePeriod(prefs.period, prefs.customRange, new Date(TODAY)), [prefs]);
   const m = useMemo(() => computeMetrics(data, range), [data, range]);
@@ -41,6 +49,24 @@ export default function TransportView() {
 
   const driverName = (id) => data.drivers.find((d) => d.id === id)?.name || "-";
   const vehicleReg = (id) => data.vehicles.find((v) => v.id === id)?.reg || "-";
+
+  const ql = q.trim().toLowerCase();
+  const shownTrips = useMemo(() => tripsInRange
+    .filter((t) => tStatus === "All" || t.status === tStatus)
+    .filter((t) => tVehicle === "All" || vehicleReg(t.vehicleId) === tVehicle)
+    .filter((t) => (!from || t.date >= from) && (!to || t.date <= to))
+    .filter((t) => !ql || `${t.origin} ${t.destination} ${t.client || ""} ${vehicleReg(t.vehicleId)} ${driverName(t.driverId)}`.toLowerCase().includes(ql)),
+    [tripsInRange, tStatus, tVehicle, from, to, ql]);
+  const shownVehicles = useMemo(() => data.vehicles
+    .filter((v) => vStatus === "All" || v.status === vStatus)
+    .filter((v) => !ql || `${v.reg} ${v.model} ${v.type}`.toLowerCase().includes(ql)),
+    [data.vehicles, vStatus, ql]);
+  const shownDrivers = useMemo(() => data.drivers
+    .filter((d) => dStatus === "All" || d.status === dStatus)
+    .filter((d) => !ql || `${d.name} ${d.phone} ${d.licence || ""}`.toLowerCase().includes(ql)),
+    [data.drivers, dStatus, ql]);
+  const dirty = ql || tStatus !== "All" || tVehicle !== "All" || vStatus !== "All" || dStatus !== "All" || from || to;
+  const clearFilters = () => { setQ(""); setTStatus("All"); setTVehicle("All"); setVStatus("All"); setDStatus("All"); setFrom(""); setTo(""); };
 
   const activeVehicles = data.vehicles.filter((v) => v.status === "Active").length;
   const onDuty = data.drivers.filter((d) => d.status === "On Duty").length;
@@ -140,22 +166,30 @@ export default function TransportView() {
           />
         </div>
         <div className="px-5 pb-5">
+          <FilterBar
+            search={{ value: q, onChange: setQ, placeholder: tab === "trips" ? "Route, client, vehicle..." : tab === "vehicles" ? "Reg or model..." : "Name or phone..." }}
+            selects={
+              tab === "trips"
+                ? [
+                    selectFilter("s", "Status", TRIP_STATUSES, tStatus, setTStatus),
+                    selectFilter("v", "Vehicle", data.vehicles.map((v) => v.reg), tVehicle, setTVehicle),
+                  ]
+                : tab === "vehicles"
+                  ? [selectFilter("vs", "Status", VEHICLE_STATUSES, vStatus, setVStatus)]
+                  : [selectFilter("ds", "Status", DRIVER_STATUSES, dStatus, setDStatus)]
+            }
+            range={tab === "trips" ? { from, to, onFrom: setFrom, onTo: setTo } : undefined}
+            dirty={!!dirty}
+            onClear={clearFilters}
+          />
           {tab === "trips" && (
-            <DataTable
-              columns={tripColumns}
-              rows={tripsInRange}
-              actions={rowActions("trips")}
-              exportName={`transport-trips-${range.label}`}
-              initialSort={{ key: "date", dir: "desc" }}
-              emptyIcon={MapPin}
-              emptyText="No trips in this period."
-            />
+            <DataTable columns={tripColumns} rows={shownTrips} actions={rowActions("trips")} exportName={`kash-trips-${range.label}`} initialSort={{ key: "date", dir: "desc" }} emptyIcon={MapPin} emptyText="No trips match these filters." />
           )}
           {tab === "vehicles" && (
-            <DataTable columns={vehicleColumns} rows={data.vehicles} actions={rowActions("vehicles")} exportName="fleet-vehicles" emptyIcon={Truck} emptyText="No vehicles yet." />
+            <DataTable columns={vehicleColumns} rows={shownVehicles} actions={rowActions("vehicles")} exportName="kash-vehicles" emptyIcon={Truck} emptyText="No vehicles match." />
           )}
           {tab === "drivers" && (
-            <DataTable columns={driverColumns} rows={data.drivers} actions={rowActions("drivers")} exportName="drivers" emptyIcon={Users} emptyText="No drivers yet." />
+            <DataTable columns={driverColumns} rows={shownDrivers} actions={rowActions("drivers")} exportName="kash-drivers" emptyIcon={Users} emptyText="No drivers match." />
           )}
         </div>
       </Card>

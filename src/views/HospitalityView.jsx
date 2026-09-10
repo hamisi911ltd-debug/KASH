@@ -15,8 +15,9 @@ import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../compo
 import { GroupedBars, BarSeries } from "../components/Charts.jsx";
 import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
+import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
-import { statusTone } from "../lib/constants";
+import { statusTone, BOOKING_STATUSES, PAYMENT_STATUSES, ROOM_TYPES } from "../lib/constants";
 
 const STATE_TONE = { Occupied: "blue", Available: "emerald", Cleaning: "amber", Maintenance: "coral" };
 
@@ -25,6 +26,12 @@ export default function HospitalityView() {
   const { openForm, editRecord, deleteRecord, patchRoom, caps } = useActions();
   const pal = useChartPalette();
   const [tab, setTab] = useState("bookings");
+  const [q, setQ] = useState("");
+  const [bStatus, setBStatus] = useState("All");
+  const [pStatus, setPStatus] = useState("All");
+  const [roomType, setRoomType] = useState("All");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
 
   const range = useMemo(() => resolvePeriod(prefs.period, prefs.customRange, new Date(TODAY)), [prefs]);
   const m = useMemo(() => computeMetrics(data, range), [data, range]);
@@ -149,15 +156,41 @@ export default function HospitalityView() {
           />
         </div>
         <div className="px-5 pb-5">
-          <DataTable
-            columns={bookingColumns}
-            rows={tab === "bookings" ? bookingsInRange : data.bookings}
-            actions={rowActions}
-            exportName={`bookings-${tab}`}
-            initialSort={{ key: "checkIn", dir: "desc" }}
-            emptyIcon={DoorOpen}
-            emptyText="No bookings to show."
-          />
+          {(() => {
+            const ql = q.trim().toLowerCase();
+            const base = tab === "bookings" ? bookingsInRange : data.bookings;
+            const rows = base
+              .filter((b) => bStatus === "All" || b.status === bStatus)
+              .filter((b) => pStatus === "All" || b.paymentStatus === pStatus)
+              .filter((b) => roomType === "All" || (data.rooms.find((r) => r.id === b.roomId)?.type === roomType))
+              .filter((b) => (!from || b.checkIn >= from) && (!to || b.checkIn <= to))
+              .filter((b) => !ql || `${b.guest} ${b.source || ""}`.toLowerCase().includes(ql));
+            const dirty = ql || bStatus !== "All" || pStatus !== "All" || roomType !== "All" || from || to;
+            return (
+              <>
+                <FilterBar
+                  search={{ value: q, onChange: setQ, placeholder: "Guest or source..." }}
+                  selects={[
+                    selectFilter("bs", "Status", BOOKING_STATUSES, bStatus, setBStatus),
+                    selectFilter("ps", "Payment", PAYMENT_STATUSES, pStatus, setPStatus),
+                    selectFilter("rt", "Room type", ROOM_TYPES, roomType, setRoomType),
+                  ]}
+                  range={{ from, to, onFrom: setFrom, onTo: setTo }}
+                  dirty={!!dirty}
+                  onClear={() => { setQ(""); setBStatus("All"); setPStatus("All"); setRoomType("All"); setFrom(""); setTo(""); }}
+                />
+                <DataTable
+                  columns={bookingColumns}
+                  rows={rows}
+                  actions={rowActions}
+                  exportName={`kash-bookings-${tab}`}
+                  initialSort={{ key: "checkIn", dir: "desc" }}
+                  emptyIcon={DoorOpen}
+                  emptyText="No bookings match these filters."
+                />
+              </>
+            );
+          })()}
         </div>
       </Card>
     </Page>

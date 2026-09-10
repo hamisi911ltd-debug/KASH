@@ -5,12 +5,13 @@
    ============================================================ */
 import {
   Truck, Wallet, UtensilsCrossed, BedDouble, Users, Bell, Car, DoorOpen, UserPlus, BookMarked,
+  ArrowLeftRight,
 } from "lucide-react";
 import { TODAY } from "./seed";
 import {
   VEHICLE_TYPES, ROOM_TYPES, TRIP_STATUSES, ORDER_STATUSES, BOOKING_STATUSES,
   PAYMENT_STATUSES, PAYMENT_METHODS, EXPENSE_CATEGORIES, DIVISIONS, ROLES,
-  DRIVER_STATUSES, VEHICLE_STATUSES, ROOM_STATUSES,
+  DRIVER_STATUSES, VEHICLE_STATUSES, ROOM_STATUSES, PAYMENT_DIRECTIONS,
 } from "./constants";
 import { daysBetween } from "./format";
 
@@ -215,6 +216,66 @@ export function buildForms(data) {
       ],
     },
 
+    /* ---------------- Payments (any worker) ---------------- */
+    payment: {
+      key: "payment",
+      collection: "payments",
+      label: "Record Payment",
+      icon: ArrowLeftRight,
+      title: "Record a payment",
+      subtitle: "Money you paid out or money you received. It goes straight into the books.",
+      submitLabel: "Record payment",
+      notify: {
+        channel: "expenses",
+        message: (v) =>
+          v.direction === "in"
+            ? `Payment received from ${v.party || "customer"} - KSh ${Number(v.amount || 0).toLocaleString()}`
+            : `Payment sent to ${v.party || "supplier"} - KSh ${Number(v.amount || 0).toLocaleString()}`,
+        type: "payment",
+        division: "General",
+      },
+      fields: [
+        { key: "direction", label: "Type", type: "select", options: PAYMENT_DIRECTIONS, default: "out" },
+        { key: "date", label: "Date", type: "date", default: TODAY, required: true },
+        {
+          key: "party",
+          label: "Paid to / received from",
+          type: "text",
+          placeholder: "e.g. Karim Butchery",
+          required: true,
+        },
+        {
+          key: "amount",
+          label: "Amount (KSh)",
+          type: "number",
+          min: 0,
+          required: true,
+          computed: (v) => `KSh ${(Number(v.amount) || 0).toLocaleString()}`,
+        },
+        { key: "division", label: "Which service?", type: "select", options: opt(DIVISIONS) },
+        {
+          key: "category",
+          label: "What for?",
+          type: "select",
+          options: opt(EXPENSE_CATEGORIES),
+          visibleIf: (v) => v.direction === "out",
+        },
+        { key: "method", label: "How?", type: "select", options: opt(PAYMENT_METHODS), default: "M-Pesa" },
+        {
+          key: "phone",
+          label: "M-Pesa number",
+          type: "tel",
+          placeholder: "+254 7..",
+          visibleIf: (v) => v.method === "M-Pesa",
+          hint: "A payment prompt is sent to this number.",
+          validate: (v, all) =>
+            all.method === "M-Pesa" && !String(v || "").trim() ? "Enter the M-Pesa number" : null,
+        },
+        { key: "reference", label: "Reference (optional)", type: "text", placeholder: "Invoice / receipt no." },
+        { key: "notes", label: "Notes (optional)", type: "textarea" },
+      ],
+    },
+
     /* ---------------- Admin ---------------- */
     user: {
       key: "user",
@@ -249,4 +310,4 @@ export function buildForms(data) {
 }
 
 /** The subset shown in the top bar's quick-create menu and command palette. */
-export const QUICK_ACTION_KEYS = ["trip", "order", "booking", "expense", "reminder", "vehicle", "room", "user"];
+export const QUICK_ACTION_KEYS = ["payment", "trip", "order", "booking", "expense", "reminder", "vehicle", "room", "user"];

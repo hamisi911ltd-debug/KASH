@@ -2,7 +2,7 @@
    (trip fuel, food cost) are shown read-only so the P&L reconciles. */
 import React, { useMemo, useState } from "react";
 import { Plus, Wallet, Pencil, Trash2, Lock, Receipt } from "lucide-react";
-import { C, DIVISIONS } from "../lib/constants";
+import { C, DIVISIONS, EXPENSE_CATEGORIES, PAYMENT_METHODS } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import { resolvePeriod, computeMetrics, buildLedger, inRange, topBy } from "../lib/derive";
 import { TODAY } from "../lib/seed";
@@ -11,6 +11,7 @@ import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, ChipRow, Segmented } from "../components/ui.jsx";
 import { BarSeries, DonutChart } from "../components/Charts.jsx";
 import DataTable from "../components/DataTable.jsx";
+import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 
 const DIV_TONE = { Transport: "emerald", Food: "amber", Hospitality: "coral", General: "violet" };
@@ -20,6 +21,11 @@ export default function ExpensesView() {
   const { openForm, editRecord, deleteRecord, caps } = useActions();
   const [division, setDivision] = useState("All");
   const [scope, setScope] = useState("all"); // all | manual | auto
+  const [q, setQ] = useState("");
+  const [category, setCategory] = useState("All");
+  const [method, setMethod] = useState("All");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
 
   const range = useMemo(() => resolvePeriod(prefs.period, prefs.customRange, new Date(TODAY)), [prefs]);
   const m = useMemo(() => computeMetrics(data, range), [data, range]);
@@ -29,9 +35,15 @@ export default function ExpensesView() {
     [data, range]
   );
 
+  const ql = q.trim().toLowerCase();
   const filtered = expenseLines
     .filter((l) => division === "All" || l.division === division)
-    .filter((l) => scope === "all" || (scope === "manual" ? l.source === "manual" : l.source !== "manual"));
+    .filter((l) => scope === "all" || (scope === "manual" ? l.source === "manual" : l.source !== "manual"))
+    .filter((l) => category === "All" || l.category === category)
+    .filter((l) => method === "All" || l.method === method)
+    .filter((l) => (!from || l.date >= from) && (!to || l.date <= to))
+    .filter((l) => !ql || `${l.category} ${l.desc} ${l.vendor || ""}`.toLowerCase().includes(ql));
+  const dirty = ql || division !== "All" || category !== "All" || method !== "All" || from || to;
 
   const totalsByDivision = DIVISIONS.map((d) => ({
     division: d,
@@ -111,14 +123,24 @@ export default function ExpensesView() {
           <ChipRow options={["All", ...DIVISIONS]} value={division} onChange={setDivision} />
         </div>
         <div className="px-5 pb-5">
+          <FilterBar
+            search={{ value: q, onChange: setQ, placeholder: "Category, vendor, note..." }}
+            selects={[
+              selectFilter("cat", "Category", EXPENSE_CATEGORIES, category, setCategory),
+              selectFilter("mth", "Method", [...PAYMENT_METHODS, "Auto-posted"], method, setMethod),
+            ]}
+            range={{ from, to, onFrom: setFrom, onTo: setTo }}
+            dirty={!!dirty}
+            onClear={() => { setQ(""); setDivision("All"); setCategory("All"); setMethod("All"); setFrom(""); setTo(""); }}
+          />
           <DataTable
             columns={columns}
             rows={filtered}
             actions={actions}
-            exportName={`expenses-${division}-${range.label}`}
+            exportName={`kash-expenses-${division}-${range.label}`}
             initialSort={{ key: "date", dir: "desc" }}
             emptyIcon={Receipt}
-            emptyText="No expenses match this filter."
+            emptyText="No expenses match these filters."
           />
         </div>
       </Card>
