@@ -4,13 +4,13 @@ import { Plus, Truck, Users, Fuel, TrendingUp, Coins, Pencil, Trash2, MapPin, Ro
 import { C } from "../lib/constants";
 import { formatKES, formatNumber, formatDateShort } from "../lib/format";
 import {
-  resolvePeriod, computeMetrics, weeklySeries, inRange, topBy, CANCELLED,
+  resolvePeriod, computeMetrics, weeklySeries, inRange, CANCELLED,
 } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
-import { GroupedBars, BarSeries } from "../components/Charts.jsx";
+import { GroupedBars } from "../components/Charts.jsx";
 import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
@@ -39,14 +39,9 @@ export default function TransportView() {
     [data.trips, range]
   );
   const series = useMemo(
-    () => weeklySeries(m.ledger.filter((l) => l.division === "Transport"), 12, new Date(TODAY)),
+    () => weeklySeries(m.ledger.filter((l) => l.division === "Transport"), 8, new Date(TODAY)),
     [m.ledger]
   );
-  const byRoute = useMemo(
-    () => topBy(tripsInRange.filter((t) => t.status !== CANCELLED), (t) => `${t.origin}→${t.destination}`, (t) => t.amount, 6),
-    [tripsInRange]
-  );
-
   const driverName = (id) => data.drivers.find((d) => d.id === id)?.name || "-";
   const vehicleReg = (id) => data.vehicles.find((v) => v.id === id)?.reg || "-";
 
@@ -134,23 +129,18 @@ export default function TransportView() {
         <StatCard icon={Fuel} label="Fuel spend" value={formatKES(fuelSpend)} sub={`${onDuty} drivers on duty`} tint={C.coral} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2">
-          <SectionTitle title="Received vs spent" subtitle="Weekly, last 12 weeks" />
-          <GroupedBars
-            data={series}
-            series={[
-              { key: "income", label: "Received", color: pal.blue },
-              { key: "expense", label: "Spent", color: pal.coral },
-            ]}
-            height={210}
-          />
-        </Card>
-        <Card>
-          <SectionTitle title="Top routes" subtitle="By fare in range" />
-          <BarSeries data={byRoute} horizontal height={210} color={C.emerald} />
-        </Card>
-      </div>
+      <Card className="lg:max-w-2xl">
+        <SectionTitle title="Received vs spent" subtitle="Weekly, last 8 weeks" />
+        <GroupedBars
+          data={series}
+          series={[
+            { key: "income", label: "Received", color: pal.blue },
+            { key: "expense", label: "Spent", color: pal.coral },
+          ]}
+          height={165}
+          maxBarSize={26}
+        />
+      </Card>
 
       <Card padded={false}>
         <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">

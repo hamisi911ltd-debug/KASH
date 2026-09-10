@@ -42,7 +42,7 @@ export default function HospitalityView() {
     [data.bookings, range]
   );
   const series = useMemo(
-    () => weeklySeries(m.ledger.filter((l) => l.division === "Hospitality"), 12, new Date(TODAY)),
+    () => weeklySeries(m.ledger.filter((l) => l.division === "Hospitality"), 8, new Date(TODAY)),
     [m.ledger]
   );
   const occ = useMemo(
@@ -96,19 +96,20 @@ export default function HospitalityView() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
-          <SectionTitle title="Received vs spent" subtitle="Weekly, last 12 weeks" />
+          <SectionTitle title="Received vs spent" subtitle="Weekly, last 8 weeks" />
           <GroupedBars
             data={series}
             series={[
               { key: "income", label: "Received", color: pal.blue },
               { key: "expense", label: "Spent", color: pal.coral },
             ]}
-            height={210}
+            height={175}
+            maxBarSize={24}
           />
         </Card>
         <Card>
           <SectionTitle title="Occupancy" subtitle="Avg % of rooms sold, weekly" />
-          <BarSeries data={occ} dataKey="rate" color={pal.coral} unit="%" money={false} maxValue={100} height={210} />
+          <BarSeries data={occ} dataKey="rate" color={pal.coral} unit="%" money={false} maxValue={100} height={175} />
         </Card>
       </div>
 

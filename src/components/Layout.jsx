@@ -5,17 +5,17 @@
    ============================================================ */
 import React, { useMemo, useRef, useState } from "react";
 import {
-  LogOut, Menu, X, Search, Plus, ChevronDown, ChevronUp, Bell, Sun, Moon,
-  Command, CheckCheck, Trash2, Calendar, Settings as SettingsIcon,
+  LogOut, Menu, X, Search, Plus, ChevronDown, ChevronUp, Sun, Moon,
+  Command, Calendar, Settings as SettingsIcon,
 } from "lucide-react";
 import { C } from "../lib/constants";
-import { relativeTime, formatDateLong } from "../lib/format";
+import { formatDateLong } from "../lib/format";
 import { useStore } from "../lib/store.jsx";
 import { NAV, NAV_GROUPS, SIDEBAR_KEYS, PRIMARY_TABS } from "./nav.js";
 import { KashLogo } from "./Logo.jsx";
 import { canOpenView, capsForRole } from "../lib/auth";
 import { ROLES } from "../lib/constants";
-import { Avatar, Badge, IconButton } from "./ui.jsx";
+import { Avatar } from "./ui.jsx";
 import { useOnDismiss, useMediaQuery } from "../lib/hooks.js";
 
 /* ---------------------------------------------------------- nav list */
@@ -68,6 +68,7 @@ function Brand({ compact }) {
 /* Account block at the foot of the sidebar - click to reveal Settings / role / Sign out. */
 function AccountMenu({ session, role, onNavigate, onSignOut, onSwitchRole }) {
   const [open, setOpen] = useState(false);
+  const { theme, toggleTheme } = useStore();
   const ref = useRef(null);
   useOnDismiss(ref, () => setOpen(false), open);
   return (
@@ -81,6 +82,14 @@ function AccountMenu({ session, role, onNavigate, onSignOut, onSwitchRole }) {
             <p className="text-sm font-semibold truncate" style={{ color: C.ink }}>{session?.name}</p>
             <p className="text-xs truncate" style={{ color: C.muted }}>{session?.email}</p>
           </div>
+          <button
+            onClick={toggleTheme}
+            className="w-full text-left px-3.5 py-2 text-sm flex items-center gap-2.5 hover:opacity-70"
+            style={{ color: C.ink }}
+          >
+            {theme === "dark" ? <Sun size={14} style={{ color: C.muted }} /> : <Moon size={14} style={{ color: C.muted }} />}
+            {theme === "dark" ? "Light mode" : "Dark mode"}
+          </button>
           <button
             onClick={() => { onNavigate("settings"); setOpen(false); }}
             className="w-full text-left px-3.5 py-2 text-sm flex items-center gap-2.5 hover:opacity-70"
@@ -162,7 +171,7 @@ export function MobileBottomNav({ role, activeView, onNavigate, onMore }) {
   const items = PRIMARY_TABS.filter((t) => canOpenView(role, t.key));
   return (
     <div
-      className="lg:hidden fixed bottom-0 inset-x-0 flex items-stretch border-t n1-safe-bottom"
+      className="lg:hidden n1-bottomnav flex items-stretch border-t"
       style={{ zIndex: 60, background: C.surface, borderColor: C.line }}
     >
       {items.map((item) => {
@@ -184,78 +193,6 @@ export function MobileBottomNav({ role, activeView, onNavigate, onMore }) {
 }
 
 /* ---------------------------------------------------------- top bar */
-
-function NotificationsMenu({ onNavigate }) {
-  const { data, markNotificationRead, markAllNotificationsRead, clearNotifications } = useStore();
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useOnDismiss(ref, () => setOpen(false), open);
-  const unread = data.notifications.filter((n) => !n.read).length;
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="relative h-9 w-9 rounded-lg flex items-center justify-center transition-colors"
-        style={{ background: open ? C.blueSoft : C.surface2, color: open ? C.blue : C.ink }}
-      >
-        <Bell size={17} />
-        {unread > 0 && (
-          <span
-            className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full text-white flex items-center justify-center text-[10px] font-bold"
-            style={{ background: C.coral }}
-          >
-            {unread > 9 ? "9+" : unread}
-          </span>
-        )}
-      </button>
-      {open && (
-        <div
-          className="n1-pop absolute right-0 mt-2 w-[min(88vw,360px)] rounded-2xl border overflow-hidden"
-          style={{ background: C.surface, borderColor: C.line, boxShadow: C.shadowLg, zIndex: 70 }}
-        >
-          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: C.line }}>
-            <p className="text-sm font-bold font-display" style={{ color: C.ink }}>Notifications</p>
-            <div className="flex items-center gap-1">
-              <button onClick={markAllNotificationsRead} title="Mark all read" className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ color: C.muted }}>
-                <CheckCheck size={15} />
-              </button>
-              <button onClick={clearNotifications} title="Clear all" className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ color: C.muted }}>
-                <Trash2 size={14} />
-              </button>
-            </div>
-          </div>
-          <div className="max-h-80 overflow-y-auto n1-scroll">
-            {data.notifications.length === 0 && (
-              <p className="px-4 py-10 text-center text-sm" style={{ color: C.faint }}>You're all caught up.</p>
-            )}
-            {data.notifications.slice(0, 30).map((n) => (
-              <button
-                key={n.id}
-                onClick={() => { markNotificationRead(n.id); setOpen(false); }}
-                className="w-full text-left px-4 py-3 flex gap-2.5 border-b transition-colors hover:opacity-80"
-                style={{ borderColor: C.line, background: n.read ? "transparent" : C.blueSoft }}
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: n.read ? "transparent" : C.blue }} />
-                <div className="min-w-0">
-                  <p className="text-sm" style={{ color: C.ink }}>{n.message}</p>
-                  <p className="text-xs mt-0.5" style={{ color: C.faint }}>{relativeTime(n.ts)}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => { onNavigate("updates"); setOpen(false); }}
-            className="w-full py-2.5 text-xs font-bold border-t"
-            style={{ color: C.blue, borderColor: C.line }}
-          >
-            View all updates
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function QuickCreateMenu({ actions, onPick }) {
   const [open, setOpen] = useState(false);
@@ -294,18 +231,24 @@ function QuickCreateMenu({ actions, onPick }) {
 }
 
 export function Topbar({
-  role, session, onMenu, onNavigate,
+  session, onMenu, onNavigate,
   onOpenPalette, onQuickAction, quickActions,
 }) {
-  const { theme, toggleTheme } = useStore();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   return (
     <header
-      className="shrink-0 flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 lg:px-8 py-2.5 sm:py-3 border-b n1-no-print"
+      className="shrink-0 flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 lg:px-8 py-2.5 sm:py-3 border-b n1-no-print"
       style={{ zIndex: 50, background: C.surface, borderColor: C.line }}
     >
-      <button onClick={onMenu} className="lg:hidden" style={{ color: C.ink }}><Menu size={20} /></button>
+      {/* mobile: brand mark in the top-left; tap to open the menu */}
+      <button
+        onClick={onMenu}
+        className="lg:hidden shrink-0 -my-1 py-1 pr-1"
+        aria-label="Open menu"
+      >
+        <KashLogo size={20} />
+      </button>
 
       <button
         onClick={onOpenPalette}
@@ -325,9 +268,7 @@ export function Topbar({
         <Calendar size={14} /> {formatDateLong(new Date())}
       </div>
 
-      <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
-        <IconButton icon={theme === "dark" ? Sun : Moon} onClick={toggleTheme} title="Toggle theme" />
-        <NotificationsMenu onNavigate={onNavigate} />
+      <div className="ml-auto shrink-0">
         <QuickCreateMenu actions={quickActions} onPick={onQuickAction} />
       </div>
     </header>

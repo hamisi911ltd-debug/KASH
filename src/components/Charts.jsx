@@ -128,7 +128,7 @@ export function BarSeries({
 
 /* ---------------------------------------------------------- Grouped bars */
 
-export function GroupedBars({ data, series, xKey = "label", height = 240, money = true }) {
+export function GroupedBars({ data, series, xKey = "label", height = 240, money = true, maxBarSize = 16 }) {
   const pal = useChartPalette();
   const H = useChartHeight(height);
   if (!data?.length) return <EmptyState text="No data for this range." />;
@@ -140,7 +140,7 @@ export function GroupedBars({ data, series, xKey = "label", height = 240, money 
         <YAxis {...axisProps(pal)} tickFormatter={(v) => formatCompact(v)} width={50} tickCount={5} />
         <Tooltip cursor={{ fill: pal.grid, opacity: 0.35 }} content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
         {series.map((s) => (
-          <Bar key={s.key} dataKey={s.key} isAnimationActive={false} name={s.label} fill={s.color} radius={[3, 3, 0, 0]} maxBarSize={16} />
+          <Bar key={s.key} dataKey={s.key} isAnimationActive={false} name={s.label} fill={s.color} radius={[3, 3, 0, 0]} maxBarSize={maxBarSize} />
         ))}
       </BarChart>
     </ResponsiveContainer>

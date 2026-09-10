@@ -84,6 +84,14 @@ body,
 #root {
   height: 100%;
 }
+html,
+body {
+  overflow: hidden;            /* the app manages its own single scroll area */
+  overscroll-behavior: none;   /* no page-level rubber-banding on mobile */
+  position: fixed;
+  inset: 0;
+  width: 100%;
+}
 
 body {
   margin: 0;
@@ -259,7 +267,13 @@ input[type="checkbox"] {
 /* wide blocks scroll inside themselves, never the page */
 .n1-xscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-/* Keep the mobile bottom bar clear of the iOS home indicator. */
-.n1-safe-bottom {
+/* Mobile bottom bar: pinned to the visual viewport, never moves with scroll
+   or the browser chrome, clears the iOS home indicator. */
+.n1-bottomnav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform: translateZ(0);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }

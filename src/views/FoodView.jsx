@@ -3,12 +3,12 @@ import React, { useMemo, useState } from "react";
 import { Plus, UtensilsCrossed, TrendingUp, Coins, Clock, Pencil, Trash2, ShoppingBag, BookMarked } from "lucide-react";
 import { C } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
-import { resolvePeriod, computeMetrics, weeklySeries, inRange, topBy, CANCELLED } from "../lib/derive";
+import { resolvePeriod, computeMetrics, weeklySeries, inRange, CANCELLED } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
-import { GroupedBars, BarSeries } from "../components/Charts.jsx";
+import { GroupedBars } from "../components/Charts.jsx";
 import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
@@ -36,14 +36,9 @@ export default function FoodView() {
     [data.orders, range]
   );
   const series = useMemo(
-    () => weeklySeries(m.ledger.filter((l) => l.division === "Food"), 12, new Date(TODAY)),
+    () => weeklySeries(m.ledger.filter((l) => l.division === "Food"), 8, new Date(TODAY)),
     [m.ledger]
   );
-  const topItems = useMemo(
-    () => topBy(ordersInRange.filter((o) => o.orderStatus !== CANCELLED), (o) => o.item.replace(/\s*\(\d+ pax\)$/, ""), (o) => o.amount, 6),
-    [ordersInRange]
-  );
-
   const openOrders = ordersInRange.filter((o) => ["Preparing", "Out for Delivery"].includes(o.orderStatus)).length;
   const avgOrder = ordersInRange.length ? Math.round(ordersInRange.reduce((s, o) => s + o.amount, 0) / ordersInRange.length) : 0;
 
@@ -108,23 +103,18 @@ export default function FoodView() {
         <StatCard icon={Clock} label="Open orders" value={openOrders} sub="preparing / delivering" tint={C.coral} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2">
-          <SectionTitle title="Received vs spent" subtitle="Weekly, last 12 weeks" />
-          <GroupedBars
-            data={series}
-            series={[
-              { key: "income", label: "Received", color: pal.blue },
-              { key: "expense", label: "Spent", color: pal.coral },
-            ]}
-            height={210}
-          />
-        </Card>
-        <Card>
-          <SectionTitle title="Best sellers" subtitle="By revenue in range" />
-          <BarSeries data={topItems} horizontal height={210} color={C.amber} />
-        </Card>
-      </div>
+      <Card className="lg:max-w-2xl">
+        <SectionTitle title="Received vs spent" subtitle="Weekly, last 8 weeks" />
+        <GroupedBars
+          data={series}
+          series={[
+            { key: "income", label: "Received", color: pal.blue },
+            { key: "expense", label: "Spent", color: pal.coral },
+          ]}
+          height={165}
+          maxBarSize={26}
+        />
+      </Card>
 
       <Card padded={false}>
         <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">

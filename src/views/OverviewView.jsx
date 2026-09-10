@@ -16,7 +16,7 @@ import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { useChartPalette } from "../lib/hooks.js";
 import { Card, SectionTitle, Badge, Button, TrendPill, EmptyState, ProgressBar } from "../components/ui.jsx";
-import { GroupedBars, MiniArea, MiniBars } from "../components/Charts.jsx";
+import { GroupedBars, MiniBars } from "../components/Charts.jsx";
 import { Page } from "../components/Page.jsx";
 
 const DIV_TONE = { Transport: "emerald", Food: "amber", Hospitality: "coral", General: "violet" };
@@ -76,20 +76,20 @@ export default function OverviewView() {
         </select>
       </div>
 
-      {/* hero: net position + trajectory */}
+      {/* net position */}
       <Card
         className="relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${C.blueSoft}, ${C.surface} 62%)` }}
+        style={{ background: `linear-gradient(135deg, ${C.blueSoft}, ${C.surface} 68%)` }}
       >
-        <div className="relative flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <div className="min-w-0">
             <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide" style={{ color: C.muted }}>
               Net position · {range.label}
             </p>
-            <p className="mt-1 text-[26px] sm:text-3xl md:text-[34px] font-bold font-display leading-none" style={{ color: netTone }}>
+            <p className="mt-1 text-[24px] sm:text-3xl font-bold font-display leading-none" style={{ color: netTone }}>
               {formatKES(m.profit)}
             </p>
-            <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
               <TrendPill value={m.profitDelta} />
               <span className="text-xs" style={{ color: C.faint }}>vs previous period</span>
             </div>
@@ -99,14 +99,6 @@ export default function OverviewView() {
             <MoneyChip icon={ArrowDownRight} label="Money in" value={formatKES(m.income)} tone={C.emerald} />
             <MoneyChip icon={ArrowUpRight} label="Money out" value={formatKES(m.expense)} tone={C.coral} />
           </div>
-        </div>
-
-        {/* net position, week by week - a real graph with figures on both axes */}
-        <div className="mt-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: C.faint }}>
-            Weekly net · last 12 weeks
-          </p>
-          <MiniArea data={weekly.map((w) => ({ label: w.label, v: w.profit }))} color={pal.blue} height={132} />
         </div>
       </Card>
 
