@@ -36,7 +36,9 @@ const axisProps = (pal) => ({
   tick: { fontSize: 11, fill: pal.axis },
   axisLine: false,
   tickLine: false,
+  tickMargin: 8,
 });
+const GRID = (pal) => ({ strokeDasharray: "4 4", stroke: pal.grid, strokeOpacity: 0.9 });
 
 /* Shrink chart height on small screens so a page fits without endless scroll. */
 function useChartHeight(h) {
@@ -65,19 +67,19 @@ export function TrendArea({ data, keys, height = 260, money = true }) {
             </linearGradient>
           ))}
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={pal.grid} />
-        <XAxis dataKey="label" {...axisProps(pal)} minTickGap={18} />
-        <YAxis {...axisProps(pal)} tickFormatter={(v) => formatCompact(v)} width={52} />
+        <CartesianGrid vertical={false} {...GRID(pal)} />
+        <XAxis dataKey="label" {...axisProps(pal)} minTickGap={22} interval="preserveStartEnd" />
+        <YAxis {...axisProps(pal)} tickFormatter={(v) => formatCompact(v)} width={50} tickCount={5} />
         <Tooltip content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
         {series.map((s) => (
           <Area
             key={s.key}
             isAnimationActive={false}
-            type="monotone"
+            type="natural"
             dataKey={s.key}
             name={s.label}
             stroke={s.color}
-            strokeWidth={2.4}
+            strokeWidth={2.25}
             fill={`url(#grad-${s.key})`}
           />
         ))}
@@ -103,9 +105,9 @@ export function BarSeries({
         data={data}
         layout={horizontal ? "vertical" : "horizontal"}
         margin={{ top: 6, right: 12, left: 4, bottom: 0 }}
-        barCategoryGap={horizontal ? "22%" : "16%"}
+        barCategoryGap={horizontal ? "26%" : "22%"}
       >
-        <CartesianGrid strokeDasharray="3 3" vertical={horizontal} horizontal={!horizontal} stroke={pal.grid} />
+        <CartesianGrid vertical={horizontal} horizontal={!horizontal} {...GRID(pal)} />
         {horizontal ? (
           <>
             <XAxis type="number" {...axisProps(pal)} tickFormatter={fmt} />
@@ -118,7 +120,7 @@ export function BarSeries({
           </>
         )}
         <Tooltip cursor={{ fill: pal.grid, opacity: 0.35 }} content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
-        <Bar dataKey={dataKey} isAnimationActive={false} fill={fill} radius={horizontal ? [0, 5, 5, 0] : [5, 5, 0, 0]} maxBarSize={horizontal ? 22 : 34} />
+        <Bar dataKey={dataKey} isAnimationActive={false} fill={fill} radius={horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]} maxBarSize={horizontal ? 20 : 30} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -132,13 +134,13 @@ export function GroupedBars({ data, series, xKey = "label", height = 240, money 
   if (!data?.length) return <EmptyState text="No data for this range." />;
   return (
     <ResponsiveContainer width="100%" height={H}>
-      <BarChart data={data} margin={{ top: 6, right: 12, left: 4, bottom: 0 }} barCategoryGap="20%" barGap={2}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={pal.grid} />
-        <XAxis dataKey={xKey} {...axisProps(pal)} interval="preserveStartEnd" minTickGap={8} />
-        <YAxis {...axisProps(pal)} tickFormatter={(v) => formatCompact(v)} width={52} />
+      <BarChart data={data} margin={{ top: 6, right: 12, left: 4, bottom: 0 }} barCategoryGap="26%" barGap={4}>
+        <CartesianGrid vertical={false} {...GRID(pal)} />
+        <XAxis dataKey={xKey} {...axisProps(pal)} interval="preserveStartEnd" minTickGap={10} />
+        <YAxis {...axisProps(pal)} tickFormatter={(v) => formatCompact(v)} width={50} tickCount={5} />
         <Tooltip cursor={{ fill: pal.grid, opacity: 0.35 }} content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
         {series.map((s) => (
-          <Bar key={s.key} dataKey={s.key} isAnimationActive={false} name={s.label} fill={s.color} radius={[3, 3, 0, 0]} maxBarSize={18} />
+          <Bar key={s.key} dataKey={s.key} isAnimationActive={false} name={s.label} fill={s.color} radius={[3, 3, 0, 0]} maxBarSize={16} />
         ))}
       </BarChart>
     </ResponsiveContainer>
@@ -154,11 +156,11 @@ export function LineSeries({ data, dataKey = "rate", xKey = "label", color, heig
   return (
     <ResponsiveContainer width="100%" height={H}>
       <LineChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={pal.grid} />
-        <XAxis dataKey={xKey} {...axisProps(pal)} minTickGap={18} />
-        <YAxis {...axisProps(pal)} width={44} tickFormatter={(v) => `${v}${suffix}`} domain={[0, 100]} allowDecimals={false} />
+        <CartesianGrid vertical={false} {...GRID(pal)} />
+        <XAxis dataKey={xKey} {...axisProps(pal)} minTickGap={22} interval="preserveStartEnd" />
+        <YAxis {...axisProps(pal)} width={42} tickFormatter={(v) => `${v}${suffix}`} domain={[0, 100]} tickCount={5} allowDecimals={false} />
         <Tooltip content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
-        <Line type="monotone" dataKey={dataKey} isAnimationActive={false} stroke={color || pal.violet} strokeWidth={2.6} dot={false} activeDot={{ r: 4 }} />
+        <Line type="natural" dataKey={dataKey} isAnimationActive={false} stroke={color || pal.violet} strokeWidth={2.5} dot={false} activeDot={{ r: 3.5 }} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -208,11 +210,11 @@ export function Sparkline({ data, dataKey = "value", color, height = 44 }) {
       <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={stroke} stopOpacity={0.28} />
+            <stop offset="0%" stopColor={stroke} stopOpacity={0.2} />
             <stop offset="100%" stopColor={stroke} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <Area type="monotone" isAnimationActive={false} dataKey={dataKey} stroke={stroke} strokeWidth={2} fill={`url(#${gid})`} />
+        <Area type="natural" isAnimationActive={false} dataKey={dataKey} stroke={stroke} strokeWidth={2} fill={`url(#${gid})`} />
       </AreaChart>
     </ResponsiveContainer>
   );

@@ -52,7 +52,7 @@ export default function ReportsView() {
   const margin = income ? (profit / income) * 100 : 0;
 
   const monthly = useMemo(
-    () => seriesByMonth(division === "All" ? ledger : ledger.filter((l) => l.division === division), 12, new Date(TODAY)),
+    () => seriesByMonth(division === "All" ? ledger : ledger.filter((l) => l.division === division), 8, new Date(TODAY)),
     [ledger, division]
   );
 
@@ -142,7 +142,7 @@ export default function ReportsView() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
-          <SectionTitle title="12-month trend" subtitle={division === "All" ? "All divisions" : division} />
+          <SectionTitle title="Monthly trend" subtitle={division === "All" ? "All divisions · last 8 months" : division} />
           <GroupedBars
             data={monthly}
             series={[

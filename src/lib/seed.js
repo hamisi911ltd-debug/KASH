@@ -21,6 +21,23 @@ const between = (min, max) => Math.round(min + rnd() * (max - min));
 const chance = (p) => rnd() < p;
 const round50 = (n) => Math.round(n / 50) * 50;
 
+/* --- shape helpers: make the generated history look like a real business --- */
+// Gentle growth across the window: ~0.80 at the start -> ~1.18 now, with a soft quarterly ripple.
+const trendAt = (offset) => {
+  const t = (DAYS - offset) / DAYS; // 0 (oldest) .. 1 (today)
+  const growth = 0.72 + 0.46 * t;   // clear, steady climb
+  const ripple = 1 + 0.035 * Math.sin(t * Math.PI * 2);
+  return growth * ripple;
+};
+// weekday weighting per division (Sun..Sat)
+const DOW_TRANSPORT = [0.45, 1.2, 1.25, 1.2, 1.15, 1.05, 0.7];
+const DOW_FOOD = [0.75, 0.9, 0.95, 1.0, 1.15, 1.4, 1.3];
+const DOW_HOSP = [0.95, 0.75, 0.75, 0.85, 1.15, 1.45, 1.35];
+// gentle triangular noise in [-1, 1]
+const noise = () => rnd() + rnd() - 1;
+// count with a mild proportional wobble (keeps weekly bars readable, not spiky)
+const wobble = (mean) => Math.max(0, Math.round(mean * (1 + noise() * 0.26)));
+
 export const TODAY = toISODate(new Date());
 const DAYS = 120;
 const dayOf = (offset) => toISODate(addDays(TODAY, -offset));
@@ -70,12 +87,13 @@ function buildTrips() {
   for (let offset = DAYS; offset >= 0; offset--) {
     const date = dayOf(offset);
     const dow = new Date(date).getDay();
-    const count = dow === 0 ? between(0, 2) : between(1, 3); // quieter Sundays
+    const count = wobble(2.0 * DOW_TRANSPORT[dow] * trendAt(offset));
     for (let i = 0; i < count; i++) {
       const route = pick(ROUTES);
       const vehicle = pick(activeVehicles);
-      const fare = round50(route.fare * (0.85 + rnd() * 0.3));
-      const fuel = round50(route.km * between(18, 27));
+      const charter = chance(0.022); // occasional big private charter
+      const fare = round50(route.fare * (0.93 + rnd() * 0.14) * trendAt(offset) * (charter ? 1.9 + rnd() * 0.8 : 1));
+      const fuel = round50(route.km * between(19, 26) * (charter ? 1.5 : 1));
       const other = chance(0.35) ? round50(between(1500, 9000)) : 0;
       const status =
         offset === 0
@@ -129,11 +147,12 @@ function buildOrders() {
   for (let offset = DAYS; offset >= 0; offset--) {
     const date = dayOf(offset);
     const dow = new Date(date).getDay();
-    const count = dow === 6 || dow === 5 ? between(4, 7) : between(2, 5);
+    const count = Math.max(1, wobble(3.3 * DOW_FOOD[dow] * trendAt(offset)));
     for (let i = 0; i < count; i++) {
       const item = pick(SEED_MENU);
       const bulk = item.category === "Corporate" || item.category === "Events";
-      const qty = bulk ? between(10, 150) : between(1, 6);
+      const mega = bulk && chance(0.045); // rare big event booking
+      const qty = bulk ? Math.round(between(14, 80) * trendAt(offset) * (mega ? 2 : 1)) : between(1, 6);
       const amount = item.price * qty;
       const orderStatus =
         offset === 0
@@ -197,10 +216,11 @@ function buildBookings() {
     (taken[roomId] || []).some(([s, e]) => lo < e && hi > s);
 
   for (let offset = DAYS; offset >= -14; offset--) {
-    const attempts = between(1, 3);
+    const dow = new Date(dayOf(Math.max(0, offset))).getDay();
+    const attempts = Math.max(1, wobble(2.0 * DOW_HOSP[dow] * trendAt(Math.max(0, offset))));
     for (let i = 0; i < attempts; i++) {
       const room = pick(SEED_ROOMS);
-      const nights = between(1, 5);
+      const nights = dow === 5 || dow === 6 ? between(2, 6) : between(1, 4);
       const lo = offset - nights;
       const hi = offset;
       if (overlaps(room.id, lo, hi)) continue;
@@ -258,14 +278,14 @@ function buildExpenses() {
         ...o,
         id: genId("e"),
         date: dayOf(m * 30 + 2),
-        amount: round50(o.amount * (0.95 + rnd() * 0.1)),
+        amount: round50(o.amount * (0.9 + rnd() * 0.08) * trendAt(m * 30)),
         source: "manual",
       });
     });
   }
   // Ad-hoc operating spend.
   for (let offset = DAYS; offset >= 0; offset--) {
-    if (!chance(0.55)) continue;
+    if (!chance(0.5 + 0.12 * trendAt(offset))) continue;
     const a = pick(ADHOC);
     list.push({
       id: genId("e"),
@@ -273,7 +293,7 @@ function buildExpenses() {
       division: a.division,
       category: a.category,
       vendor: a.vendor,
-      amount: round50(between(a.range[0], a.range[1])),
+      amount: round50(between(a.range[0], a.range[1]) * (0.85 + 0.4 * trendAt(offset))),
       method: pick(["M-Pesa", "Bank Transfer", "Cash"]),
       notes: `${a.category} - ${a.vendor}`,
       source: "manual",
