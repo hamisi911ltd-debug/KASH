@@ -1,8 +1,9 @@
-/* Navigation model, shared by the sidebar, mobile nav and command palette. */
+/* Navigation model, shared by the sidebar, top tabs, mobile nav and command palette. */
 import {
   LayoutDashboard, LayoutGrid, Truck, UtensilsCrossed, BedDouble,
   Users, BarChart3, Wallet, Bell, Settings,
 } from "lucide-react";
+import { C } from "../lib/constants";
 
 export const NAV = [
   { key: "overview", label: "Overview", icon: LayoutDashboard, group: "main" },
@@ -19,7 +20,20 @@ export const NAV = [
 
 export const NAV_GROUPS = [
   { key: "main", label: "" },
-  { key: "divisions", label: "Divisions" },
   { key: "finance", label: "Finance" },
   { key: "admin", label: "Administration" },
 ];
+
+/* The primary spaces - shown as big horizontal tabs on every page and in the
+   mobile bottom bar. Kept out of the sidebar so it stays short. */
+export const PRIMARY_TABS = [
+  { key: "overview", label: "Home", icon: LayoutDashboard, color: C.blue },
+  { key: "transport", label: "Transport", icon: Truck, color: C.emerald },
+  { key: "food", label: "Food", icon: UtensilsCrossed, color: C.amber },
+  { key: "hospitality", label: "Hospitality", icon: BedDouble, color: C.coral },
+];
+
+export const PRIMARY_KEYS = PRIMARY_TABS.map((t) => t.key);
+
+/* Sidebar hides the division pages (they live in the top tabs instead). */
+export const SIDEBAR_KEYS = NAV.map((n) => n.key).filter((k) => !["transport", "food", "hospitality"].includes(k));

@@ -44,9 +44,12 @@ You can also deep-link a role for demos/screenshots:
 
 ## What's in it
 
-- **Overview** — the owner's screen: money-in / money-out / net-position tiles with
-  week-over-week change, a live 12-week *received vs spent* bar chart, recent activity,
-  a revenue-mix donut, the "needs attention" feed and upcoming reminders.
+- **Overview** — deliberately plain: **Money in / Money out / What's left** with
+  week-over-week change, a card per service (tap to open), one live 12-week
+  *money in vs money out* bar chart, latest activity in plain words, and a short
+  "needs a look" list.
+- **Top tabs** — Home / Transport / Food / Hospitality sit as big buttons above every
+  page (and as the mobile bottom bar); the sidebar keeps the rest.
 - **All Services** — the three divisions side by side.
 - **Transport** — trips, fleet, drivers. Trip fare is income; trip fuel/tolls
   post to the ledger automatically. Service-interval and insurance alerts.

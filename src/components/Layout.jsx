@@ -11,7 +11,7 @@ import {
 import { C } from "../lib/constants";
 import { relativeTime, formatDateLong } from "../lib/format";
 import { useStore } from "../lib/store.jsx";
-import { NAV, NAV_GROUPS } from "./nav.js";
+import { NAV, NAV_GROUPS, SIDEBAR_KEYS, PRIMARY_TABS } from "./nav.js";
 import { KashLogo } from "./Logo.jsx";
 import { canOpenView, capsForRole } from "../lib/auth";
 import { Avatar, Badge, IconButton } from "./ui.jsx";
@@ -20,7 +20,7 @@ import { useOnDismiss, useMediaQuery } from "../lib/hooks.js";
 /* ---------------------------------------------------------- nav list */
 
 function NavLinks({ role, activeView, onNavigate }) {
-  const items = NAV.filter((n) => canOpenView(role, n.key));
+  const items = NAV.filter((n) => canOpenView(role, n.key) && SIDEBAR_KEYS.includes(n.key));
   return (
     <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto n1-scroll">
       {NAV_GROUPS.map((group) => {
@@ -121,7 +121,7 @@ export function MobileDrawer({ open, onClose, role, activeView, onNavigate, onSi
 }
 
 export function MobileBottomNav({ role, activeView, onNavigate, onMore }) {
-  const items = NAV.filter((n) => canOpenView(role, n.key)).slice(0, 4);
+  const items = PRIMARY_TABS.filter((t) => canOpenView(role, t.key));
   return (
     <div
       className="lg:hidden fixed bottom-0 inset-x-0 flex items-stretch border-t n1-safe-bottom"
@@ -132,8 +132,8 @@ export function MobileBottomNav({ role, activeView, onNavigate, onMore }) {
         const active = activeView === item.key;
         return (
           <button key={item.key} onClick={() => onNavigate(item.key)} className="flex-1 flex flex-col items-center gap-1 py-2.5">
-            <Icon size={19} style={{ color: active ? C.blue : C.muted }} strokeWidth={active ? 2.4 : 2} />
-            <span className="text-[10px] font-semibold" style={{ color: active ? C.blue : C.muted }}>{item.label.split(" ")[0]}</span>
+            <Icon size={19} style={{ color: active ? item.color : C.muted }} strokeWidth={active ? 2.4 : 2} />
+            <span className="text-[10px] font-semibold" style={{ color: active ? item.color : C.muted }}>{item.label}</span>
           </button>
         );
       })}
