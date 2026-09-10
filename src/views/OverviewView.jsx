@@ -16,7 +16,7 @@ import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { useChartPalette } from "../lib/hooks.js";
 import { Card, SectionTitle, Badge, Button, TrendPill, EmptyState, ProgressBar } from "../components/ui.jsx";
-import { GroupedBars, Sparkline } from "../components/Charts.jsx";
+import { GroupedBars, MiniArea, MiniBars } from "../components/Charts.jsx";
 import { Page } from "../components/Page.jsx";
 
 const DIV_TONE = { Transport: "emerald", Food: "amber", Hospitality: "coral", General: "violet" };
@@ -43,9 +43,9 @@ export default function OverviewView() {
     SERVICES.forEach((sv) => {
       map[sv.name] = weeklySeries(
         m.ledger.filter((l) => l.division === sv.name && l.kind === "income"),
-        10,
+        8,
         new Date(TODAY)
-      ).map((w) => ({ v: w.income }));
+      ).map((w) => ({ label: w.label, v: w.income }));
     });
     return map;
   }, [m.ledger]);
@@ -101,9 +101,12 @@ export default function OverviewView() {
           </div>
         </div>
 
-        {/* trajectory sparkline bleeds to the card edges */}
-        <div className="mt-4 -mx-3.5 sm:-mx-4 -mb-3.5 sm:-mb-4">
-          <Sparkline data={weekly.map((w) => ({ v: w.profit }))} dataKey="v" color={pal.blue} height={70} />
+        {/* net position, week by week - a real graph with figures on both axes */}
+        <div className="mt-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: C.faint }}>
+            Weekly net · last 12 weeks
+          </p>
+          <MiniArea data={weekly.map((w) => ({ label: w.label, v: w.profit }))} color={pal.blue} height={132} />
         </div>
       </Card>
 
@@ -132,13 +135,13 @@ export default function OverviewView() {
                 {formatKES(d.income)}
               </p>
 
-              <div className="mt-1 -mx-1" style={{ height: 30 }}>
-                <Sparkline data={divWeekly[sv.name]} dataKey="v" color={sv.color} height={30} />
+              <div className="mt-1.5">
+                <MiniBars data={divWeekly[sv.name]} color={sv.color} height={96} />
               </div>
 
-              <div className="mt-1.5 flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-2">
                 <ProgressBar value={share} tone={sv.color} height={5} />
-                <span className="text-[10px] font-semibold shrink-0" style={{ color: C.muted }}>{share}%</span>
+                <span className="text-[10px] font-semibold shrink-0" style={{ color: C.muted }}>{share}% of revenue</span>
               </div>
             </Card>
           );

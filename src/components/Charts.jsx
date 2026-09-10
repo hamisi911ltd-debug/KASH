@@ -219,3 +219,57 @@ export function Sparkline({ data, dataKey = "value", color, height = 44 }) {
     </ResponsiveContainer>
   );
 }
+
+/* ---------------------------------------------------------- Mini charts (with axes)
+   Small, but still real graphs: figures on the Y axis, labels on the X axis.  */
+
+const miniAxis = (pal) => ({
+  tick: { fontSize: 9.5, fill: pal.axis },
+  axisLine: false,
+  tickLine: false,
+  tickMargin: 4,
+});
+
+let miniSeq = 0;
+
+export function MiniArea({ data, dataKey = "v", xKey = "label", color, height = 120, money = true }) {
+  const pal = useChartPalette();
+  const H = useChartHeight(height);
+  const stroke = color || pal.blue;
+  const gid = React.useMemo(() => `mini-${(miniSeq += 1)}`, []);
+  if (!data?.length) return <EmptyState text="No data yet." />;
+  return (
+    <ResponsiveContainer width="100%" height={H}>
+      <AreaChart data={data} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={stroke} stopOpacity={0.22} />
+            <stop offset="100%" stopColor={stroke} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid vertical={false} {...GRID(pal)} />
+        <XAxis dataKey={xKey} {...miniAxis(pal)} interval="preserveStartEnd" minTickGap={28} />
+        <YAxis {...miniAxis(pal)} width={38} tickCount={3} tickFormatter={(x) => formatCompact(x)} />
+        <Tooltip content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
+        <Area type="natural" isAnimationActive={false} dataKey={dataKey} name="Value" stroke={stroke} strokeWidth={2} fill={`url(#${gid})`} />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function MiniBars({ data, dataKey = "v", xKey = "label", color, height = 110, money = true }) {
+  const pal = useChartPalette();
+  const H = useChartHeight(height);
+  if (!data?.length) return <EmptyState text="No data yet." />;
+  return (
+    <ResponsiveContainer width="100%" height={H}>
+      <BarChart data={data} margin={{ top: 6, right: 6, left: 0, bottom: 0 }} barCategoryGap="24%">
+        <CartesianGrid vertical={false} {...GRID(pal)} />
+        <XAxis dataKey={xKey} {...miniAxis(pal)} interval="preserveStartEnd" minTickGap={24} />
+        <YAxis {...miniAxis(pal)} width={38} tickCount={3} tickFormatter={(x) => formatCompact(x)} />
+        <Tooltip cursor={{ fill: pal.grid, opacity: 0.3 }} content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
+        <Bar dataKey={dataKey} name="Value" isAnimationActive={false} fill={color || pal.blue} radius={[3, 3, 0, 0]} maxBarSize={14} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
