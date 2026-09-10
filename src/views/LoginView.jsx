@@ -1,0 +1,240 @@
+/* ============================================================
+   Sign-in / register / password reset. Demo auth: any of the
+   listed accounts + any non-empty password. One click fills a role.
+   ============================================================ */
+import React, { useState } from "react";
+import { Sparkles, Mail, Lock, Eye, EyeOff, Truck, UtensilsCrossed, BedDouble, ArrowRight } from "lucide-react";
+import { C } from "../lib/constants";
+import { DEMO_ACCOUNTS, findAccount, accountForRole } from "../lib/auth";
+import { Button, Spinner } from "../components/ui.jsx";
+import { useStore } from "../lib/store.jsx";
+
+function Panel() {
+  const { data } = useStore();
+  const stats = [
+    { icon: Truck, label: "Transport", value: `${data.vehicles.filter((v) => v.status === "Active").length} vehicles active` },
+    { icon: UtensilsCrossed, label: "Food", value: `${data.menu.filter((m) => m.active).length} live menu items` },
+    { icon: BedDouble, label: "Hospitality", value: `${data.rooms.length} rooms managed` },
+  ];
+  return (
+    <div
+      className="hidden lg:flex flex-col justify-between w-[44%] p-12 text-white relative overflow-hidden"
+      style={{ background: `linear-gradient(155deg, ${C.navy}, ${C.navy3})` }}
+    >
+      <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full" style={{ background: "radial-gradient(circle, rgba(47,111,237,0.35), transparent 70%)" }} />
+      <div className="absolute -left-16 bottom-16 h-72 w-72 rounded-full" style={{ background: "radial-gradient(circle, rgba(14,166,120,0.22), transparent 70%)" }} />
+      <div className="relative">
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: C.blue }}>
+            <Sparkles size={18} color="#fff" />
+          </div>
+          <span className="text-lg font-bold font-display">NEXORA ONE</span>
+        </div>
+        <p className="mt-1.5 text-sm text-white/50">One business. Total control.</p>
+      </div>
+
+      <div className="relative space-y-7">
+        <p className="text-[2rem] leading-tight font-bold font-display">
+          Run transport, food and hospitality from a single screen.
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          {stats.map((s) => (
+            <div key={s.label} className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
+              <s.icon size={18} className="mb-2" />
+              <p className="text-[11px] text-white/55">{s.label}</p>
+              <p className="text-sm font-semibold mt-0.5 leading-snug">{s.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="relative text-xs text-white/40">© {new Date().getFullYear()} {data.company.name}</p>
+    </div>
+  );
+}
+
+export default function LoginView({ onSignIn }) {
+  const [mode, setMode] = useState("signin"); // signin | register | reset
+  const [email, setEmail] = useState(DEMO_ACCOUNTS[0].email);
+  const [password, setPassword] = useState("nexora");
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+
+  const submitSignIn = (e) => {
+    e.preventDefault();
+    setError("");
+    const account = findAccount(email);
+    if (!account) {
+      setError("No account for that email. Try one of the demo accounts below.");
+      return;
+    }
+    if (!password.trim()) {
+      setError("Enter any password to continue.");
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      onSignIn({ email: account.email, name: account.name, role: account.role });
+    }, 550);
+  };
+
+  return (
+    <div className="min-h-screen w-full flex" style={{ background: C.bg }}>
+      <Panel />
+
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-sm">
+          <div className="lg:hidden flex items-center gap-2.5 mb-8">
+            <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: C.blue }}>
+              <Sparkles size={18} color="#fff" />
+            </div>
+            <span className="text-lg font-bold font-display" style={{ color: C.ink }}>NEXORA ONE</span>
+          </div>
+
+          <div className="flex rounded-xl p-1 mb-7" style={{ background: C.surface2 }}>
+            {[
+              ["signin", "Sign in"],
+              ["register", "Create account"],
+            ].map(([key, label]) => (
+              <button
+                type="button"
+                key={key}
+                onClick={() => { setMode(key); setError(""); setDone(false); }}
+                className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
+                style={mode === key ? { background: C.surface, color: C.ink, boxShadow: C.shadowSm } : { color: C.muted }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {mode === "signin" && (
+            <form onSubmit={submitSignIn} className="space-y-4">
+              <div>
+                <h1 className="text-2xl font-bold font-display" style={{ color: C.ink }}>Welcome back</h1>
+                <p className="text-sm mt-1" style={{ color: C.muted }}>Sign in to your operations workspace.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Email</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    type="email"
+                    required
+                    className="w-full rounded-lg border pl-9 pr-3 py-2.5 text-sm outline-none"
+                    style={{ borderColor: C.line }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Password</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />
+                  <input
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    type={showPw ? "text" : "password"}
+                    required
+                    className="w-full rounded-lg border pl-9 pr-9 py-2.5 text-sm outline-none"
+                    style={{ borderColor: C.line }}
+                  />
+                  <button type="button" onClick={() => setShowPw((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }}>
+                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ background: C.coralSoft, color: C.coral }}>{error}</p>
+              )}
+
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2" style={{ color: C.muted }}>
+                  <input type="checkbox" defaultChecked /> Remember me
+                </label>
+                <button type="button" onClick={() => setMode("reset")} className="font-semibold" style={{ color: C.blue }}>
+                  Forgot password?
+                </button>
+              </div>
+
+              <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                {loading ? <Spinner color="#fff" /> : null}
+                {loading ? "Signing in..." : "Sign in"}
+              </Button>
+
+              <div className="pt-2">
+                <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: C.faint }}>Demo accounts - click to fill</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {DEMO_ACCOUNTS.map((a) => (
+                    <button
+                      key={a.email}
+                      type="button"
+                      onClick={() => { setEmail(a.email); setPassword("nexora"); setError(""); }}
+                      className="text-left rounded-lg border px-2.5 py-1.5 transition-colors hover:opacity-80"
+                      style={{ borderColor: email === a.email ? C.blue : C.line, background: email === a.email ? C.blueSoft : C.surface }}
+                    >
+                      <span className="block text-xs font-semibold truncate" style={{ color: C.ink }}>{a.role}</span>
+                      <span className="block text-[10px] truncate" style={{ color: C.faint }}>{a.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </form>
+          )}
+
+          {mode === "register" && (
+            <div className="space-y-4">
+              <h1 className="text-2xl font-bold font-display" style={{ color: C.ink }}>Create your account</h1>
+              {done ? (
+                <p className="rounded-lg p-4 text-sm" style={{ background: C.blueSoft, color: C.blue }}>
+                  Request received. A Super Admin will review and approve your access shortly.
+                </p>
+              ) : (
+                <form onSubmit={(e) => { e.preventDefault(); setDone(true); }} className="space-y-4">
+                  {[
+                    { label: "Full name", ph: "Jane Doe", type: "text" },
+                    { label: "Work email", ph: "you@company.com", type: "email" },
+                    { label: "Company", ph: "Nexora Holdings Ltd", type: "text" },
+                  ].map((f) => (
+                    <div key={f.label}>
+                      <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>{f.label}</label>
+                      <input required type={f.type} placeholder={f.ph} className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none" style={{ borderColor: C.line }} />
+                    </div>
+                  ))}
+                  <Button type="submit" size="lg" className="w-full">Request access <ArrowRight size={15} /></Button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {mode === "reset" && (
+            <div className="space-y-4">
+              <h1 className="text-2xl font-bold font-display" style={{ color: C.ink }}>Reset password</h1>
+              {done ? (
+                <p className="rounded-lg p-4 text-sm" style={{ background: C.emeraldSoft, color: C.emerald }}>
+                  If an account exists for that email, reset instructions are on the way.
+                </p>
+              ) : (
+                <form onSubmit={(e) => { e.preventDefault(); setDone(true); }} className="space-y-4">
+                  <p className="text-sm" style={{ color: C.muted }}>Enter your email and we'll send reset instructions.</p>
+                  <input type="email" required placeholder="you@company.com" className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none" style={{ borderColor: C.line }} />
+                  <Button type="submit" size="lg" className="w-full">Send reset link</Button>
+                </form>
+              )}
+              <button type="button" onClick={() => { setMode("signin"); setDone(false); }} className="text-sm font-semibold" style={{ color: C.blue }}>
+                Back to sign in
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

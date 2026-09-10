@@ -1,0 +1,356 @@
+/* ============================================================
+   The app shell: fixed sidebar (desktop), slide-over drawer and
+   bottom bar (mobile), and the top bar with search, notifications,
+   quick-create and the profile menu.
+   ============================================================ */
+import React, { useMemo, useRef, useState } from "react";
+import {
+  Sparkles, LogOut, Menu, X, Search, Plus, ChevronDown, Bell, Sun, Moon,
+  Command, CheckCheck, Trash2, Calendar,
+} from "lucide-react";
+import { C } from "../lib/constants";
+import { relativeTime, formatDateLong } from "../lib/format";
+import { useStore } from "../lib/store.jsx";
+import { NAV, NAV_GROUPS } from "./nav.js";
+import { canOpenView, capsForRole } from "../lib/auth";
+import { Avatar, Badge, IconButton } from "./ui.jsx";
+import { useOnDismiss, useMediaQuery } from "../lib/hooks.js";
+
+/* ---------------------------------------------------------- nav list */
+
+function NavLinks({ role, activeView, onNavigate }) {
+  const items = NAV.filter((n) => canOpenView(role, n.key));
+  return (
+    <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto n1-scroll">
+      {NAV_GROUPS.map((group) => {
+        const groupItems = items.filter((i) => i.group === group.key);
+        if (!groupItems.length) return null;
+        return (
+          <div key={group.key} className="mb-1">
+            {group.label && (
+              <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.32)" }}>
+                {group.label}
+              </p>
+            )}
+            {groupItems.map((item) => {
+              const Icon = item.icon;
+              const active = activeView === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => onNavigate(item.key)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
+                  style={{
+                    background: active ? "rgba(255,255,255,0.12)" : "transparent",
+                    color: active ? "#fff" : "rgba(255,255,255,0.6)",
+                  }}
+                >
+                  <Icon size={17} strokeWidth={active ? 2.4 : 2} />
+                  <span className="truncate">{item.label}</span>
+                  {active && <span className="ml-auto h-1.5 w-1.5 rounded-full" style={{ background: C.blue }} />}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+function Brand({ compact }) {
+  const { data } = useStore();
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: C.blue }}>
+        <Sparkles size={18} color="#fff" />
+      </div>
+      {!compact && (
+        <div className="min-w-0">
+          <p className="text-white font-bold text-sm leading-none font-display truncate">NEXORA ONE</p>
+          <p className="mt-1 text-[11px] truncate" style={{ color: "rgba(255,255,255,0.4)" }}>
+            {data.company.tagline}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------- sidebar / drawer */
+
+export function Sidebar({ role, activeView, onNavigate, onSignOut, session }) {
+  return (
+    <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0" style={{ background: C.navy }}>
+      <div className="px-5 py-6">
+        <Brand />
+      </div>
+      <NavLinks role={role} activeView={activeView} onNavigate={onNavigate} />
+      <div className="px-4 py-4 border-t" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+        <div className="flex items-center gap-2.5 px-1 mb-3">
+          <Avatar name={session?.name} size={34} />
+          <div className="min-w-0 flex-1">
+            <p className="text-white text-xs font-semibold truncate">{session?.name}</p>
+            <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.45)" }}>{role}</p>
+          </div>
+        </div>
+        <button
+          onClick={onSignOut}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+          style={{ color: "rgba(255,255,255,0.6)" }}
+        >
+          <LogOut size={16} /> Sign out
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+export function MobileDrawer({ open, onClose, role, activeView, onNavigate, onSignOut, session }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 lg:hidden" style={{ zIndex: 95 }}>
+      <div className="absolute inset-0 n1-fade" style={{ background: "rgba(6,10,20,0.6)" }} onClick={onClose} />
+      <div className="n1-pop absolute left-0 top-0 bottom-0 w-72 flex flex-col" style={{ background: C.navy }}>
+        <div className="px-5 py-6 flex items-center justify-between">
+          <Brand />
+          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.6)" }}><X size={18} /></button>
+        </div>
+        <NavLinks role={role} activeView={activeView} onNavigate={(k) => { onNavigate(k); onClose(); }} />
+        <div className="px-4 py-4 border-t" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          <div className="flex items-center gap-2.5 px-1 mb-3">
+            <Avatar name={session?.name} size={34} />
+            <div className="min-w-0 flex-1">
+              <p className="text-white text-xs font-semibold truncate">{session?.name}</p>
+              <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.45)" }}>{role}</p>
+            </div>
+          </div>
+          <button onClick={onSignOut} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>
+            <LogOut size={16} /> Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function MobileBottomNav({ role, activeView, onNavigate, onMore }) {
+  const items = NAV.filter((n) => canOpenView(role, n.key)).slice(0, 4);
+  return (
+    <div
+      className="lg:hidden fixed bottom-0 inset-x-0 flex items-stretch border-t n1-safe-bottom"
+      style={{ zIndex: 60, background: C.surface, borderColor: C.line }}
+    >
+      {items.map((item) => {
+        const Icon = item.icon;
+        const active = activeView === item.key;
+        return (
+          <button key={item.key} onClick={() => onNavigate(item.key)} className="flex-1 flex flex-col items-center gap-1 py-2.5">
+            <Icon size={19} style={{ color: active ? C.blue : C.muted }} strokeWidth={active ? 2.4 : 2} />
+            <span className="text-[10px] font-semibold" style={{ color: active ? C.blue : C.muted }}>{item.label.split(" ")[0]}</span>
+          </button>
+        );
+      })}
+      <button onClick={onMore} className="flex-1 flex flex-col items-center gap-1 py-2.5">
+        <Menu size={19} style={{ color: C.muted }} />
+        <span className="text-[10px] font-semibold" style={{ color: C.muted }}>More</span>
+      </button>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------- top bar */
+
+function NotificationsMenu({ onNavigate }) {
+  const { data, markNotificationRead, markAllNotificationsRead, clearNotifications } = useStore();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useOnDismiss(ref, () => setOpen(false), open);
+  const unread = data.notifications.filter((n) => !n.read).length;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="relative h-9 w-9 rounded-lg flex items-center justify-center transition-colors"
+        style={{ background: open ? C.blueSoft : C.surface2, color: open ? C.blue : C.ink }}
+      >
+        <Bell size={17} />
+        {unread > 0 && (
+          <span
+            className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full text-white flex items-center justify-center text-[10px] font-bold"
+            style={{ background: C.coral }}
+          >
+            {unread > 9 ? "9+" : unread}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div
+          className="n1-pop absolute right-0 mt-2 w-[min(88vw,360px)] rounded-2xl border overflow-hidden"
+          style={{ background: C.surface, borderColor: C.line, boxShadow: C.shadowLg, zIndex: 70 }}
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: C.line }}>
+            <p className="text-sm font-bold font-display" style={{ color: C.ink }}>Notifications</p>
+            <div className="flex items-center gap-1">
+              <button onClick={markAllNotificationsRead} title="Mark all read" className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ color: C.muted }}>
+                <CheckCheck size={15} />
+              </button>
+              <button onClick={clearNotifications} title="Clear all" className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ color: C.muted }}>
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+          <div className="max-h-80 overflow-y-auto n1-scroll">
+            {data.notifications.length === 0 && (
+              <p className="px-4 py-10 text-center text-sm" style={{ color: C.faint }}>You're all caught up.</p>
+            )}
+            {data.notifications.slice(0, 30).map((n) => (
+              <button
+                key={n.id}
+                onClick={() => { markNotificationRead(n.id); setOpen(false); }}
+                className="w-full text-left px-4 py-3 flex gap-2.5 border-b transition-colors hover:opacity-80"
+                style={{ borderColor: C.line, background: n.read ? "transparent" : C.blueSoft }}
+              >
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: n.read ? "transparent" : C.blue }} />
+                <div className="min-w-0">
+                  <p className="text-sm" style={{ color: C.ink }}>{n.message}</p>
+                  <p className="text-xs mt-0.5" style={{ color: C.faint }}>{relativeTime(n.ts)}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => { onNavigate("updates"); setOpen(false); }}
+            className="w-full py-2.5 text-xs font-bold border-t"
+            style={{ color: C.blue, borderColor: C.line }}
+          >
+            View all updates
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuickCreateMenu({ actions, onPick }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useOnDismiss(ref, () => setOpen(false), open);
+  if (!actions.length) return null;
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold text-white transition-transform active:scale-95"
+        style={{ background: C.blue }}
+      >
+        <Plus size={16} /> <span className="hidden sm:inline">New</span> <ChevronDown size={14} />
+      </button>
+      {open && (
+        <div
+          className="n1-pop absolute right-0 mt-2 w-52 rounded-2xl border py-1.5"
+          style={{ background: C.surface, borderColor: C.line, boxShadow: C.shadowLg, zIndex: 70 }}
+        >
+          {actions.map((a) => (
+            <button
+              key={a.key}
+              onClick={() => { onPick(a.key); setOpen(false); }}
+              className="w-full text-left px-4 py-2 text-sm flex items-center gap-2.5 transition-colors hover:opacity-70"
+              style={{ color: C.ink }}
+            >
+              {a.icon && <a.icon size={14} style={{ color: C.muted }} />}
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProfileMenu({ session, role, onNavigate, onSignOut, onSwitchRole }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useOnDismiss(ref, () => setOpen(false), open);
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen((o) => !o)} className="rounded-full transition-transform active:scale-95">
+        <Avatar name={session?.name} size={36} />
+      </button>
+      {open && (
+        <div
+          className="n1-pop absolute right-0 mt-2 w-56 rounded-2xl border py-1.5"
+          style={{ background: C.surface, borderColor: C.line, boxShadow: C.shadowLg, zIndex: 70 }}
+        >
+          <div className="px-4 py-2.5 border-b" style={{ borderColor: C.line }}>
+            <p className="text-sm font-semibold" style={{ color: C.ink }}>{session?.name}</p>
+            <p className="text-xs" style={{ color: C.muted }}>{session?.email}</p>
+            <div className="mt-1.5"><Badge tone="blue" size="sm">{role}</Badge></div>
+          </div>
+          <button onClick={() => { onNavigate("settings"); setOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:opacity-70" style={{ color: C.ink }}>
+            Settings
+          </button>
+          <div className="px-4 py-2 border-t" style={{ borderColor: C.line }}>
+            <p className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: C.faint }}>Preview as role</p>
+            <select
+              value={role}
+              onChange={(e) => onSwitchRole(e.target.value)}
+              className="w-full rounded-lg border px-2 py-1.5 text-xs"
+              style={{ borderColor: C.line }}
+            >
+              {["Super Admin", "Admin", "Transport Manager", "Food Manager", "Hospitality Manager", "Accountant", "Staff"].map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+          <button onClick={() => { onSignOut(); setOpen(false); }} className="w-full text-left px-4 py-2 text-sm border-t hover:opacity-70" style={{ color: C.coral, borderColor: C.line }}>
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function Topbar({
+  role, session, onMenu, onNavigate, onSignOut, onSwitchRole,
+  onOpenPalette, onQuickAction, quickActions, searchValue, onSearchChange,
+}) {
+  const { theme, toggleTheme } = useStore();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
+  return (
+    <header
+      className="sticky top-0 flex items-center gap-2.5 px-4 lg:px-8 py-3.5 border-b n1-no-print"
+      style={{ zIndex: 50, background: C.surface, borderColor: C.line }}
+    >
+      <button onClick={onMenu} className="lg:hidden" style={{ color: C.ink }}><Menu size={20} /></button>
+
+      <button
+        onClick={onOpenPalette}
+        className="flex-1 flex items-center gap-2 max-w-md rounded-lg px-3 py-2 text-left transition-colors"
+        style={{ background: C.surface2 }}
+      >
+        <Search size={16} style={{ color: C.muted }} />
+        <span className="text-sm flex-1 truncate" style={{ color: C.faint }}>Search or jump to...</span>
+        {isDesktop && (
+          <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: C.surface, color: C.faint }}>
+            <Command size={10} /> K
+          </span>
+        )}
+      </button>
+
+      <div className="hidden xl:flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg" style={{ background: C.surface2, color: C.muted }}>
+        <Calendar size={14} /> {formatDateLong(new Date())}
+      </div>
+
+      <div className="flex items-center gap-2 ml-auto">
+        <IconButton icon={theme === "dark" ? Sun : Moon} onClick={toggleTheme} title="Toggle theme" />
+        <NotificationsMenu onNavigate={onNavigate} />
+        <QuickCreateMenu actions={quickActions} onPick={onQuickAction} />
+        <ProfileMenu session={session} role={role} onNavigate={onNavigate} onSignOut={onSignOut} onSwitchRole={onSwitchRole} />
+      </div>
+    </header>
+  );
+}

@@ -1,0 +1,350 @@
+/* ============================================================
+   Demo dataset. Generated across ~120 days ending today so every
+   period filter, trend delta and chart has real history behind it.
+   Deterministic (seeded PRNG) => the same demo on every first load.
+   ============================================================ */
+import { toISODate, addDays, genId } from "./format";
+
+function mulberry32(a) {
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const rnd = mulberry32(20260910);
+const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
+const between = (min, max) => Math.round(min + rnd() * (max - min));
+const chance = (p) => rnd() < p;
+const round50 = (n) => Math.round(n / 50) * 50;
+
+export const TODAY = toISODate(new Date());
+const DAYS = 120;
+const dayOf = (offset) => toISODate(addDays(TODAY, -offset));
+
+/* ---------------------------------------------------------- people */
+
+export const SEED_DRIVERS = [
+  { id: "d1", name: "Peter Mwangi", phone: "+254 712 345 678", licence: "DL-448120", status: "On Duty", rating: 4.8, hiredOn: dayOf(940) },
+  { id: "d2", name: "James Otieno", phone: "+254 722 456 789", licence: "DL-337091", status: "On Duty", rating: 4.6, hiredOn: dayOf(610) },
+  { id: "d3", name: "Samuel Kiptoo", phone: "+254 733 567 890", licence: "DL-905233", status: "Off Duty", rating: 4.4, hiredOn: dayOf(430) },
+  { id: "d4", name: "Grace Wanjiru", phone: "+254 700 111 222", licence: "DL-661874", status: "On Leave", rating: 4.9, hiredOn: dayOf(300) },
+  { id: "d5", name: "Ibrahim Hassan", phone: "+254 745 909 100", licence: "DL-220458", status: "On Duty", rating: 4.7, hiredOn: dayOf(180) },
+  { id: "d6", name: "Caroline Nduta", phone: "+254 719 220 337", licence: "DL-118763", status: "On Duty", rating: 4.5, hiredOn: dayOf(95) },
+];
+
+export const SEED_VEHICLES = [
+  { id: "v1", reg: "KDA 245A", type: "Bus", model: "Scania K410", driverId: "d1", status: "Active", mileage: 182340, serviceDueKm: 186000, insuranceExpiry: dayOf(-21), capacity: 49 },
+  { id: "v2", reg: "KCB 102X", type: "Shuttle", model: "Toyota Hiace", driverId: "d2", status: "Active", mileage: 96500, serviceDueKm: 101000, insuranceExpiry: dayOf(-96), capacity: 14 },
+  { id: "v3", reg: "KDG 771B", type: "Truck", model: "Isuzu FRR", driverId: "d3", status: "Maintenance", mileage: 210800, serviceDueKm: 210000, insuranceExpiry: dayOf(-58), capacity: 8 },
+  { id: "v4", reg: "KDN 330F", type: "Van", model: "Nissan NV350", driverId: "d4", status: "Active", mileage: 54200, serviceDueKm: 60000, insuranceExpiry: dayOf(-134), capacity: 12 },
+  { id: "v5", reg: "KDJ 812K", type: "Shuttle", model: "Toyota Hiace", driverId: "d5", status: "Active", mileage: 71450, serviceDueKm: 73000, insuranceExpiry: dayOf(-12), capacity: 14 },
+  { id: "v6", reg: "KCX 559M", type: "Bus", model: "Yutong ZK6100", driverId: "d6", status: "Active", mileage: 133900, serviceDueKm: 140000, insuranceExpiry: dayOf(-175), capacity: 41 },
+];
+
+/* ---------------------------------------------------------- transport */
+
+const ROUTES = [
+  { origin: "Nairobi", destination: "Mombasa", km: 485, fare: 186000 },
+  { origin: "Nairobi", destination: "Kisumu", km: 350, fare: 142000 },
+  { origin: "Nairobi", destination: "Eldoret", km: 310, fare: 96000 },
+  { origin: "Nairobi", destination: "Nakuru", km: 160, fare: 34500 },
+  { origin: "Nairobi CBD", destination: "Westlands", km: 9, fare: 8200 },
+  { origin: "Nairobi", destination: "Nanyuki", km: 200, fare: 52000 },
+  { origin: "Mombasa", destination: "Malindi", km: 120, fare: 41000 },
+  { origin: "Nairobi", destination: "Kericho", km: 260, fare: 78000 },
+  { origin: "JKIA", destination: "Naivasha", km: 120, fare: 26500 },
+];
+
+const CLIENTS = [
+  "Zenith Africa Ltd", "Rift Valley Sacco", "Bluewave Logistics", "Kenmore Tours",
+  "Private charter", "Summit Insurance", "Highland Tea Co.", "Coastal Cargo Ltd", "Walk-in",
+];
+
+function buildTrips() {
+  const trips = [];
+  const activeVehicles = SEED_VEHICLES.filter((v) => v.status === "Active");
+  for (let offset = DAYS; offset >= 0; offset--) {
+    const date = dayOf(offset);
+    const dow = new Date(date).getDay();
+    const count = dow === 0 ? between(0, 2) : between(1, 3); // quieter Sundays
+    for (let i = 0; i < count; i++) {
+      const route = pick(ROUTES);
+      const vehicle = pick(activeVehicles);
+      const fare = round50(route.fare * (0.85 + rnd() * 0.3));
+      const fuel = round50(route.km * between(18, 27));
+      const other = chance(0.35) ? round50(between(1500, 9000)) : 0;
+      const status =
+        offset === 0
+          ? pick(["Scheduled", "In Transit", "Completed"])
+          : offset === 1
+            ? pick(["In Transit", "Completed", "Completed"])
+            : chance(0.04)
+              ? "Cancelled"
+              : "Completed";
+      trips.push({
+        id: genId("t"),
+        date,
+        vehicleId: vehicle.id,
+        driverId: vehicle.driverId,
+        origin: route.origin,
+        destination: route.destination,
+        distanceKm: route.km,
+        client: pick(CLIENTS),
+        amount: status === "Cancelled" ? 0 : fare,
+        fuelCost: status === "Cancelled" ? 0 : fuel,
+        otherCost: status === "Cancelled" ? 0 : other,
+        status,
+      });
+    }
+  }
+  return trips.reverse();
+}
+
+/* ---------------------------------------------------------- food */
+
+export const SEED_MENU = [
+  { id: "m1", name: "Nyama choma platter", category: "Grill", price: 1600, cost: 780, active: true },
+  { id: "m2", name: "Pilau special tray", category: "Trays", price: 1850, cost: 900, active: true },
+  { id: "m3", name: "Fish fillet meal", category: "Mains", price: 950, cost: 430, active: true },
+  { id: "m4", name: "Corporate lunch combo", category: "Corporate", price: 1600, cost: 820, active: true },
+  { id: "m5", name: "Chapati & beef stew", category: "Mains", price: 650, cost: 280, active: true },
+  { id: "m6", name: "Vegetarian buffet", category: "Corporate", price: 1200, cost: 540, active: true },
+  { id: "m7", name: "Event catering", category: "Events", price: 1500, cost: 760, active: true },
+  { id: "m8", name: "Breakfast pack", category: "Mains", price: 480, cost: 190, active: true },
+];
+
+const CUSTOMERS = [
+  "Zenith Africa Ltd", "Amina Yusuf", "Rift Valley Sacco", "Brian Kamau", "Coastal Weddings Co.",
+  "Njoki Wairimu", "Halisi Tech Hub", "Dennis Omondi", "Serene Gardens Ltd", "Faith Chebet",
+  "Kilimani Apartments", "Walk-in customer", "Mwangi & Sons", "Uzuri Salon Group",
+];
+const CHANNELS = ["Walk-in", "Phone", "WhatsApp", "Online", "Corporate"];
+
+function buildOrders() {
+  const orders = [];
+  for (let offset = DAYS; offset >= 0; offset--) {
+    const date = dayOf(offset);
+    const dow = new Date(date).getDay();
+    const count = dow === 6 || dow === 5 ? between(4, 7) : between(2, 5);
+    for (let i = 0; i < count; i++) {
+      const item = pick(SEED_MENU);
+      const bulk = item.category === "Corporate" || item.category === "Events";
+      const qty = bulk ? between(10, 150) : between(1, 6);
+      const amount = item.price * qty;
+      const orderStatus =
+        offset === 0
+          ? pick(["Preparing", "Out for Delivery", "Delivered"])
+          : chance(0.03)
+            ? "Cancelled"
+            : "Delivered";
+      const paymentStatus =
+        orderStatus === "Cancelled"
+          ? "Pending"
+          : chance(0.12)
+            ? chance(0.4)
+              ? "Partial"
+              : "Pending"
+            : "Paid";
+      orders.push({
+        id: genId("o"),
+        date,
+        customer: pick(CUSTOMERS),
+        channel: pick(CHANNELS),
+        menuItemId: item.id,
+        item: bulk ? `${item.name} (${qty} pax)` : item.name,
+        qty,
+        unitPrice: item.price,
+        amount: orderStatus === "Cancelled" ? 0 : amount,
+        cost: orderStatus === "Cancelled" ? 0 : item.cost * qty,
+        paymentStatus,
+        orderStatus,
+      });
+    }
+  }
+  return orders.reverse();
+}
+
+/* ---------------------------------------------------------- hospitality */
+
+export const SEED_ROOMS = [
+  { id: "r1", number: "101", type: "Standard", price: 6500, status: "Available", floor: 1 },
+  { id: "r2", number: "102", type: "Standard", price: 6500, status: "Available", floor: 1 },
+  { id: "r3", number: "103", type: "Standard", price: 6500, status: "Cleaning", floor: 1 },
+  { id: "r4", number: "201", type: "Deluxe", price: 11500, status: "Available", floor: 2 },
+  { id: "r5", number: "202", type: "Deluxe", price: 11500, status: "Available", floor: 2 },
+  { id: "r6", number: "203", type: "Family", price: 14500, status: "Available", floor: 2 },
+  { id: "r7", number: "301", type: "Executive Suite", price: 22000, status: "Available", floor: 3 },
+  { id: "r8", number: "302", type: "Executive Suite", price: 22000, status: "Maintenance", floor: 3 },
+];
+
+const GUESTS = [
+  "David & Linda Achieng", "Tom Barasa", "Njeri Consulting Ltd", "Faith Chebet", "Ahmed Farah",
+  "Sophie Muthoni", "Green Acres Sacco", "Martin Kariuki", "Elizabeth Wangari", "Joseph Mutinda",
+  "Rehema Salim", "Kevin Oduor", "Patel Family", "Grace Atieno", "Horizon Auditors LLP",
+];
+const SOURCES = ["Direct", "Booking.com", "Walk-in", "Corporate", "Agent"];
+
+function buildBookings() {
+  const bookings = [];
+  // Track occupied day-ranges per room so the demo never double-books.
+  // Offsets count backwards ("days ago"), so a stay spans [checkOutOffset, checkInOffset].
+  const taken = {};
+  const overlaps = (roomId, lo, hi) =>
+    (taken[roomId] || []).some(([s, e]) => lo < e && hi > s);
+
+  for (let offset = DAYS; offset >= -14; offset--) {
+    const attempts = between(1, 3);
+    for (let i = 0; i < attempts; i++) {
+      const room = pick(SEED_ROOMS);
+      const nights = between(1, 5);
+      const lo = offset - nights;
+      const hi = offset;
+      if (overlaps(room.id, lo, hi)) continue;
+      taken[room.id] = [...(taken[room.id] || []), [lo, hi]];
+
+      const amount = room.price * nights;
+      const inFuture = offset < 0;
+      const currentlyStaying = offset >= 0 && offset - nights < 0;
+      const status = inFuture ? "Confirmed" : currentlyStaying ? "Checked In" : "Checked Out";
+      const paymentStatus =
+        status === "Confirmed" ? (chance(0.5) ? "Pending" : "Paid") : chance(0.1) ? "Partial" : "Paid";
+      bookings.push({
+        id: genId("b"),
+        guest: pick(GUESTS),
+        roomId: room.id,
+        checkIn: dayOf(offset),
+        checkOut: dayOf(offset - nights),
+        nights,
+        guests: between(1, room.type === "Family" ? 5 : 2),
+        source: pick(SOURCES),
+        amount,
+        paid: paymentStatus === "Paid" ? amount : paymentStatus === "Partial" ? round50(amount * 0.5) : 0,
+        paymentStatus,
+        status,
+      });
+    }
+  }
+  return bookings.sort((a, b) => (a.checkIn < b.checkIn ? 1 : -1));
+}
+
+/* ---------------------------------------------------------- expenses */
+
+const OVERHEADS = [
+  { division: "General", category: "Salaries", amount: 186000, method: "Bank Transfer", notes: "Admin & support staff payroll", vendor: "Payroll" },
+  { division: "General", category: "Rent", amount: 145000, method: "Bank Transfer", notes: "Head office & yard", vendor: "Sameer Business Park" },
+  { division: "Hospitality", category: "Utilities", amount: 28500, method: "Bank Transfer", notes: "Electricity & water", vendor: "Kenya Power" },
+  { division: "General", category: "Licensing", amount: 42000, method: "Bank Transfer", notes: "County business permits", vendor: "Nairobi County" },
+];
+
+const ADHOC = [
+  { division: "Food", category: "Supplies", vendor: "City Market produce", range: [6000, 22000] },
+  { division: "Food", category: "Supplies", vendor: "Karim Butchery", range: [4000, 14000] },
+  { division: "Transport", category: "Maintenance", vendor: "Autoworks Garage", range: [8000, 48000] },
+  { division: "Hospitality", category: "Supplies", vendor: "Linen & Co.", range: [3000, 18000] },
+  { division: "General", category: "Marketing", vendor: "Digital Hub Agency", range: [5000, 30000] },
+  { division: "Transport", category: "Insurance", vendor: "Summit Insurance", range: [20000, 60000] },
+];
+
+function buildExpenses() {
+  const list = [];
+  // Recurring monthly overheads across the window.
+  for (let m = 0; m <= Math.floor(DAYS / 30); m++) {
+    OVERHEADS.forEach((o) => {
+      list.push({
+        ...o,
+        id: genId("e"),
+        date: dayOf(m * 30 + 2),
+        amount: round50(o.amount * (0.95 + rnd() * 0.1)),
+        source: "manual",
+      });
+    });
+  }
+  // Ad-hoc operating spend.
+  for (let offset = DAYS; offset >= 0; offset--) {
+    if (!chance(0.55)) continue;
+    const a = pick(ADHOC);
+    list.push({
+      id: genId("e"),
+      date: dayOf(offset),
+      division: a.division,
+      category: a.category,
+      vendor: a.vendor,
+      amount: round50(between(a.range[0], a.range[1])),
+      method: pick(["M-Pesa", "Bank Transfer", "Cash"]),
+      notes: `${a.category} - ${a.vendor}`,
+      source: "manual",
+    });
+  }
+  return list.sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
+/* ---------------------------------------------------------- people & comms */
+
+export const SEED_USERS = [
+  { id: "u1", name: "Wanjiku Kamande", email: "wanjiku@nexoraone.co.ke", role: "Super Admin", division: "All", status: "Active", lastActive: TODAY },
+  { id: "u2", name: "Peter Mwangi", email: "peter.m@nexoraone.co.ke", role: "Transport Manager", division: "Transport", status: "Active", lastActive: TODAY },
+  { id: "u3", name: "Aisha Noor", email: "aisha.n@nexoraone.co.ke", role: "Food Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
+  { id: "u4", name: "Daniel Kiprop", email: "daniel.k@nexoraone.co.ke", role: "Hospitality Manager", division: "Hospitality", status: "Active", lastActive: dayOf(2) },
+  { id: "u5", name: "Mercy Adhiambo", email: "mercy.a@nexoraone.co.ke", role: "Staff", division: "Food", status: "Invited", lastActive: null },
+  { id: "u6", name: "Victor Kimani", email: "victor.k@nexoraone.co.ke", role: "Accountant", division: "All", status: "Active", lastActive: dayOf(1) },
+];
+
+export const SEED_REMINDERS = [
+  { id: "rem1", title: "Renew fleet insurance (KDJ 812K)", due: toISODate(addDays(TODAY, 12)), done: false, division: "Transport", priority: "High" },
+  { id: "rem2", title: "File monthly VAT return", due: toISODate(addDays(TODAY, 6)), done: false, division: "General", priority: "High" },
+  { id: "rem3", title: "Deep clean Room 302 after maintenance", due: toISODate(addDays(TODAY, 2)), done: false, division: "Hospitality", priority: "Normal" },
+  { id: "rem4", title: "Review supplier contracts", due: toISODate(addDays(TODAY, 20)), done: false, division: "Food", priority: "Normal" },
+  { id: "rem5", title: "Submit NSSF & NHIF returns", due: toISODate(addDays(TODAY, -3)), done: false, division: "General", priority: "High" },
+  { id: "rem6", title: "Quarterly staff performance reviews", due: toISODate(addDays(TODAY, 34)), done: false, division: "General", priority: "Low" },
+];
+
+function buildNotifications() {
+  const now = Date.now();
+  const mk = (message, minsAgo, type, division, read) => ({
+    id: genId("n"),
+    message,
+    ts: new Date(now - minsAgo * 60_000).toISOString(),
+    read,
+    type,
+    division,
+  });
+  return [
+    mk("Booking confirmed - Njeri Consulting Ltd, Room 201", 12, "booking", "Hospitality", false),
+    mk("Expense approval needed - truck maintenance, KSh 31,000", 68, "expense", "Transport", false),
+    mk("Trip scheduled - Nairobi to Kisumu, 6:00 AM departure", 145, "trip", "Transport", false),
+    mk("Large catering order received - Coastal Weddings Co.", 400, "order", "Food", false),
+    mk("Fleet insurance for KDJ 812K expires in 12 days", 1500, "alert", "Transport", true),
+    mk("Room 302 flagged for maintenance by housekeeping", 2600, "alert", "Hospitality", true),
+  ];
+}
+
+/* ---------------------------------------------------------- assembly */
+
+export function buildSeedData() {
+  return {
+    version: 1,
+    company: {
+      name: "Nexora Holdings Ltd",
+      tagline: "One Business. Total Control.",
+      email: "hello@nexoraone.co.ke",
+      phone: "+254 700 000 000",
+      address: "Sameer Business Park, Mombasa Rd, Nairobi",
+      taxId: "P051234567X",
+    },
+    drivers: SEED_DRIVERS,
+    vehicles: SEED_VEHICLES,
+    trips: buildTrips(),
+    menu: SEED_MENU,
+    orders: buildOrders(),
+    rooms: SEED_ROOMS,
+    bookings: buildBookings(),
+    expenses: buildExpenses(),
+    users: SEED_USERS,
+    reminders: SEED_REMINDERS,
+    notifications: buildNotifications(),
+  };
+}
