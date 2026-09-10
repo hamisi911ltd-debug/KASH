@@ -197,19 +197,22 @@ export function DonutChart({ data, height = 200, money = true, centerLabel, cent
 
 /* ---------------------------------------------------------- Sparkline */
 
+let sparkSeq = 0;
 export function Sparkline({ data, dataKey = "value", color, height = 44 }) {
   const pal = useChartPalette();
+  const stroke = color || pal.blue;
+  const gid = React.useMemo(() => `spark-${(sparkSeq += 1)}`, []);
   if (!data?.length) return null;
   return (
-    <ResponsiveContainer width="100%" height={H}>
+    <ResponsiveContainer width="100%" height={height}>
       <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
         <defs>
-          <linearGradient id={`spark-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color || pal.blue} stopOpacity={0.3} />
-            <stop offset="100%" stopColor={color || pal.blue} stopOpacity={0} />
+          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={stroke} stopOpacity={0.28} />
+            <stop offset="100%" stopColor={stroke} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <Area type="monotone" isAnimationActive={false} dataKey={dataKey} stroke={color || pal.blue} strokeWidth={2} fill={`url(#spark-${dataKey})`} />
+        <Area type="monotone" isAnimationActive={false} dataKey={dataKey} stroke={stroke} strokeWidth={2} fill={`url(#${gid})`} />
       </AreaChart>
     </ResponsiveContainer>
   );
