@@ -181,12 +181,12 @@ export default function DataTable({
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {view.map((row, idx) => (
             <div
               key={row.id || idx}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className="rounded-xl border p-2.5"
+              className="rounded-xl border px-3 py-2"
               style={{ borderColor: C.line, background: C.surface }}
             >
               <div className="flex items-start justify-between gap-2">
@@ -204,11 +204,11 @@ export default function DataTable({
               </div>
 
               {middle.length > 0 && (
-                <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1">
+                <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
                   {middle.map((c) => (
                     <div key={c.key} className="min-w-0">
-                      <p className="text-[9px] font-semibold uppercase tracking-wide leading-none" style={{ color: C.faint }}>{c.header}</p>
-                      <div className="text-xs mt-0.5 break-words leading-snug" style={{ color: c.muted ? C.muted : C.ink }}>{cell(c, row)}</div>
+                      <p className="text-[8.5px] font-semibold uppercase tracking-wide leading-none" style={{ color: C.faint }}>{c.header}</p>
+                      <div className="text-[11.5px] break-words leading-tight" style={{ color: c.muted ? C.muted : C.ink }}>{cell(c, row)}</div>
                     </div>
                   ))}
                 </div>
