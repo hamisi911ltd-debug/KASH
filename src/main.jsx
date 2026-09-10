@@ -42,3 +42,20 @@ createRoot(document.getElementById("root")).render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+
+/* Dismiss the launch splash once the app has painted (with a short
+   minimum so the logo animation always gets to play). */
+(() => {
+  const START = performance.now();
+  const MIN_MS = 900;
+  const dismiss = () => {
+    const el = document.getElementById("kash-splash");
+    if (!el || el.classList.contains("hide")) return;
+    el.classList.add("hide");
+    setTimeout(() => el.remove(), 500);
+  };
+  requestAnimationFrame(() => {
+    const wait = Math.max(0, MIN_MS - (performance.now() - START));
+    setTimeout(dismiss, wait);
+  });
+})();

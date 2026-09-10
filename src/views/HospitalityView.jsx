@@ -87,7 +87,7 @@ export default function HospitalityView() {
         )}
       />
 
-      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         <StatCard icon={TrendingUp} label={`Revenue · ${range.label}`} value={formatKES(hosp?.income || 0)} trend={hosp?.incomeDelta} tint={C.emerald} />
         <StatCard icon={Coins} label="Net profit" value={formatKES(hosp?.profit || 0)} sub={`${Math.round(hosp?.margin || 0)}% margin`} tint={C.blue} />
         <StatCard icon={BedDouble} label="Occupancy today" value={`${occNow}%`} sub={`avg ${avgOcc}% / 12 weeks`} tint={C.coral} />
@@ -103,12 +103,12 @@ export default function HospitalityView() {
               { key: "income", label: "Received", color: pal.blue },
               { key: "expense", label: "Spent", color: pal.coral },
             ]}
-            height={240}
+            height={210}
           />
         </Card>
         <Card>
           <SectionTitle title="Occupancy" subtitle="Avg % of rooms sold, weekly" />
-          <BarSeries data={occ} dataKey="rate" color={pal.coral} unit="%" money={false} maxValue={100} height={240} />
+          <BarSeries data={occ} dataKey="rate" color={pal.coral} unit="%" money={false} maxValue={100} height={210} />
         </Card>
       </div>
 

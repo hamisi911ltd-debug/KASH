@@ -127,7 +127,7 @@ export default function TransportView() {
         )}
       />
 
-      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         <StatCard icon={TrendingUp} label={`Revenue · ${range.label}`} value={formatKES(transport?.income || 0)} trend={transport?.incomeDelta} tint={C.emerald} />
         <StatCard icon={Coins} label="Net profit" value={formatKES(transport?.profit || 0)} sub={`${Math.round(transport?.margin || 0)}% margin`} tint={C.blue} />
         <StatCard icon={Truck} label="Fleet" value={`${activeVehicles}/${data.vehicles.length}`} sub="active vehicles" tint={C.violet} />
@@ -143,12 +143,12 @@ export default function TransportView() {
               { key: "income", label: "Received", color: pal.blue },
               { key: "expense", label: "Spent", color: pal.coral },
             ]}
-            height={240}
+            height={210}
           />
         </Card>
         <Card>
           <SectionTitle title="Top routes" subtitle="By fare in range" />
-          <BarSeries data={byRoute} horizontal height={240} color={C.emerald} />
+          <BarSeries data={byRoute} horizontal height={210} color={C.emerald} />
         </Card>
       </div>
 

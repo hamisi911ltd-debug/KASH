@@ -101,7 +101,7 @@ export default function FoodView() {
         )}
       />
 
-      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         <StatCard icon={TrendingUp} label={`Revenue · ${range.label}`} value={formatKES(food?.income || 0)} trend={food?.incomeDelta} tint={C.emerald} />
         <StatCard icon={Coins} label="Net profit" value={formatKES(food?.profit || 0)} sub={`${Math.round(food?.margin || 0)}% margin`} tint={C.blue} />
         <StatCard icon={ShoppingBag} label="Orders" value={ordersInRange.length} sub={`avg ${formatKES(avgOrder)}`} tint={C.amber} />
@@ -117,12 +117,12 @@ export default function FoodView() {
               { key: "income", label: "Received", color: pal.blue },
               { key: "expense", label: "Spent", color: pal.coral },
             ]}
-            height={240}
+            height={210}
           />
         </Card>
         <Card>
           <SectionTitle title="Best sellers" subtitle="By revenue in range" />
-          <BarSeries data={topItems} horizontal height={240} color={C.amber} />
+          <BarSeries data={topItems} horizontal height={210} color={C.amber} />
         </Card>
       </div>
 

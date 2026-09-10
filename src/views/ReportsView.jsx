@@ -133,7 +133,7 @@ export default function ReportsView() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         <StatCard icon={TrendingUp} label="Income" value={formatKES(income)} tint={C.emerald} />
         <StatCard icon={TrendingDown} label="Expenses" value={formatKES(expense)} tint={C.coral} />
         <StatCard icon={Wallet} label="Net profit" value={formatKES(profit)} tint={C.blue} />
@@ -149,7 +149,7 @@ export default function ReportsView() {
               { key: "income", label: "Income", color: pal.blue },
               { key: "expense", label: "Expenses", color: pal.coral },
             ]}
-            height={260}
+            height={220}
           />
         </Card>
         <Card>

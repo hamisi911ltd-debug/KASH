@@ -80,7 +80,7 @@ export default function ExpensesView() {
         actions={caps.write && <Button size="sm" onClick={() => openForm("expense")}><Plus size={14} /> New expense</Button>}
       />
 
-      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         {totalsByDivision.map((d) => (
           <StatCard
             key={d.division}
@@ -95,7 +95,7 @@ export default function ExpensesView() {
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
           <SectionTitle title="Spend by category" subtitle={range.label} />
-          <BarSeries data={byCategory} horizontal height={260} color={C.coral} />
+          <BarSeries data={byCategory} horizontal height={220} color={C.coral} />
         </Card>
         <Card>
           <SectionTitle title="Split by division" />

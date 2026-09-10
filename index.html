@@ -21,9 +21,103 @@
         document.documentElement.classList.add(t);
       } catch (e) {}
     </script>
+    <style>
+      /* ---- launch splash (shown before React mounts) ---- */
+      #kash-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background: #f5f7fa;
+        transition: opacity 0.45s ease;
+        font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+      }
+      html.dark #kash-splash { background: #08202e; }
+      #kash-splash.hide { opacity: 0; pointer-events: none; }
+      #kash-splash .tiles { display: flex; gap: 7px; }
+      #kash-splash .t {
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 800;
+        font-size: 27px;
+        line-height: 1;
+        opacity: 0;
+        transform: translateY(16px) scale(0.8);
+        animation: kashTileIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards, kashTileFloat 2.4s ease-in-out infinite;
+      }
+      #kash-splash .t:nth-child(1) { background: #1e6ca8; animation-delay: 0.04s, 0.7s; }
+      #kash-splash .t:nth-child(2) { background: #159c8c; animation-delay: 0.14s, 0.8s; }
+      #kash-splash .t:nth-child(3) { background: #dfa21c; animation-delay: 0.24s, 0.9s; }
+      #kash-splash .t:nth-child(4) { background: #c82e58; animation-delay: 0.34s, 1s; }
+      #kash-splash .bar {
+        width: 128px;
+        height: 3px;
+        border-radius: 99px;
+        background: rgba(20, 34, 48, 0.1);
+        overflow: hidden;
+      }
+      html.dark #kash-splash .bar { background: rgba(255, 255, 255, 0.14); }
+      #kash-splash .bar::after {
+        content: "";
+        display: block;
+        height: 100%;
+        width: 42%;
+        border-radius: 99px;
+        background: #1e6ca8;
+        animation: kashBar 1.05s ease-in-out infinite;
+      }
+      #kash-splash .cap {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: #647689;
+        opacity: 0;
+        animation: kashFadeIn 0.5s ease 0.5s forwards;
+      }
+      html.dark #kash-splash .cap { color: #8fa7b4; }
+      @keyframes kashTileIn { to { opacity: 1; transform: none; } }
+      @keyframes kashTileFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+      }
+      @keyframes kashBar {
+        0% { transform: translateX(-130%); }
+        100% { transform: translateX(320%); }
+      }
+      @keyframes kashFadeIn { to { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        #kash-splash .t, #kash-splash .cap, #kash-splash .bar::after { animation: kashFadeIn 0.2s ease forwards; }
+      }
+      /* app fades up once it takes over */
+      #root { animation: kashAppIn 0.5s ease 0.15s both; }
+      @keyframes kashAppIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    </style>
   </head>
   <body>
+    <div id="kash-splash" aria-hidden="true">
+      <div class="tiles">
+        <span class="t">K</span><span class="t">A</span><span class="t">S</span><span class="t">H</span>
+      </div>
+      <div class="bar"></div>
+      <div class="cap">One Platform. Many Solutions.</div>
+    </div>
     <div id="root"></div>
+    <script>
+      // Hard backstop: never let the splash get stuck if the bundle fails to load.
+      setTimeout(function () {
+        var s = document.getElementById("kash-splash");
+        if (s && !s.classList.contains("hide")) { s.classList.add("hide"); setTimeout(function () { s.remove(); }, 500); }
+      }, 6000);
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

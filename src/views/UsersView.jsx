@@ -75,7 +75,7 @@ export default function UsersView() {
         actions={caps.manageUsers && <Button size="sm" onClick={() => openForm("user")}><Plus size={14} /> Invite user</Button>}
       />
 
-      <div className="grid grid-cols-1 min-[430px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         <StatCard icon={UsersIcon} label="Total users" value={data.users.length} tint={C.blue} />
         <StatCard icon={ShieldCheck} label="Active" value={active} tint={C.emerald} />
         <StatCard icon={Mail} label="Pending invites" value={invited} tint={C.amber} />

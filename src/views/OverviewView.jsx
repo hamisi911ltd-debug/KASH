@@ -27,14 +27,14 @@ const SERVICES = [
   { name: "Hospitality", key: "hospitality", icon: BedDouble, color: C.coral },
 ];
 
-function BigStat({ label, value, tone, trend, invert }) {
+function BigStat({ label, value, tone, trend, invert, className = "" }) {
   return (
-    <Card>
-      <p className="text-sm font-medium" style={{ color: C.muted }}>{label}</p>
-      <p className="mt-2 text-2xl md:text-[28px] font-bold font-display" style={{ color: tone }}>{value}</p>
+    <Card className={className}>
+      <p className="text-[11px] sm:text-xs font-medium" style={{ color: C.muted }}>{label}</p>
+      <p className="mt-1 text-base sm:text-xl md:text-2xl font-bold font-display leading-tight truncate" style={{ color: tone }}>{value}</p>
       {trend != null && (
-        <p className="mt-2 flex items-center gap-2 text-xs" style={{ color: C.faint }}>
-          <TrendPill value={trend} invert={invert} /> vs last week
+        <p className="mt-1.5 flex items-center gap-1.5 text-[11px]" style={{ color: C.faint }}>
+          <TrendPill value={trend} invert={invert} /> <span className="hidden xs:inline sm:inline">vs last week</span>
         </p>
       )}
     </Card>
@@ -61,10 +61,10 @@ export default function OverviewView() {
   return (
     <Page>
       {/* greeting */}
-      <div className="flex items-end justify-between flex-wrap gap-3">
+      <div className="flex items-end justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-xl font-bold font-display" style={{ color: C.ink }}>Hi {firstName} 👋</h1>
-          <p className="text-sm mt-1" style={{ color: C.muted }}>Here's your business at a glance.</p>
+          <h1 className="text-lg sm:text-xl font-bold font-display" style={{ color: C.ink }}>Hi {firstName} 👋</h1>
+          <p className="text-xs sm:text-sm mt-0.5" style={{ color: C.muted }}>Here's your business at a glance.</p>
         </div>
         <select
           value={prefs.period}
@@ -79,30 +79,28 @@ export default function OverviewView() {
       </div>
 
       {/* the three numbers that matter */}
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
         <BigStat label="Money in" value={formatKES(m.income)} tone={C.emerald} trend={m.incomeDelta} />
         <BigStat label="Money out" value={formatKES(m.expense)} tone={C.coral} trend={m.expenseDelta} invert />
-        <BigStat label="What's left" value={formatKES(m.profit)} tone={m.profit >= 0 ? C.blue : C.coral} trend={m.profitDelta} />
+        <BigStat label="What's left" value={formatKES(m.profit)} tone={m.profit >= 0 ? C.blue : C.coral} trend={m.profitDelta} className="col-span-2 sm:col-span-1" />
       </div>
 
       {/* each service - tap to open */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        {SERVICES.map((s) => {
-          const d = m.byDivision.find((x) => x.division === s.name) || { income: 0, profit: 0 };
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
+        {SERVICES.map((sv, i) => {
+          const d = m.byDivision.find((x) => x.division === sv.name) || { income: 0, profit: 0 };
           return (
-            <Card key={s.key} as="button" hover onClick={() => navigate(s.key)} className="text-left w-full">
-              <div className="flex items-center gap-2.5">
-                <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: s.color + "22" }}>
-                  <s.icon size={19} style={{ color: s.color }} />
+            <Card key={sv.key} as="button" hover onClick={() => navigate(sv.key)} className={`text-left w-full ${i === 2 ? "col-span-2 sm:col-span-1" : ""}`}>
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: sv.color + "22" }}>
+                  <sv.icon size={14} style={{ color: sv.color }} />
                 </div>
-                <p className="font-bold" style={{ color: C.ink }}>{s.name}</p>
+                <p className="font-bold text-sm" style={{ color: C.ink }}>{sv.name}</p>
+                <ArrowRight size={13} className="ml-auto" style={{ color: sv.color }} />
               </div>
-              <p className="mt-3 text-lg font-bold font-display" style={{ color: C.ink }}>{formatKES(d.income)}</p>
-              <p className="text-xs" style={{ color: C.muted }}>
-                came in · <span style={{ color: d.profit >= 0 ? C.emerald : C.coral }}>{formatKES(d.profit)} left</span>
-              </p>
-              <p className="mt-3 text-xs font-bold flex items-center gap-1" style={{ color: s.color }}>
-                Open {s.name} <ArrowRight size={13} />
+              <p className="mt-2 text-[15px] sm:text-base font-bold font-display truncate" style={{ color: C.ink }}>{formatKES(d.income)}</p>
+              <p className="text-[11px] truncate" style={{ color: C.muted }}>
+                in · <span style={{ color: d.profit >= 0 ? C.emerald : C.coral }}>{formatKES(d.profit)} left</span>
               </p>
             </Card>
           );
@@ -127,12 +125,12 @@ export default function OverviewView() {
             { key: "income", label: "Money in", color: pal.blue },
             { key: "expense", label: "Money out", color: pal.coral },
           ]}
-          height={260}
+          height={230}
         />
       </Card>
 
       {/* what happened + what to check */}
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 gap-3 sm:gap-4">
         <Card padded={false}>
           <div className="p-4 sm:p-5 pb-3">
             <SectionTitle

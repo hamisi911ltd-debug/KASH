@@ -37,7 +37,7 @@ export function Badge({ children, tone = "slate", dot = false, size = "md", clas
 export function Card({ children, className = "", padded = true, hover = false, as: As = "div", ...rest }) {
   return (
     <As
-      className={`rounded-2xl border ${padded ? "p-4 sm:p-5" : ""} ${hover ? "transition-transform duration-200 hover:-translate-y-0.5" : ""} ${className}`}
+      className={`rounded-xl sm:rounded-2xl border ${padded ? "p-3.5 sm:p-4" : ""} ${hover ? "transition-transform duration-200 hover:-translate-y-0.5" : ""} ${className}`}
       style={{ background: C.surface, borderColor: C.line, boxShadow: C.shadowSm }}
       {...rest}
     >
@@ -75,18 +75,18 @@ export function StatCard({ icon: Icon, label, value, sub, tint = C.blue, trend, 
       hover={!!onClick}
       className={onClick ? "text-left w-full cursor-pointer" : ""}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-xs font-medium truncate" style={{ color: C.muted }}>{label}</p>
-          <p className="mt-1.5 sm:mt-2 text-lg sm:text-xl font-bold truncate font-display" style={{ color: C.ink }}>{value}</p>
-          {sub && <p className="mt-1 text-xs truncate" style={{ color: C.faint }}>{sub}</p>}
+          <p className="text-[11px] sm:text-xs font-medium truncate" style={{ color: C.muted }}>{label}</p>
+          <p className="mt-1 text-[15px] sm:text-lg font-bold truncate font-display leading-tight" style={{ color: C.ink }}>{value}</p>
+          {sub && <p className="mt-0.5 text-[11px] truncate" style={{ color: C.faint }}>{sub}</p>}
         </div>
-        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: tint + "1f" }}>
-          <Icon size={17} style={{ color: tint }} />
+        <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: tint + "1f" }}>
+          <Icon size={14} style={{ color: tint }} />
         </div>
       </div>
       {trend !== undefined && (
-        <div className="mt-3">
+        <div className="mt-2">
           <TrendPill value={trend} invert={trendInvert} />
         </div>
       )}
