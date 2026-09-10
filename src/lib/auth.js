@@ -8,12 +8,12 @@
    ============================================================ */
 
 export const DEMO_ACCOUNTS = [
-  { email: "wanjiku@nexoraone.co.ke", name: "Wanjiku Kamande", role: "Super Admin" },
-  { email: "peter.m@nexoraone.co.ke", name: "Peter Mwangi", role: "Transport Manager" },
-  { email: "aisha.n@nexoraone.co.ke", name: "Aisha Noor", role: "Food Manager" },
-  { email: "daniel.k@nexoraone.co.ke", name: "Daniel Kiprop", role: "Hospitality Manager" },
-  { email: "victor.k@nexoraone.co.ke", name: "Victor Kimani", role: "Accountant" },
-  { email: "mercy.a@nexoraone.co.ke", name: "Mercy Adhiambo", role: "Staff" },
+  { email: "wanjiku@kash.co.ke", name: "Wanjiku Kamande", role: "Super Admin" },
+  { email: "peter.m@kash.co.ke", name: "Peter Mwangi", role: "Transport Manager" },
+  { email: "aisha.n@kash.co.ke", name: "Aisha Noor", role: "Food Manager" },
+  { email: "daniel.k@kash.co.ke", name: "Daniel Kiprop", role: "Hospitality Manager" },
+  { email: "victor.k@kash.co.ke", name: "Victor Kimani", role: "Accountant" },
+  { email: "mercy.a@kash.co.ke", name: "Mercy Adhiambo", role: "Staff" },
 ];
 
 export function findAccount(email) {

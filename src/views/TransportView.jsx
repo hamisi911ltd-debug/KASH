@@ -4,13 +4,14 @@ import { Plus, Truck, Users, Fuel, TrendingUp, Coins, Pencil, Trash2, MapPin, Ro
 import { C } from "../lib/constants";
 import { formatKES, formatNumber, formatDateShort } from "../lib/format";
 import {
-  resolvePeriod, computeMetrics, seriesByDay, seriesByMonth, chartRange, inRange, topBy, CANCELLED,
+  resolvePeriod, computeMetrics, weeklySeries, inRange, topBy, CANCELLED,
 } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
-import { TrendArea, BarSeries } from "../components/Charts.jsx";
+import { GroupedBars, BarSeries } from "../components/Charts.jsx";
+import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import { statusTone } from "../lib/constants";
@@ -18,6 +19,7 @@ import { statusTone } from "../lib/constants";
 export default function TransportView() {
   const { data, prefs } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
+  const pal = useChartPalette();
   const [tab, setTab] = useState("trips");
 
   const range = useMemo(() => resolvePeriod(prefs.period, prefs.customRange, new Date(TODAY)), [prefs]);
@@ -28,11 +30,10 @@ export default function TransportView() {
     () => data.trips.filter((t) => inRange(t.date, range.from, range.to)),
     [data.trips, range]
   );
-  const series = useMemo(() => {
-    const lines = m.current.filter((l) => l.division === "Transport");
-    const cr = chartRange(range, lines);
-    return cr.monthly ? seriesByMonth(lines, 12, new Date(TODAY)) : seriesByDay(lines, cr.from, cr.to);
-  }, [m.current, range]);
+  const series = useMemo(
+    () => weeklySeries(m.ledger.filter((l) => l.division === "Transport"), 12, new Date(TODAY)),
+    [m.ledger]
+  );
   const byRoute = useMemo(
     () => topBy(tripsInRange.filter((t) => t.status !== CANCELLED), (t) => `${t.origin}→${t.destination}`, (t) => t.amount, 6),
     [tripsInRange]
@@ -109,8 +110,15 @@ export default function TransportView() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
-          <SectionTitle title="Transport revenue vs cost" />
-          <TrendArea data={series} height={240} />
+          <SectionTitle title="Received vs spent" subtitle="Weekly, last 12 weeks" />
+          <GroupedBars
+            data={series}
+            series={[
+              { key: "income", label: "Received", color: pal.blue },
+              { key: "expense", label: "Spent", color: pal.coral },
+            ]}
+            height={240}
+          />
         </Card>
         <Card>
           <SectionTitle title="Top routes" subtitle="By fare in range" />

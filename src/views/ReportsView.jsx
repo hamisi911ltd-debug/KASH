@@ -56,7 +56,7 @@ export default function ReportsView() {
 
   const exportLedger = () => {
     downloadCSV(
-      `nexora-report-${division.toLowerCase()}-${range.from}_${range.to}`,
+      `kash-report-${division.toLowerCase()}-${range.from}_${range.to}`,
       [
         { label: "Date", key: "date" },
         { label: "Division", key: "division" },

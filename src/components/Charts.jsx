@@ -81,31 +81,36 @@ export function TrendArea({ data, keys, height = 260, money = true }) {
 
 /* ---------------------------------------------------------- Bars */
 
-export function BarSeries({ data, dataKey = "value", xKey = "label", color, height = 220, money = true, horizontal = false }) {
+export function BarSeries({
+  data, dataKey = "value", xKey = "label", color, height = 220,
+  money = true, horizontal = false, unit = "", maxValue,
+}) {
   const pal = useChartPalette();
   if (!data?.length) return <EmptyState text="No data yet." />;
   const fill = color || pal.blue;
+  const fmt = unit ? (v) => `${Math.round(v)}${unit}` : (v) => formatCompact(v);
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
         data={data}
         layout={horizontal ? "vertical" : "horizontal"}
-        margin={{ top: 6, right: 12, left: horizontal ? 4 : 4, bottom: 0 }}
+        margin={{ top: 6, right: 12, left: 4, bottom: 0 }}
+        barCategoryGap={horizontal ? "22%" : "16%"}
       >
         <CartesianGrid strokeDasharray="3 3" vertical={horizontal} horizontal={!horizontal} stroke={pal.grid} />
         {horizontal ? (
           <>
-            <XAxis type="number" {...axisProps(pal)} tickFormatter={(v) => formatCompact(v)} />
+            <XAxis type="number" {...axisProps(pal)} tickFormatter={fmt} />
             <YAxis type="category" dataKey={xKey} {...axisProps(pal)} width={128} tick={{ fontSize: 10.5, fill: pal.axis }} />
           </>
         ) : (
           <>
-            <XAxis dataKey={xKey} {...axisProps(pal)} minTickGap={12} />
-            <YAxis {...axisProps(pal)} tickFormatter={(v) => formatCompact(v)} width={52} />
+            <XAxis dataKey={xKey} {...axisProps(pal)} interval="preserveStartEnd" minTickGap={8} />
+            <YAxis {...axisProps(pal)} tickFormatter={fmt} width={unit ? 40 : 52} domain={maxValue ? [0, maxValue] : undefined} allowDecimals={false} />
           </>
         )}
-        <Tooltip cursor={{ fill: pal.grid, opacity: 0.4 }} content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
-        <Bar dataKey={dataKey} isAnimationActive={false} fill={fill} radius={horizontal ? [0, 6, 6, 0] : [6, 6, 0, 0]} maxBarSize={horizontal ? 22 : 40} />
+        <Tooltip cursor={{ fill: pal.grid, opacity: 0.35 }} content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
+        <Bar dataKey={dataKey} isAnimationActive={false} fill={fill} radius={horizontal ? [0, 5, 5, 0] : [5, 5, 0, 0]} maxBarSize={horizontal ? 22 : 34} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -118,13 +123,13 @@ export function GroupedBars({ data, series, xKey = "label", height = 240, money 
   if (!data?.length) return <EmptyState text="No data for this range." />;
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 6, right: 12, left: 4, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 6, right: 12, left: 4, bottom: 0 }} barCategoryGap="20%" barGap={2}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={pal.grid} />
-        <XAxis dataKey={xKey} {...axisProps(pal)} minTickGap={12} />
+        <XAxis dataKey={xKey} {...axisProps(pal)} interval="preserveStartEnd" minTickGap={8} />
         <YAxis {...axisProps(pal)} tickFormatter={(v) => formatCompact(v)} width={52} />
-        <Tooltip cursor={{ fill: pal.grid, opacity: 0.4 }} content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
+        <Tooltip cursor={{ fill: pal.grid, opacity: 0.35 }} content={(p) => <TooltipBox {...p} pal={pal} money={money} />} />
         {series.map((s) => (
-          <Bar key={s.key} dataKey={s.key} isAnimationActive={false} name={s.label} fill={s.color} radius={[5, 5, 0, 0]} maxBarSize={26} />
+          <Bar key={s.key} dataKey={s.key} isAnimationActive={false} name={s.label} fill={s.color} radius={[3, 3, 0, 0]} maxBarSize={18} />
         ))}
       </BarChart>
     </ResponsiveContainer>

@@ -1,10 +1,10 @@
-# Nexora One
+# KASH
 
-A unified operations dashboard for a group that runs **transport, food and hospitality**
-under one roof. The owner signs in once and sees every division's revenue, costs,
-profit and open tasks on a single screen — then drills into any of them.
+**One platform to track transport, food and hospitality.** The business owner signs
+in once and sees money in, money out, net position, what needs attention and where
+revenue comes from — on one screen — then drills into any division.
 
-<p align="center"><em>One business. Total control.</em></p>
+<p align="center"><em>One Platform. Many Solutions.  &nbsp;·&nbsp;  Manage · Track · Grow</em></p>
 
 ---
 
@@ -28,7 +28,7 @@ Requires Node 18+.
 ## Signing in
 
 Demo auth — pick any account on the sign-in screen (they're one click to fill) and
-use any non-empty password. Each account maps to a role:
+use password `kash` (or any non-empty text). Each account maps to a role:
 
 | Account | Role | Sees |
 | --- | --- | --- |
@@ -44,8 +44,9 @@ You can also deep-link a role for demos/screenshots:
 
 ## What's in it
 
-- **Overview** — group revenue with trend vs. the previous period, per-division
-  cards, occupancy, a live "needs attention" feed, recent income and reminders.
+- **Overview** — the owner's screen: money-in / money-out / net-position tiles with
+  week-over-week change, a live 12-week *received vs spent* bar chart, recent activity,
+  a revenue-mix donut, the "needs attention" feed and upcoming reminders.
 - **All Services** — the three divisions side by side.
 - **Transport** — trips, fleet, drivers. Trip fare is income; trip fuel/tolls
   post to the ledger automatically. Service-interval and insurance alerts.
@@ -60,7 +61,7 @@ You can also deep-link a role for demos/screenshots:
 - **Users & Roles**, **Updates & reminders**, **Settings** (company profile,
   theme, notification channels, backup / restore / reset).
 
-Everything you enter is saved to the browser (`localStorage`) and survives a
+Everything you enter is saved to the browser (`localStorage` under `kash.*` keys) and survives a
 refresh. Settings → Data management exports/imports a JSON backup or resets to the
 demo dataset.
 
@@ -89,5 +90,5 @@ src/
 
 ## Legacy
 
-`legacy/nexora-one-dashboard.original.jsx` is the original single-file prototype
+`legacy/kash-dashboard.original.jsx` is the original single-file prototype
 this project was built from, kept for reference.

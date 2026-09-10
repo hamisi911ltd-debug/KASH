@@ -279,6 +279,53 @@ export function seriesByMonth(lines, months = 12, today = new Date()) {
   return out;
 }
 
+/**
+ * Trailing N weeks of income/expense, each week ending on `today`.
+ * Fixed bucket count => the bars are always the same width and readable,
+ * and it recomputes from the live ledger on every data change.
+ */
+export function weeklySeries(lines, weeks = 12, today = new Date()) {
+  const out = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const end = addDays(today, -i * 7);
+    const start = addDays(end, -6);
+    out.push({
+      key: toISODate(start),
+      from: toISODate(start),
+      to: toISODate(end),
+      label: parseDate(start).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }),
+      income: 0,
+      expense: 0,
+      profit: 0,
+    });
+  }
+  lines.forEach((l) => {
+    const d = String(l.date).slice(0, 10);
+    const row = out.find((w) => d >= w.from && d <= w.to);
+    if (!row) return;
+    if (l.kind === "income") row.income += l.amount;
+    else row.expense += l.amount;
+    row.profit = row.income - row.expense;
+  });
+  return out;
+}
+
+/** Average occupancy % per week across the trailing N weeks. */
+export function weeklyOccupancy(rooms, bookings, weeks = 12, today = new Date()) {
+  const out = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const end = addDays(today, -i * 7);
+    let total = 0;
+    for (let d = 0; d < 7; d++) total += occupancyRate(rooms, bookings, toISODate(addDays(end, -d)));
+    out.push({
+      key: toISODate(addDays(end, -6)),
+      label: parseDate(addDays(end, -6)).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }),
+      rate: Math.round(total / 7),
+    });
+  }
+  return out;
+}
+
 /** Top N groups by summed amount. */
 export function topBy(rows, keyFn, amountFn, n = 5) {
   const map = new Map();

@@ -66,7 +66,7 @@ export function TrendPill({ value, invert = false, size = "sm" }) {
 
 /* ---------------------------------------------------------- Stat tile */
 
-export function StatCard({ icon: Icon, label, value, sub, tint = C.blue, trend, onClick }) {
+export function StatCard({ icon: Icon, label, value, sub, tint = C.blue, trend, trendInvert = false, onClick }) {
   const Comp = onClick ? "button" : "div";
   return (
     <Card
@@ -87,7 +87,7 @@ export function StatCard({ icon: Icon, label, value, sub, tint = C.blue, trend, 
       </div>
       {trend !== undefined && (
         <div className="mt-3">
-          <TrendPill value={trend} />
+          <TrendPill value={trend} invert={trendInvert} />
         </div>
       )}
     </Card>

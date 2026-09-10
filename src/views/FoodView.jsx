@@ -3,12 +3,13 @@ import React, { useMemo, useState } from "react";
 import { Plus, UtensilsCrossed, TrendingUp, Coins, Clock, Pencil, Trash2, ShoppingBag, BookMarked } from "lucide-react";
 import { C } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
-import { resolvePeriod, computeMetrics, seriesByDay, seriesByMonth, chartRange, inRange, topBy, CANCELLED } from "../lib/derive";
+import { resolvePeriod, computeMetrics, weeklySeries, inRange, topBy, CANCELLED } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
-import { TrendArea, BarSeries } from "../components/Charts.jsx";
+import { GroupedBars, BarSeries } from "../components/Charts.jsx";
+import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import { statusTone } from "../lib/constants";
@@ -16,6 +17,7 @@ import { statusTone } from "../lib/constants";
 export default function FoodView() {
   const { data, prefs } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
+  const pal = useChartPalette();
   const [tab, setTab] = useState("orders");
 
   const range = useMemo(() => resolvePeriod(prefs.period, prefs.customRange, new Date(TODAY)), [prefs]);
@@ -26,11 +28,10 @@ export default function FoodView() {
     () => data.orders.filter((o) => inRange(o.date, range.from, range.to)),
     [data.orders, range]
   );
-  const series = useMemo(() => {
-    const lines = m.current.filter((l) => l.division === "Food");
-    const cr = chartRange(range, lines);
-    return cr.monthly ? seriesByMonth(lines, 12, new Date(TODAY)) : seriesByDay(lines, cr.from, cr.to);
-  }, [m.current, range]);
+  const series = useMemo(
+    () => weeklySeries(m.ledger.filter((l) => l.division === "Food"), 12, new Date(TODAY)),
+    [m.ledger]
+  );
   const topItems = useMemo(
     () => topBy(ordersInRange.filter((o) => o.orderStatus !== CANCELLED), (o) => o.item.replace(/\s*\(\d+ pax\)$/, ""), (o) => o.amount, 6),
     [ordersInRange]
@@ -88,8 +89,15 @@ export default function FoodView() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
-          <SectionTitle title="Food revenue vs cost" />
-          <TrendArea data={series} height={240} />
+          <SectionTitle title="Received vs spent" subtitle="Weekly, last 12 weeks" />
+          <GroupedBars
+            data={series}
+            series={[
+              { key: "income", label: "Received", color: pal.blue },
+              { key: "expense", label: "Spent", color: pal.coral },
+            ]}
+            height={240}
+          />
         </Card>
         <Card>
           <SectionTitle title="Best sellers" subtitle="By revenue in range" />

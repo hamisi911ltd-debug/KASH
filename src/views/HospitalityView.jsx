@@ -5,14 +5,15 @@ import { Plus, BedDouble, TrendingUp, Coins, CalendarCheck, Pencil, Trash2, Door
 import { C } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import {
-  resolvePeriod, computeMetrics, seriesByDay, seriesByMonth, chartRange, occupancySeries, occupancyRate,
+  resolvePeriod, computeMetrics, weeklySeries, weeklyOccupancy, occupancyRate,
   roomStates, inRange, CANCELLED,
 } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
-import { TrendArea, LineSeries } from "../components/Charts.jsx";
+import { GroupedBars, BarSeries } from "../components/Charts.jsx";
+import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import { statusTone } from "../lib/constants";
@@ -22,6 +23,7 @@ const STATE_TONE = { Occupied: "blue", Available: "emerald", Cleaning: "amber", 
 export default function HospitalityView() {
   const { data, prefs } = useStore();
   const { openForm, editRecord, deleteRecord, patchRoom, caps } = useActions();
+  const pal = useChartPalette();
   const [tab, setTab] = useState("bookings");
 
   const range = useMemo(() => resolvePeriod(prefs.period, prefs.customRange, new Date(TODAY)), [prefs]);
@@ -32,14 +34,13 @@ export default function HospitalityView() {
     () => data.bookings.filter((b) => inRange(b.checkIn, range.from, range.to) || (b.checkIn <= range.to && b.checkOut >= range.from)),
     [data.bookings, range]
   );
-  const series = useMemo(() => {
-    const lines = m.current.filter((l) => l.division === "Hospitality");
-    const cr = chartRange(range, lines);
-    return cr.monthly ? seriesByMonth(lines, 12, new Date(TODAY)) : seriesByDay(lines, cr.from, cr.to);
-  }, [m.current, range]);
+  const series = useMemo(
+    () => weeklySeries(m.ledger.filter((l) => l.division === "Hospitality"), 12, new Date(TODAY)),
+    [m.ledger]
+  );
   const occ = useMemo(
-    () => occupancySeries(data.rooms, data.bookings, range.from === "1970-01-01" ? range.to : range.from, range.to),
-    [data.rooms, data.bookings, range]
+    () => weeklyOccupancy(data.rooms, data.bookings, 12, new Date(TODAY)),
+    [data.rooms, data.bookings]
   );
   const rooms = useMemo(() => roomStates(data.rooms, data.bookings, TODAY), [data.rooms, data.bookings]);
 
@@ -82,18 +83,25 @@ export default function HospitalityView() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={TrendingUp} label={`Revenue · ${range.label}`} value={formatKES(hosp?.income || 0)} trend={hosp?.incomeDelta} tint={C.emerald} />
         <StatCard icon={Coins} label="Net profit" value={formatKES(hosp?.profit || 0)} sub={`${Math.round(hosp?.margin || 0)}% margin`} tint={C.blue} />
-        <StatCard icon={BedDouble} label="Occupancy today" value={`${occNow}%`} sub={`avg ${avgOcc}% in range`} tint={C.coral} />
+        <StatCard icon={BedDouble} label="Occupancy today" value={`${occNow}%`} sub={`avg ${avgOcc}% / 12 weeks`} tint={C.coral} />
         <StatCard icon={CalendarCheck} label="Front desk today" value={`${arrivals} in · ${departures} out`} sub={`${data.rooms.length} rooms`} tint={C.violet} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
-          <SectionTitle title="Occupancy trend" subtitle="Rooms sold per day" />
-          <LineSeries data={occ} dataKey="rate" color={C.coral} height={240} />
+          <SectionTitle title="Received vs spent" subtitle="Weekly, last 12 weeks" />
+          <GroupedBars
+            data={series}
+            series={[
+              { key: "income", label: "Received", color: pal.blue },
+              { key: "expense", label: "Spent", color: pal.coral },
+            ]}
+            height={240}
+          />
         </Card>
         <Card>
-          <SectionTitle title="Revenue vs cost" />
-          <TrendArea data={series} height={240} />
+          <SectionTitle title="Occupancy" subtitle="Avg % of rooms sold, weekly" />
+          <BarSeries data={occ} dataKey="rate" color={pal.coral} unit="%" money={false} maxValue={100} height={240} />
         </Card>
       </div>
 

@@ -40,28 +40,28 @@ export const C = {
    the resolved hex values, picked per theme by useChartPalette(). */
 export const CHART_PALETTE = {
   light: {
-    blue: "#2f6fed",
-    emerald: "#0ea678",
-    amber: "#e08526",
-    coral: "#ea5a4c",
-    violet: "#7c5cf0",
-    grid: "#e8edf5",
-    axis: "#64748b",
+    blue: "#1E6CA8",
+    emerald: "#159C8C",
+    amber: "#DFA21C",
+    coral: "#C82E58",
+    violet: "#4B6C8A",
+    grid: "#E7DFCD",
+    axis: "#6B7A83",
     tooltipBg: "#ffffff",
-    tooltipLine: "#e3e8f0",
-    tooltipInk: "#0f172a",
+    tooltipLine: "#E6DECC",
+    tooltipInk: "#1E2E36",
   },
   dark: {
-    blue: "#5b8def",
-    emerald: "#2dd4a7",
-    amber: "#f5a94e",
-    coral: "#ff7c6e",
-    violet: "#a48afb",
-    grid: "#1e2a41",
-    axis: "#8a97ab",
-    tooltipBg: "#141d30",
-    tooltipLine: "#2a3852",
-    tooltipInk: "#e9eef7",
+    blue: "#5AA0D6",
+    emerald: "#3FBFAE",
+    amber: "#F0B44A",
+    coral: "#E86A8C",
+    violet: "#83A3BF",
+    grid: "#1D3F53",
+    axis: "#8DA6B4",
+    tooltipBg: "#0F2C3E",
+    tooltipLine: "#2A5266",
+    tooltipInk: "#E7F1F6",
   },
 };
 
@@ -166,7 +166,7 @@ export function statusTone(status) {
   return STATUS_TONES[status] || "slate";
 }
 
-export const STORAGE_KEY = "nexora.data.v1";
-export const PREFS_KEY = "nexora.prefs.v1";
-export const THEME_KEY = "nexora.theme";
-export const SESSION_KEY = "nexora.session.v1";
+export const STORAGE_KEY = "kash.data.v1";
+export const PREFS_KEY = "kash.prefs.v1";
+export const THEME_KEY = "kash.theme";
+export const SESSION_KEY = "kash.session.v1";

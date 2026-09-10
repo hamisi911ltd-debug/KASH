@@ -3,10 +3,11 @@
    listed accounts + any non-empty password. One click fills a role.
    ============================================================ */
 import React, { useState } from "react";
-import { Sparkles, Mail, Lock, Eye, EyeOff, Truck, UtensilsCrossed, BedDouble, ArrowRight } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Truck, UtensilsCrossed, BedDouble, ArrowRight } from "lucide-react";
 import { C } from "../lib/constants";
 import { DEMO_ACCOUNTS, findAccount, accountForRole } from "../lib/auth";
 import { Button, Spinner } from "../components/ui.jsx";
+import { KashLogo } from "../components/Logo.jsx";
 import { useStore } from "../lib/store.jsx";
 
 function Panel() {
@@ -24,19 +25,17 @@ function Panel() {
       <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full" style={{ background: "radial-gradient(circle, rgba(47,111,237,0.35), transparent 70%)" }} />
       <div className="absolute -left-16 bottom-16 h-72 w-72 rounded-full" style={{ background: "radial-gradient(circle, rgba(14,166,120,0.22), transparent 70%)" }} />
       <div className="relative">
-        <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: C.blue }}>
-            <Sparkles size={18} color="#fff" />
-          </div>
-          <span className="text-lg font-bold font-display">NEXORA ONE</span>
-        </div>
-        <p className="mt-1.5 text-sm text-white/50">One business. Total control.</p>
+        <KashLogo size={30} onDark />
+        <p className="mt-3 text-sm text-white/55">One Platform. Many Solutions.</p>
       </div>
 
       <div className="relative space-y-7">
-        <p className="text-[2rem] leading-tight font-bold font-display">
-          Run transport, food and hospitality from a single screen.
-        </p>
+        <div>
+          <p className="text-[2rem] leading-tight font-bold font-display">
+            Track transport, food and hospitality from one platform.
+          </p>
+          <p className="mt-3 text-sm font-semibold tracking-wide text-white/50">Manage &nbsp;·&nbsp; Track &nbsp;·&nbsp; Grow</p>
+        </div>
         <div className="grid grid-cols-3 gap-3">
           {stats.map((s) => (
             <div key={s.label} className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
@@ -56,7 +55,7 @@ function Panel() {
 export default function LoginView({ onSignIn }) {
   const [mode, setMode] = useState("signin"); // signin | register | reset
   const [email, setEmail] = useState(DEMO_ACCOUNTS[0].email);
-  const [password, setPassword] = useState("nexora");
+  const [password, setPassword] = useState("kash");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -87,11 +86,8 @@ export default function LoginView({ onSignIn }) {
 
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2.5 mb-8">
-            <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: C.blue }}>
-              <Sparkles size={18} color="#fff" />
-            </div>
-            <span className="text-lg font-bold font-display" style={{ color: C.ink }}>NEXORA ONE</span>
+          <div className="lg:hidden mb-8">
+            <KashLogo size={28} />
           </div>
 
           <div className="flex rounded-xl p-1 mb-7" style={{ background: C.surface2 }}>
@@ -176,7 +172,7 @@ export default function LoginView({ onSignIn }) {
                     <button
                       key={a.email}
                       type="button"
-                      onClick={() => { setEmail(a.email); setPassword("nexora"); setError(""); }}
+                      onClick={() => { setEmail(a.email); setPassword("kash"); setError(""); }}
                       className="text-left rounded-lg border px-2.5 py-1.5 transition-colors hover:opacity-80"
                       style={{ borderColor: email === a.email ? C.blue : C.line, background: email === a.email ? C.blueSoft : C.surface }}
                     >
@@ -201,7 +197,7 @@ export default function LoginView({ onSignIn }) {
                   {[
                     { label: "Full name", ph: "Jane Doe", type: "text" },
                     { label: "Work email", ph: "you@company.com", type: "email" },
-                    { label: "Company", ph: "Nexora Holdings Ltd", type: "text" },
+                    { label: "Company", ph: "KASH Group Ltd", type: "text" },
                   ].map((f) => (
                     <div key={f.label}>
                       <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>{f.label}</label>

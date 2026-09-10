@@ -18,7 +18,7 @@ const COLLECTIONS = [
 ];
 
 const DEFAULT_PREFS = {
-  period: "This Month",
+  period: "Last 7 days",
   customRange: null,
   density: "comfortable",
   notify: { bookings: true, orders: true, trips: true, expenses: true, alerts: true },
@@ -335,7 +335,7 @@ export function StoreProvider({ children }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `nexora-backup-${toISODate(new Date())}.json`;
+    a.download = `kash-backup-${toISODate(new Date())}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -349,7 +349,7 @@ export function StoreProvider({ children }) {
         reader.onload = () => {
           try {
             const parsed = JSON.parse(String(reader.result));
-            if (!parsed || !Array.isArray(parsed.trips)) throw new Error("Not a Nexora backup file");
+            if (!parsed || !Array.isArray(parsed.trips)) throw new Error("Not a KASH backup file");
             const seed = buildSeedData();
             const merged = { ...seed, ...parsed, company: { ...seed.company, ...(parsed.company || {}) } };
             COLLECTIONS.forEach((c) => {

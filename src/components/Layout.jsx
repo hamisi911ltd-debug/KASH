@@ -5,13 +5,14 @@
    ============================================================ */
 import React, { useMemo, useRef, useState } from "react";
 import {
-  Sparkles, LogOut, Menu, X, Search, Plus, ChevronDown, Bell, Sun, Moon,
+  LogOut, Menu, X, Search, Plus, ChevronDown, Bell, Sun, Moon,
   Command, CheckCheck, Trash2, Calendar,
 } from "lucide-react";
 import { C } from "../lib/constants";
 import { relativeTime, formatDateLong } from "../lib/format";
 import { useStore } from "../lib/store.jsx";
 import { NAV, NAV_GROUPS } from "./nav.js";
+import { KashLogo } from "./Logo.jsx";
 import { canOpenView, capsForRole } from "../lib/auth";
 import { Avatar, Badge, IconButton } from "./ui.jsx";
 import { useOnDismiss, useMediaQuery } from "../lib/hooks.js";
@@ -59,22 +60,7 @@ function NavLinks({ role, activeView, onNavigate }) {
 }
 
 function Brand({ compact }) {
-  const { data } = useStore();
-  return (
-    <div className="flex items-center gap-2.5">
-      <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: C.blue }}>
-        <Sparkles size={18} color="#fff" />
-      </div>
-      {!compact && (
-        <div className="min-w-0">
-          <p className="text-white font-bold text-sm leading-none font-display truncate">NEXORA ONE</p>
-          <p className="mt-1 text-[11px] truncate" style={{ color: "rgba(255,255,255,0.4)" }}>
-            {data.company.tagline}
-          </p>
-        </div>
-      )}
-    </div>
-  );
+  return <KashLogo size={compact ? 24 : 26} tagline={!compact} onDark />;
 }
 
 /* ---------------------------------------------------------- sidebar / drawer */

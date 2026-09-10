@@ -1,9 +1,9 @@
 {
-  "name": "nexora-one",
+  "name": "kash",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Nexora One - unified operations dashboard for transport, food and hospitality.",
+  "description": "KASH - one platform to track transport, food and hospitality.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

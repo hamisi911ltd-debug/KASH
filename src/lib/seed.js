@@ -285,12 +285,12 @@ function buildExpenses() {
 /* ---------------------------------------------------------- people & comms */
 
 export const SEED_USERS = [
-  { id: "u1", name: "Wanjiku Kamande", email: "wanjiku@nexoraone.co.ke", role: "Super Admin", division: "All", status: "Active", lastActive: TODAY },
-  { id: "u2", name: "Peter Mwangi", email: "peter.m@nexoraone.co.ke", role: "Transport Manager", division: "Transport", status: "Active", lastActive: TODAY },
-  { id: "u3", name: "Aisha Noor", email: "aisha.n@nexoraone.co.ke", role: "Food Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
-  { id: "u4", name: "Daniel Kiprop", email: "daniel.k@nexoraone.co.ke", role: "Hospitality Manager", division: "Hospitality", status: "Active", lastActive: dayOf(2) },
-  { id: "u5", name: "Mercy Adhiambo", email: "mercy.a@nexoraone.co.ke", role: "Staff", division: "Food", status: "Invited", lastActive: null },
-  { id: "u6", name: "Victor Kimani", email: "victor.k@nexoraone.co.ke", role: "Accountant", division: "All", status: "Active", lastActive: dayOf(1) },
+  { id: "u1", name: "Wanjiku Kamande", email: "wanjiku@kash.co.ke", role: "Super Admin", division: "All", status: "Active", lastActive: TODAY },
+  { id: "u2", name: "Peter Mwangi", email: "peter.m@kash.co.ke", role: "Transport Manager", division: "Transport", status: "Active", lastActive: TODAY },
+  { id: "u3", name: "Aisha Noor", email: "aisha.n@kash.co.ke", role: "Food Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
+  { id: "u4", name: "Daniel Kiprop", email: "daniel.k@kash.co.ke", role: "Hospitality Manager", division: "Hospitality", status: "Active", lastActive: dayOf(2) },
+  { id: "u5", name: "Mercy Adhiambo", email: "mercy.a@kash.co.ke", role: "Staff", division: "Food", status: "Invited", lastActive: null },
+  { id: "u6", name: "Victor Kimani", email: "victor.k@kash.co.ke", role: "Accountant", division: "All", status: "Active", lastActive: dayOf(1) },
 ];
 
 export const SEED_REMINDERS = [
@@ -328,9 +328,9 @@ export function buildSeedData() {
   return {
     version: 1,
     company: {
-      name: "Nexora Holdings Ltd",
-      tagline: "One Business. Total Control.",
-      email: "hello@nexoraone.co.ke",
+      name: "KASH Group Ltd",
+      tagline: "One Platform. Many Solutions.",
+      email: "hello@kash.co.ke",
       phone: "+254 700 000 000",
       address: "Sameer Business Park, Mombasa Rd, Nairobi",
       taxId: "P051234567X",
