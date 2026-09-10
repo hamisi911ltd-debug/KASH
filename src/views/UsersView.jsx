@@ -14,11 +14,11 @@ import { statusTone } from "../lib/constants";
 const ACCESS_SUMMARY = {
   "Super Admin": "Everything, including users & settings",
   Admin: "Everything, including users & settings",
-  "Transport Manager": "Transport, Expenses, Reports, Updates",
-  "Food Manager": "Food, Expenses, Reports, Updates",
-  "Hospitality Manager": "Hospitality, Expenses, Reports, Updates",
+  "Transport Manager": "Transport, Expenses, Reports, Messages",
+  "Food Manager": "Food, Expenses, Reports, Messages",
+  "Hospitality Manager": "Hospitality, Expenses, Reports, Messages",
   Accountant: "All divisions read-only, Expenses & Reports",
-  Staff: "Overview, Updates & Settings only",
+  Staff: "Overview, Messages & Settings only",
 };
 
 export default function UsersView() {

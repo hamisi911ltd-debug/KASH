@@ -14,7 +14,7 @@ const StoreContext = createContext(null);
 
 const COLLECTIONS = [
   "drivers", "vehicles", "trips", "menu", "orders",
-  "rooms", "bookings", "expenses", "payments", "users", "reminders", "notifications",
+  "rooms", "bookings", "expenses", "payments", "users", "reminders", "messages", "notifications",
 ];
 
 const DEFAULT_PREFS = {
@@ -179,6 +179,13 @@ const normalisers = {
     status: v.status || "Invited",
     lastActive: v.lastActive || null,
   }),
+  messages: (v) => ({
+    from: (v.from || "").trim(),
+    to: (v.to || "").trim(),
+    text: (v.text || "").trim(),
+    ts: v.ts || new Date().toISOString(),
+    read: v.read === undefined ? false : !!v.read,
+  }),
   reminders: (v) => ({
     title: (v.title || "").trim(),
     due: v.due || TODAY,
@@ -190,13 +197,13 @@ const normalisers = {
 
 const ID_PREFIX = {
   trips: "t", vehicles: "v", drivers: "d", orders: "o", menu: "m",
-  rooms: "r", bookings: "b", expenses: "e", payments: "pay", users: "u", reminders: "rem", notifications: "n",
+  rooms: "r", bookings: "b", expenses: "e", payments: "pay", users: "u", reminders: "rem", messages: "msg", notifications: "n",
 };
 
 /* Human labels used in toasts and confirmation copy. */
 export const SINGULAR = {
   trips: "Trip", vehicles: "Vehicle", drivers: "Driver", orders: "Order", menu: "Menu item",
-  rooms: "Room", bookings: "Booking", expenses: "Expense", payments: "Payment", users: "User", reminders: "Reminder",
+  rooms: "Room", bookings: "Booking", expenses: "Expense", payments: "Payment", users: "User", reminders: "Reminder", messages: "Message",
 };
 
 /* ---------------------------------------------------------- provider */

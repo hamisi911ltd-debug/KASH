@@ -64,8 +64,11 @@ You can also deep-link a role for demos/screenshots:
   rows (trip fuel, food cost) are shown read-only so the P&L always reconciles.
 - **Reports** — filter the one ledger by period + division, see the P&L by
   division, export CSV, or print.
-- **Users & Roles**, **Updates & reminders**, **Settings** (company profile,
-  theme, notification channels, backup / restore / reset).
+- **Users & Roles**, **Messages** (message anyone on the platform + a shared
+  reminder list).
+- **Settings** (company profile, theme, notification channels, backup / restore /
+  reset) lives only in the account popup at the foot of the sidebar - click your
+  name, then Settings.
 
 Everything you enter is saved to the browser (`localStorage` under `kash.*` keys) and survives a
 refresh. Settings → Data management exports/imports a JSON backup or resets to the

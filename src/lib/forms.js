@@ -5,7 +5,7 @@
    ============================================================ */
 import {
   Truck, Wallet, UtensilsCrossed, BedDouble, Users, Bell, Car, DoorOpen, UserPlus, BookMarked,
-  ArrowLeftRight,
+  ArrowLeftRight, MessagesSquare,
 } from "lucide-react";
 import { TODAY } from "./seed";
 import {
@@ -23,7 +23,23 @@ export function buildForms(data) {
   const roomOpts = () => data.rooms.map((r) => ({ value: r.id, label: `Room ${r.number} - ${r.type} (KSh ${r.price.toLocaleString()})` }));
   const menuOpts = () => data.menu.filter((m) => m.active).map((m) => ({ value: m.id, label: `${m.name} - KSh ${m.price.toLocaleString()}` }));
 
+  const userOpts = () => data.users.map((u) => ({ value: u.name, label: `${u.name} - ${u.role}` }));
+
   return {
+    /* ---------------- Messaging ---------------- */
+    message: {
+      key: "message",
+      collection: "messages",
+      label: "New Message",
+      icon: MessagesSquare,
+      title: "New message",
+      submitLabel: "Send",
+      fields: [
+        { key: "to", label: "To", type: "select", options: userOpts, required: true },
+        { key: "text", label: "Message", type: "textarea", rows: 4, required: true, placeholder: "Type your message..." },
+      ],
+    },
+
     /* ---------------- Transport ---------------- */
     trip: {
       key: "trip",
@@ -310,4 +326,4 @@ export function buildForms(data) {
 }
 
 /** The subset shown in the top bar's quick-create menu and command palette. */
-export const QUICK_ACTION_KEYS = ["payment", "trip", "order", "booking", "expense", "reminder", "vehicle", "room", "user"];
+export const QUICK_ACTION_KEYS = ["payment", "message", "trip", "order", "booking", "expense", "reminder", "vehicle", "room", "user"];

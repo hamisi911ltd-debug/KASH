@@ -372,6 +372,24 @@ function buildNotifications() {
   ];
 }
 
+
+function buildMessages() {
+  const now = Date.now();
+  const min = (n) => new Date(now - n * 60_000).toISOString();
+  const A = "Wanjiku Kamande", P = "Peter Mwangi", AN = "Aisha Noor", D = "Daniel Kiprop", V = "Victor Kimani", M = "Mercy Adhiambo";
+  return [
+    { id: genId("msg"), from: P, to: A, text: "Morning. KDG 771B is back from the garage, back on the road tomorrow.", ts: min(320), read: true },
+    { id: genId("msg"), from: A, to: P, text: "Great. Please log the service cost under Payments.", ts: min(300), read: true },
+    { id: genId("msg"), from: P, to: A, text: "Done - KSh 31,000, M-Pesa.", ts: min(180), read: false },
+    { id: genId("msg"), from: AN, to: A, text: "Coastal Weddings confirmed the 150-pax order for Saturday.", ts: min(240), read: false },
+    { id: genId("msg"), from: A, to: AN, text: "Perfect. Make sure the deposit is recorded.", ts: min(220), read: true },
+    { id: genId("msg"), from: D, to: A, text: "Room 302 deep clean is done, marking it available.", ts: min(90), read: false },
+    { id: genId("msg"), from: V, to: A, text: "VAT return is drafted, I'll file it before the 20th.", ts: min(1500), read: true },
+    { id: genId("msg"), from: A, to: V, text: "Thanks Victor.", ts: min(1480), read: true },
+    { id: genId("msg"), from: M, to: A, text: "Butchery paid - KSh 8,500 cash. Receipt with me.", ts: min(45), read: false },
+  ];
+}
+
 /* ---------------------------------------------------------- assembly */
 
 export function buildSeedData() {
@@ -394,6 +412,7 @@ export function buildSeedData() {
     bookings: buildBookings(),
     expenses: buildExpenses(),
     payments: buildPayments(),
+    messages: buildMessages(),
     users: SEED_USERS,
     reminders: SEED_REMINDERS,
     notifications: buildNotifications(),

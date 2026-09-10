@@ -1,7 +1,7 @@
 /* Navigation model, shared by the sidebar, top tabs, mobile nav and command palette. */
 import {
   LayoutDashboard, LayoutGrid, Truck, UtensilsCrossed, BedDouble,
-  Users, BarChart3, Wallet, Bell, Settings, ArrowLeftRight,
+  Users, BarChart3, Wallet, Bell, Settings, ArrowLeftRight, MessagesSquare,
 } from "lucide-react";
 import { C } from "../lib/constants";
 
@@ -15,7 +15,7 @@ export const NAV = [
   { key: "expenses", label: "Expenses", icon: Wallet, group: "finance" },
   { key: "reports", label: "Reports", icon: BarChart3, group: "finance" },
   { key: "users", label: "Users & Roles", icon: Users, group: "admin" },
-  { key: "updates", label: "Updates", icon: Bell, group: "admin" },
+  { key: "updates", label: "Messages", icon: MessagesSquare, group: "admin" },
   { key: "settings", label: "Settings", icon: Settings, group: "admin" },
 ];
 
@@ -37,4 +37,4 @@ export const PRIMARY_TABS = [
 export const PRIMARY_KEYS = PRIMARY_TABS.map((t) => t.key);
 
 /* Sidebar hides the division pages (they live in the top tabs instead). */
-export const SIDEBAR_KEYS = NAV.map((n) => n.key).filter((k) => !["transport", "food", "hospitality"].includes(k));
+export const SIDEBAR_KEYS = NAV.map((n) => n.key).filter((k) => !["transport", "food", "hospitality", "settings"].includes(k));

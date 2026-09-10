@@ -18,7 +18,7 @@ import HospitalityView from "./views/HospitalityView.jsx";
 import ExpensesView from "./views/ExpensesView.jsx";
 import ReportsView from "./views/ReportsView.jsx";
 import UsersView from "./views/UsersView.jsx";
-import UpdatesView from "./views/UpdatesView.jsx";
+import MessagesView from "./views/MessagesView.jsx";
 import SettingsView from "./views/SettingsView.jsx";
 import PaymentsView from "./views/PaymentsView.jsx";
 
@@ -39,7 +39,7 @@ const VIEWS = {
   expenses: ExpensesView,
   reports: ReportsView,
   users: UsersView,
-  updates: UpdatesView,
+  updates: MessagesView,
   settings: SettingsView,
 };
 
@@ -141,6 +141,13 @@ export default function App() {
       if (modal.initial) {
         updateRecord(form.collection, modal.initial.id, values);
         toast(`${SINGULAR[form.collection] || "Record"} updated`);
+        return;
+      }
+
+      if (form.collection === "messages") {
+        addRecord("messages", { ...values, from: session?.name || "", ts: new Date().toISOString(), read: false });
+        toast(`Message sent to ${values.to}`);
+        notifyIfEnabled("alerts", `New message from ${session?.name}`, { type: "message", division: "General" });
         return;
       }
 
