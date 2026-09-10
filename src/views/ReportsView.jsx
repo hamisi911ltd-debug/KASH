@@ -174,30 +174,36 @@ export default function ReportsView() {
         <Card>
           <SectionTitle title="Profit & loss by division" subtitle={range.label} />
           <div className="overflow-x-auto n1-scroll">
-            <table className="w-full text-sm">
+            <table className="w-full text-[11.5px] sm:text-sm">
               <thead>
                 <tr style={{ background: C.surface2 }}>
                   {["Division", "Income", "Expenses", "Net", "Margin"].map((h) => (
-                    <th key={h} className={`px-4 py-2.5 text-xs font-semibold ${h === "Division" ? "text-left" : "text-right"}`} style={{ color: C.muted }}>{h}</th>
+                    <th
+                      key={h}
+                      className={`px-2 py-2 sm:px-4 sm:py-2.5 text-[10px] sm:text-xs font-semibold ${h === "Division" ? "text-left" : "text-right"} ${h === "Expenses" || h === "Margin" ? "hidden sm:table-cell" : ""}`}
+                      style={{ color: C.muted }}
+                    >
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {pnlByDivision.map((d) => (
                   <tr key={d.division} className="border-t" style={{ borderColor: C.line }}>
-                    <td className="px-4 py-2.5"><Badge tone={DIV_TONE[d.division]} size="sm">{d.division}</Badge></td>
-                    <td className="px-4 py-2.5 text-right" style={{ color: C.emerald }}>{formatKES(d.income)}</td>
-                    <td className="px-4 py-2.5 text-right" style={{ color: C.coral }}>{formatKES(d.expense)}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold" style={{ color: d.profit >= 0 ? C.ink : C.coral }}>{formatKES(d.profit)}</td>
-                    <td className="px-4 py-2.5 text-right" style={{ color: C.muted }}>{d.income ? `${Math.round((d.profit / d.income) * 100)}%` : "-"}</td>
+                    <td className="px-2 py-2 sm:px-4 sm:py-2.5"><Badge tone={DIV_TONE[d.division]} size="sm">{d.division}</Badge></td>
+                    <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right" style={{ color: C.emerald }}>{formatKES(d.income)}</td>
+                    <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right hidden sm:table-cell" style={{ color: C.coral }}>{formatKES(d.expense)}</td>
+                    <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right font-semibold" style={{ color: d.profit >= 0 ? C.ink : C.coral }}>{formatKES(d.profit)}</td>
+                    <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right hidden sm:table-cell" style={{ color: C.muted }}>{d.income ? `${Math.round((d.profit / d.income) * 100)}%` : "-"}</td>
                   </tr>
                 ))}
                 <tr className="border-t-2" style={{ borderColor: C.lineStrong }}>
-                  <td className="px-4 py-2.5 font-bold" style={{ color: C.ink }}>Total</td>
-                  <td className="px-4 py-2.5 text-right font-bold" style={{ color: C.emerald }}>{formatKES(income)}</td>
-                  <td className="px-4 py-2.5 text-right font-bold" style={{ color: C.coral }}>{formatKES(expense)}</td>
-                  <td className="px-4 py-2.5 text-right font-bold" style={{ color: profit >= 0 ? C.ink : C.coral }}>{formatKES(profit)}</td>
-                  <td className="px-4 py-2.5 text-right font-bold" style={{ color: C.muted }}>{income ? `${Math.round(margin)}%` : "-"}</td>
+                  <td className="px-2 py-2 sm:px-4 sm:py-2.5 font-bold" style={{ color: C.ink }}>Total</td>
+                  <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right font-bold" style={{ color: C.emerald }}>{formatKES(income)}</td>
+                  <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right font-bold hidden sm:table-cell" style={{ color: C.coral }}>{formatKES(expense)}</td>
+                  <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right font-bold" style={{ color: profit >= 0 ? C.ink : C.coral }}>{formatKES(profit)}</td>
+                  <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right font-bold hidden sm:table-cell" style={{ color: C.muted }}>{income ? `${Math.round(margin)}%` : "-"}</td>
                 </tr>
               </tbody>
             </table>

@@ -1,14 +1,15 @@
 /* ============================================================
-   One table component for every list in the app: sortable columns,
-   client-side pagination, an optional row menu (edit / delete / view)
-   and a built-in CSV export of the currently filtered rows.
+   One list component for every table in the app.
+   - Desktop: a sortable, paginated table + CSV export.
+   - Phones: the same rows as compact stacked cards, so there is
+     no sideways scrolling.
    ============================================================ */
 import React, { useMemo, useState } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { C } from "../lib/constants";
 import { downloadCSV } from "../lib/format";
 import { EmptyState, IconButton } from "./ui.jsx";
-import { useOnDismiss } from "../lib/hooks.js";
+import { useOnDismiss, useMediaQuery } from "../lib/hooks.js";
 
 function RowMenu({ actions, row }) {
   const [open, setOpen] = useState(false);
@@ -19,7 +20,7 @@ function RowMenu({ actions, row }) {
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors"
         style={{ color: C.muted, background: open ? C.surface2 : "transparent" }}
       >
@@ -33,7 +34,7 @@ function RowMenu({ actions, row }) {
           {items.map((a) => (
             <button
               key={a.label}
-              onClick={() => { setOpen(false); a.onClick(row); }}
+              onClick={(e) => { e.stopPropagation(); setOpen(false); a.onClick(row); }}
               className="w-full text-left px-3.5 py-2 text-sm flex items-center gap-2 hover:opacity-70 transition-opacity"
               style={{ color: a.tone === "danger" ? C.coral : C.ink }}
             >
@@ -48,7 +49,7 @@ function RowMenu({ actions, row }) {
 }
 
 /**
- * @param {object[]} columns  { key, header, align?, sortable?, sortValue?(row), render?(row), width? }
+ * @param {object[]} columns  { key, header, align?, sortable?, sortValue?(row), render?(row), width?, wrap?, muted? }
  * @param {object[]} rows
  * @param {object[]} [actions] row menu: { label, icon?, onClick(row), tone?, hidden?(row) }
  * @param {function} [onRowClick]
@@ -69,6 +70,7 @@ export default function DataTable({
 }) {
   const [sort, setSort] = useState(initialSort || null); // { key, dir }
   const [page, setPage] = useState(0);
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   const sorted = useMemo(() => {
     if (!sort) return rows;
@@ -107,23 +109,132 @@ export default function DataTable({
   };
 
   const pad = dense ? "px-3 py-2" : "px-3 py-2.5 sm:px-5 sm:py-3";
+  const dataCols = columns.filter((c) => c.key !== "_actions");
+  const sortableCols = dataCols.filter((c) => c.sortable !== false);
 
+  /* ---------- shared: export + pagination ---------- */
+  const Toolbar = exportName ? (
+    <div className="flex justify-end mb-2 n1-no-print">
+      <button
+        onClick={handleExport}
+        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
+        style={{ color: C.muted, background: C.surface2 }}
+      >
+        <Download size={13} /> Export {sorted.length} row{sorted.length === 1 ? "" : "s"}
+      </button>
+    </div>
+  ) : null;
+
+  const Pager =
+    pageCount > 1 ? (
+      <div className="flex items-center justify-between mt-3 text-xs n1-no-print" style={{ color: C.muted }}>
+        <span>
+          {safePage * pageSize + 1}-{Math.min(sorted.length, (safePage + 1) * pageSize)} of {sorted.length}
+        </span>
+        <div className="flex items-center gap-1">
+          <IconButton icon={ChevronLeft} size={15} onClick={() => setPage(Math.max(0, safePage - 1))} />
+          <span className="px-2 font-semibold" style={{ color: C.ink }}>
+            {safePage + 1} / {pageCount}
+          </span>
+          <IconButton icon={ChevronRight} size={15} onClick={() => setPage(Math.min(pageCount - 1, safePage + 1))} />
+        </div>
+      </div>
+    ) : null;
+
+  /* ---------- mobile: stacked cards ---------- */
+  if (isMobile) {
+    const title = dataCols[0];
+    // the value you scan for = the right-aligned column (amount / status), else the last one
+    const trailing =
+      dataCols.length > 1
+        ? dataCols.slice(1).find((c) => c.align === "right") || dataCols[dataCols.length - 1]
+        : null;
+    const middle = dataCols.slice(1).filter((c) => c !== trailing);
+    const cell = (c, row) => (c.render ? c.render(row) : row[c.key]);
+
+    return (
+      <div>
+        {Toolbar}
+
+        {sortableCols.length > 0 && sorted.length > 1 && (
+          <div className="flex items-center gap-2 mb-2 n1-no-print">
+            <span className="text-xs" style={{ color: C.faint }}>Sort</span>
+            <select
+              value={sort ? `${sort.key}:${sort.dir}` : ""}
+              onChange={(e) => {
+                if (!e.target.value) return setSort(null);
+                const [key, dir] = e.target.value.split(":");
+                setSort({ key, dir });
+                setPage(0);
+              }}
+              className="rounded-lg border px-2 py-1.5 text-xs flex-1"
+              style={{ borderColor: C.line, background: C.surface, color: C.ink }}
+            >
+              <option value="">Default</option>
+              {sortableCols.map((c) => (
+                <React.Fragment key={c.key}>
+                  <option value={`${c.key}:desc`}>{c.header} ↓</option>
+                  <option value={`${c.key}:asc`}>{c.header} ↑</option>
+                </React.Fragment>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {view.map((row, idx) => (
+            <div
+              key={row.id || idx}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              className="rounded-xl border p-2.5"
+              style={{ borderColor: C.line, background: C.surface }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 text-sm font-semibold" style={{ color: C.ink }}>
+                  {cell(title, row)}
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {trailing && <div className="text-sm font-semibold text-right" style={{ color: C.ink }}>{cell(trailing, row)}</div>}
+                  {actions && (
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <RowMenu actions={actions} row={row} />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {middle.length > 0 && (
+                <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1">
+                  {middle.map((c) => (
+                    <div key={c.key} className="min-w-0">
+                      <p className="text-[9px] font-semibold uppercase tracking-wide leading-none" style={{ color: C.faint }}>{c.header}</p>
+                      <div className="text-xs mt-0.5 break-words leading-snug" style={{ color: c.muted ? C.muted : C.ink }}>{cell(c, row)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {sorted.length === 0 && (
+          <div className="rounded-xl border" style={{ borderColor: C.line }}>
+            <EmptyState icon={emptyIcon} text={emptyText} />
+          </div>
+        )}
+
+        {Pager}
+      </div>
+    );
+  }
+
+  /* ---------- desktop: table ---------- */
   return (
     <div>
-      {exportName && (
-        <div className="flex justify-end mb-2 n1-no-print">
-          <button
-            onClick={handleExport}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-            style={{ color: C.muted, background: C.surface2 }}
-          >
-            <Download size={13} /> Export {sorted.length} row{sorted.length === 1 ? "" : "s"}
-          </button>
-        </div>
-      )}
+      {Toolbar}
 
       <div className="overflow-x-auto n1-scroll rounded-2xl border" style={{ borderColor: C.line }}>
-        <table className="w-full text-[13px] sm:text-sm" style={{ minWidth: columns.length > 4 ? 640 : undefined }}>
+        <table className="w-full text-[13px] sm:text-sm" style={{ minWidth: columns.length > 5 ? 680 : undefined }}>
           <thead>
             <tr style={{ background: C.surface2 }}>
               {columns.map((col) => {
@@ -185,20 +296,7 @@ export default function DataTable({
         {sorted.length === 0 && <EmptyState icon={emptyIcon} text={emptyText} />}
       </div>
 
-      {pageCount > 1 && (
-        <div className="flex items-center justify-between mt-3 text-xs n1-no-print" style={{ color: C.muted }}>
-          <span>
-            {safePage * pageSize + 1}-{Math.min(sorted.length, (safePage + 1) * pageSize)} of {sorted.length}
-          </span>
-          <div className="flex items-center gap-1">
-            <IconButton icon={ChevronLeft} size={15} onClick={() => setPage(Math.max(0, safePage - 1))} />
-            <span className="px-2 font-semibold" style={{ color: C.ink }}>
-              {safePage + 1} / {pageCount}
-            </span>
-            <IconButton icon={ChevronRight} size={15} onClick={() => setPage(Math.min(pageCount - 1, safePage + 1))} />
-          </div>
-        </div>
-      )}
+      {Pager}
     </div>
   );
 }
