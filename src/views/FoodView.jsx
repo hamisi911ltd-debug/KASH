@@ -1,6 +1,6 @@
 /* Food division: orders, menu, sales mix and kitchen margin. */
 import React, { useMemo, useState } from "react";
-import { Plus, UtensilsCrossed, TrendingUp, Coins, Clock, Pencil, Trash2, ShoppingBag, BookMarked } from "lucide-react";
+import { Plus, Drumstick, TrendingUp, Coins, Clock, Pencil, Trash2, ShoppingBag, BookMarked } from "lucide-react";
 import { C } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import { resolvePeriod, computeMetrics, weeklySeries, inRange, CANCELLED } from "../lib/derive";
@@ -70,12 +70,12 @@ export default function FoodView() {
     { key: "name", header: "Item", render: (r) => <span className="font-semibold">{r.name}</span> },
     { key: "category", header: "Category", sortValue: (r) => r.category, render: (r) => <Badge tone="slate" size="sm">{r.category}</Badge> },
     { key: "price", header: "Price", align: "right", sortValue: (r) => r.price, render: (r) => formatKES(r.price) },
-    { key: "cost", header: "Food cost", align: "right", sortValue: (r) => r.cost, render: (r) => formatKES(r.cost), muted: true },
+    { key: "cost", header: "Cost price", align: "right", sortValue: (r) => r.cost, render: (r) => formatKES(r.cost), muted: true },
     { key: "margin", header: "Margin", align: "right", sortValue: (r) => (r.price ? (r.price - r.cost) / r.price : 0), render: (r) => {
       const pct = r.price ? Math.round(((r.price - r.cost) / r.price) * 100) : 0;
       return <span style={{ color: pct >= 45 ? C.emerald : pct >= 25 ? C.amber : C.coral }}>{pct}%</span>;
     } },
-    { key: "active", header: "Status", sortValue: (r) => (r.active ? 1 : 0), render: (r) => <Badge tone={r.active ? "emerald" : "slate"} size="sm">{r.active ? "Available" : "Hidden"}</Badge> },
+    { key: "active", header: "Status", sortValue: (r) => (r.active ? 1 : 0), render: (r) => <Badge tone={r.active ? "emerald" : "slate"} size="sm">{r.active ? "In stock" : "Out of stock"}</Badge> },
   ];
 
   const rowActions = (collection) => caps.write ? [
@@ -86,11 +86,11 @@ export default function FoodView() {
   return (
     <Page>
       <PageHeader
-        title="Food"
-        subtitle="Orders, menu and kitchen margin."
+        title="Chicken"
+        subtitle="Orders, stock and margin."
         actions={caps.write && (
           <>
-            <Button variant="outline" size="sm" onClick={() => openForm("menuItem")}><Plus size={14} /> Menu item</Button>
+            <Button variant="outline" size="sm" onClick={() => openForm("menuItem")}><Plus size={14} /> Product</Button>
             <Button size="sm" onClick={() => openForm("order")}><Plus size={14} /> New order</Button>
           </>
         )}
@@ -118,11 +118,11 @@ export default function FoodView() {
 
       <Card padded={false}>
         <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
-          <SectionTitle title={tab === "orders" ? "Orders" : "Menu"} />
+          <SectionTitle title={tab === "orders" ? "Orders" : "Products"} />
           <Segmented
             options={[
               { value: "orders", label: `Orders ${ordersInRange.length}` },
-              { value: "menu", label: `Menu ${data.menu.length}` },
+              { value: "menu", label: `Products ${data.menu.length}` },
             ]}
             value={tab}
             onChange={setTab}
@@ -130,13 +130,13 @@ export default function FoodView() {
         </div>
         <div className="px-3 sm:px-5 pb-5">
           <FilterBar
-            search={{ value: q, onChange: setQ, placeholder: tab === "orders" ? "Customer or item..." : "Menu item..." }}
+            search={{ value: q, onChange: setQ, placeholder: tab === "orders" ? "Customer or item..." : "Product..." }}
             selects={
               tab === "orders"
                 ? [
                     selectFilter("os", "Order status", ORDER_STATUSES, oStatus, setOStatus),
                     selectFilter("ps", "Payment", PAYMENT_STATUSES, pStatus, setPStatus),
-                    selectFilter("ch", "Channel", ["Walk-in", "Phone", "WhatsApp", "Online", "Corporate"], channel, setChannel),
+                    selectFilter("ch", "Channel", ["Walk-in", "Phone", "WhatsApp", "Online", "Wholesale"], channel, setChannel),
                   ]
                 : []
             }
@@ -155,7 +155,7 @@ export default function FoodView() {
               emptyText="No orders match these filters."
             />
           ) : (
-            <DataTable columns={menuColumns} rows={shownMenu} actions={rowActions("menu")} exportName="kash-menu" emptyIcon={BookMarked} emptyText="No menu items match." />
+            <DataTable columns={menuColumns} rows={shownMenu} actions={rowActions("menu")} exportName="kash-menu" emptyIcon={BookMarked} emptyText="No products match." />
           )}
         </div>
       </Card>

@@ -2,7 +2,7 @@
    (trip fuel, food cost) are shown read-only so the P&L reconciles. */
 import React, { useMemo, useState } from "react";
 import { Plus, Wallet, Pencil, Trash2, Lock, Receipt } from "lucide-react";
-import { C, DIVISIONS, EXPENSE_CATEGORIES, PAYMENT_METHODS } from "../lib/constants";
+import { C, DIVISIONS, EXPENSE_CATEGORIES, PAYMENT_METHODS, divisionLabel, divisionOptions } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import { resolvePeriod, computeMetrics, buildLedger, inRange, topBy } from "../lib/derive";
 import { TODAY } from "../lib/seed";
@@ -56,7 +56,7 @@ export default function ExpensesView() {
 
   const columns = [
     { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
-    { key: "division", header: "Division", sortValue: (r) => r.division, render: (r) => <Badge tone={DIV_TONE[r.division]} size="sm">{r.division}</Badge> },
+    { key: "division", header: "Division", sortValue: (r) => r.division, render: (r) => <Badge tone={DIV_TONE[r.division]} size="sm">{divisionLabel(r.division)}</Badge> },
     { key: "category", header: "Category", sortValue: (r) => r.category, render: (r) => <span className="font-medium">{r.category}</span> },
     { key: "desc", header: "Details", sortValue: (r) => r.desc, wrap: true, muted: true },
     { key: "amount", header: "Amount", align: "right", sortValue: (r) => r.amount, render: (r) => <span className="font-semibold">{formatKES(r.amount)}</span> },
@@ -85,7 +85,7 @@ export default function ExpensesView() {
           <StatCard
             key={d.division}
             icon={Wallet}
-            label={d.division}
+            label={divisionLabel(d.division)}
             value={formatKES(d.total)}
             tint={{ Transport: C.emerald, Food: C.amber, Hospitality: C.coral, General: C.violet }[d.division]}
           />
@@ -120,7 +120,7 @@ export default function ExpensesView() {
           />
         </div>
         <div className="px-3 sm:px-5 pb-4">
-          <ChipRow options={["All", ...DIVISIONS]} value={division} onChange={setDivision} />
+          <ChipRow options={divisionOptions(["All", ...DIVISIONS])} value={division} onChange={setDivision} />
         </div>
         <div className="px-3 sm:px-5 pb-5">
           <FilterBar

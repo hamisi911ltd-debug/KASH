@@ -1,7 +1,7 @@
 /* Users & roles. Only Super Admin / Admin can reach this view. */
 import React, { useMemo, useState } from "react";
 import { Plus, Pencil, Trash2, ShieldCheck, Users as UsersIcon, Mail } from "lucide-react";
-import { C, ROLE_VIEWS, ROLES, DIVISIONS } from "../lib/constants";
+import { C, ROLE_VIEWS, ROLES, DIVISIONS, divisionLabel } from "../lib/constants";
 import { relativeTime } from "../lib/format";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
@@ -15,7 +15,7 @@ const ACCESS_SUMMARY = {
   "Super Admin": "Everything, including users & settings",
   Admin: "Everything, including users & settings",
   "Transport Manager": "Transport, Expenses, Reports, Messages",
-  "Food Manager": "Food, Expenses, Reports, Messages",
+  "Food Manager": "Chicken, Expenses, Reports, Messages",
   "Hospitality Manager": "Hospitality, Expenses, Reports, Messages",
   Accountant: "All divisions read-only, Expenses & Reports",
   Staff: "Overview, Messages & Settings only",
@@ -57,7 +57,7 @@ export default function UsersView() {
       <span className="flex items-center gap-1.5"><Mail size={12} style={{ color: C.faint }} />{r.email}</span>
     ) },
     { key: "role", header: "Role", sortValue: (r) => r.role, render: (r) => <Badge tone="blue" size="sm">{r.role}</Badge> },
-    { key: "division", header: "Division", sortValue: (r) => r.division },
+    { key: "division", header: "Division", sortValue: (r) => r.division, render: (r) => divisionLabel(r.division) },
     { key: "lastActive", header: "Last active", sortValue: (r) => r.lastActive || "", render: (r) => r.lastActive ? relativeTime(r.lastActive) : "-", muted: true },
     { key: "status", header: "Status", sortValue: (r) => r.status, render: (r) => <Badge tone={statusTone(r.status)} size="sm">{r.status}</Badge> },
   ];
@@ -90,7 +90,7 @@ export default function UsersView() {
             selects={[
               selectFilter("role", "Role", ROLES, role, setRole),
               selectFilter("st", "Status", ["Active", "Invited", "Suspended"], status, setStatus),
-              selectFilter("div", "Division", ["All", ...DIVISIONS.filter((d) => d !== "General")], division, setDivision),
+              selectFilter("div", "Division", ["All", ...DIVISIONS.filter((d) => d !== "General")], division, setDivision, { labelFor: divisionLabel }),
             ]}
             dirty={!!dirty}
             onClear={() => { setQ(""); setRole("All"); setStatus("All"); setDivision("All"); }}

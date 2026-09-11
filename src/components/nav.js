@@ -1,6 +1,6 @@
 /* Navigation model, shared by the sidebar, top tabs, mobile nav and command palette. */
 import {
-  LayoutDashboard, LayoutGrid, Truck, UtensilsCrossed, BedDouble,
+  LayoutDashboard, LayoutGrid, Truck, Drumstick, BedDouble,
   Users, BarChart3, Wallet, Bell, Settings, ArrowLeftRight, MessagesSquare,
 } from "lucide-react";
 import { C } from "../lib/constants";
@@ -9,7 +9,7 @@ export const NAV = [
   { key: "overview", label: "Overview", icon: LayoutDashboard, group: "main" },
   { key: "all", label: "All Services", icon: LayoutGrid, group: "main" },
   { key: "transport", label: "Transport", icon: Truck, group: "divisions" },
-  { key: "food", label: "Food", icon: UtensilsCrossed, group: "divisions" },
+  { key: "food", label: "Chicken", icon: Drumstick, group: "divisions" },
   { key: "hospitality", label: "Hospitality", icon: BedDouble, group: "divisions" },
   { key: "payments", label: "Payments", icon: ArrowLeftRight, group: "finance" },
   { key: "expenses", label: "Expenses", icon: Wallet, group: "finance" },
@@ -30,7 +30,7 @@ export const NAV_GROUPS = [
 export const PRIMARY_TABS = [
   { key: "overview", label: "Home", icon: LayoutDashboard, color: C.blue },
   { key: "transport", label: "Transport", icon: Truck, color: C.emerald },
-  { key: "food", label: "Food", icon: UtensilsCrossed, color: C.amber },
+  { key: "food", label: "Chicken", icon: Drumstick, color: C.amber },
   { key: "hospitality", label: "Hospitality", icon: BedDouble, color: C.coral },
 ];
 

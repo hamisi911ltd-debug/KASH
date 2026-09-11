@@ -8,7 +8,7 @@ import {
   Plus, ArrowDownLeft, ArrowUpRight, Smartphone, Banknote, Landmark, CreditCard,
   Trash2, Clock, XCircle,
 } from "lucide-react";
-import { C, DIVISIONS, PAYMENT_METHODS, PAYMENT_RECORD_STATUSES, statusTone } from "../lib/constants";
+import { C, DIVISIONS, PAYMENT_METHODS, PAYMENT_RECORD_STATUSES, statusTone, divisionLabel } from "../lib/constants";
 import { formatKES, formatDateShort, relativeTime } from "../lib/format";
 import { resolvePeriod, inRange } from "../lib/derive";
 import { TODAY } from "../lib/seed";
@@ -73,7 +73,7 @@ export default function PaymentsView() {
         ),
     },
     { key: "party", header: "Party", render: (r) => <span className="font-semibold">{r.party}</span> },
-    { key: "division", header: "Service", sortValue: (r) => r.division, render: (r) => <Badge tone={DIV_TONE[r.division]} size="sm">{r.division}</Badge> },
+    { key: "division", header: "Service", sortValue: (r) => r.division, render: (r) => <Badge tone={DIV_TONE[r.division]} size="sm">{divisionLabel(r.division)}</Badge> },
     {
       key: "amount", header: "Amount", align: "right", sortValue: (r) => (r.direction === "in" ? r.amount : -r.amount),
       render: (r) => <span className="font-bold" style={{ color: r.direction === "in" ? C.emerald : C.coral }}>{r.direction === "in" ? "+" : "−"}{formatKES(r.amount)}</span>,
@@ -146,7 +146,7 @@ export default function PaymentsView() {
             selects={[
               { key: "dir", label: "Type", value: dir, onChange: setDir, all: "All", options: [{ value: "All", label: "In & out" }, { value: "Money in", label: "Money in" }, { value: "Money out", label: "Money out" }] },
               selectFilter("method", "Method", PAYMENT_METHODS, method, setMethod),
-              selectFilter("division", "Service", DIVISIONS, division, setDivision),
+              selectFilter("division", "Service", DIVISIONS, division, setDivision, { labelFor: divisionLabel }),
               selectFilter("status", "Status", PAYMENT_RECORD_STATUSES, status, setStatus),
             ]}
             range={{ from, to, onFrom: setFrom, onTo: setTo }}

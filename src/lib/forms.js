@@ -4,7 +4,7 @@
    Consumed by <FormModal>; keyed by action id.
    ============================================================ */
 import {
-  Truck, Wallet, UtensilsCrossed, BedDouble, Users, Bell, Car, DoorOpen, UserPlus, BookMarked,
+  Truck, Wallet, Drumstick, BedDouble, Users, Bell, Car, DoorOpen, UserPlus, BookMarked,
   ArrowLeftRight, MessagesSquare,
 } from "lucide-react";
 import { TODAY } from "./seed";
@@ -12,6 +12,7 @@ import {
   VEHICLE_TYPES, ROOM_TYPES, TRIP_STATUSES, ORDER_STATUSES, BOOKING_STATUSES,
   PAYMENT_STATUSES, PAYMENT_METHODS, EXPENSE_CATEGORIES, DIVISIONS, ROLES,
   DRIVER_STATUSES, VEHICLE_STATUSES, ROOM_STATUSES, PAYMENT_DIRECTIONS,
+  divisionOptions,
 } from "./constants";
 import { daysBetween } from "./format";
 
@@ -111,16 +112,16 @@ export function buildForms(data) {
       key: "order",
       collection: "orders",
       label: "New Order",
-      icon: UtensilsCrossed,
+      icon: Drumstick,
       title: "Take an order",
-      subtitle: "Pick a menu item and quantity - the total fills in.",
+      subtitle: "Pick a product and quantity - the total fills in.",
       submitLabel: "Add order",
       notify: { channel: "orders", message: (v) => `New order from ${v.customer || "walk-in"}`, type: "order", division: "Food" },
       fields: [
         { key: "date", label: "Date", type: "date", default: TODAY, required: true },
         { key: "customer", label: "Customer", type: "text", placeholder: "Walk-in customer", required: true },
-        { key: "channel", label: "Channel", type: "select", options: opt(["Walk-in", "Phone", "WhatsApp", "Online", "Corporate"]) },
-        { key: "menuItemId", label: "Menu item", type: "select", options: menuOpts, required: true },
+        { key: "channel", label: "Channel", type: "select", options: opt(["Walk-in", "Phone", "WhatsApp", "Online", "Wholesale"]) },
+        { key: "menuItemId", label: "Product", type: "select", options: menuOpts, required: true },
         { key: "qty", label: "Quantity", type: "number", min: 1, default: "1", required: true },
         {
           key: "amount", label: "Amount (KSh)", type: "number", min: 0, default: "",
@@ -138,23 +139,23 @@ export function buildForms(data) {
     menuItem: {
       key: "menuItem",
       collection: "menu",
-      label: "Add Menu Item",
+      label: "Add Product",
       icon: BookMarked,
-      title: "Add a menu item",
-      submitLabel: "Add item",
+      title: "Add a product",
+      submitLabel: "Add product",
       fields: [
-        { key: "name", label: "Name", type: "text", required: true },
-        { key: "category", label: "Category", type: "select", options: opt(["Mains", "Grill", "Trays", "Corporate", "Events", "Drinks", "Sides"]) },
+        { key: "name", label: "Name", type: "text", placeholder: "e.g. Whole chicken (broiler)", required: true },
+        { key: "category", label: "Category", type: "select", options: opt(["Whole birds", "Cuts", "Eggs", "Wholesale", "Live birds"]) },
         { key: "price", label: "Selling price (KSh)", type: "number", min: 0, required: true },
         {
-          key: "cost", label: "Food cost (KSh)", type: "number", min: 0,
+          key: "cost", label: "Cost price (KSh)", type: "number", min: 0,
           computed: (v) => {
             const margin = (Number(v.price) || 0) - (Number(v.cost) || 0);
             const pct = v.price ? Math.round((margin / Number(v.price)) * 100) : 0;
             return `${pct}% margin`;
           },
         },
-        { key: "active", label: "Available", type: "toggle", default: true },
+        { key: "active", label: "In stock", type: "toggle", default: true },
       ],
     },
 
@@ -223,7 +224,7 @@ export function buildForms(data) {
       notify: { channel: "expenses", message: (v) => `Expense logged: ${v.category} - KSh ${Number(v.amount || 0).toLocaleString()}`, type: "expense", division: "General" },
       fields: [
         { key: "date", label: "Date", type: "date", default: TODAY, required: true },
-        { key: "division", label: "Division", type: "select", options: opt(DIVISIONS) },
+        { key: "division", label: "Division", type: "select", options: divisionOptions() },
         { key: "category", label: "Category", type: "select", options: opt(EXPENSE_CATEGORIES) },
         { key: "vendor", label: "Paid to", type: "text", placeholder: "Vendor / payee" },
         { key: "amount", label: "Amount (KSh)", type: "number", min: 0, required: true },
@@ -257,7 +258,7 @@ export function buildForms(data) {
           key: "party",
           label: "Paid to / received from",
           type: "text",
-          placeholder: "e.g. Karim Butchery",
+          placeholder: "e.g. Kenchic Ltd",
           required: true,
         },
         {
@@ -268,7 +269,7 @@ export function buildForms(data) {
           required: true,
           computed: (v) => `KSh ${(Number(v.amount) || 0).toLocaleString()}`,
         },
-        { key: "division", label: "Which service?", type: "select", options: opt(DIVISIONS) },
+        { key: "division", label: "Which service?", type: "select", options: divisionOptions() },
         {
           key: "category",
           label: "What for?",
@@ -304,7 +305,7 @@ export function buildForms(data) {
         { key: "name", label: "Full name", type: "text", required: true },
         { key: "email", label: "Work email", type: "email", required: true },
         { key: "role", label: "Role", type: "select", options: opt(ROLES) },
-        { key: "division", label: "Division", type: "select", options: opt(["All", ...DIVISIONS.filter((d) => d !== "General")]) },
+        { key: "division", label: "Division", type: "select", options: divisionOptions(["All", ...DIVISIONS.filter((d) => d !== "General")]) },
         { key: "status", label: "Status", type: "select", options: opt(["Invited", "Active", "Suspended"]), default: "Invited" },
       ],
     },
@@ -318,7 +319,7 @@ export function buildForms(data) {
       fields: [
         { key: "title", label: "What needs doing?", type: "text", required: true },
         { key: "due", label: "Due date", type: "date", default: TODAY, required: true },
-        { key: "division", label: "Division", type: "select", options: opt(DIVISIONS) },
+        { key: "division", label: "Division", type: "select", options: divisionOptions() },
         { key: "priority", label: "Priority", type: "select", options: opt(["Low", "Normal", "High"]), default: "Normal" },
       ],
     },

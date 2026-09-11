@@ -125,22 +125,22 @@ function buildTrips() {
 /* ---------------------------------------------------------- food */
 
 export const SEED_MENU = [
-  { id: "m1", name: "Nyama choma platter", category: "Grill", price: 1600, cost: 780, active: true },
-  { id: "m2", name: "Pilau special tray", category: "Trays", price: 1850, cost: 900, active: true },
-  { id: "m3", name: "Fish fillet meal", category: "Mains", price: 950, cost: 430, active: true },
-  { id: "m4", name: "Corporate lunch combo", category: "Corporate", price: 1600, cost: 820, active: true },
-  { id: "m5", name: "Chapati & beef stew", category: "Mains", price: 650, cost: 280, active: true },
-  { id: "m6", name: "Vegetarian buffet", category: "Corporate", price: 1200, cost: 540, active: true },
-  { id: "m7", name: "Event catering", category: "Events", price: 1500, cost: 760, active: true },
-  { id: "m8", name: "Breakfast pack", category: "Mains", price: 480, cost: 190, active: true },
+  { id: "m1", name: "Whole chicken (broiler)", category: "Whole birds", price: 750, cost: 560, active: true },
+  { id: "m2", name: "Kienyeji chicken (whole)", category: "Whole birds", price: 1200, cost: 870, active: true },
+  { id: "m3", name: "Chicken breast (kg)", category: "Cuts", price: 600, cost: 420, active: true },
+  { id: "m4", name: "Drumsticks (kg)", category: "Cuts", price: 500, cost: 350, active: true },
+  { id: "m5", name: "Wings (kg)", category: "Cuts", price: 450, cost: 300, active: true },
+  { id: "m6", name: "Gizzards (kg)", category: "Cuts", price: 400, cost: 260, active: true },
+  { id: "m7", name: "Eggs (tray of 30)", category: "Eggs", price: 480, cost: 380, active: true },
+  { id: "m8", name: "Bulk broilers (per bird)", category: "Wholesale", price: 700, cost: 520, active: true },
 ];
 
 const CUSTOMERS = [
-  "Zenith Africa Ltd", "Amina Yusuf", "Rift Valley Sacco", "Brian Kamau", "Coastal Weddings Co.",
-  "Njoki Wairimu", "Halisi Tech Hub", "Dennis Omondi", "Serene Gardens Ltd", "Faith Chebet",
-  "Kilimani Apartments", "Walk-in customer", "Mwangi & Sons", "Uzuri Salon Group",
+  "Mama Chichi Kiosk", "Amina Yusuf", "Greenspan Butchery", "Brian Kamau", "Highridge Hotel",
+  "Njoki Wairimu", "Halisi Tech Hub Canteen", "Dennis Omondi", "Serene Gardens Restaurant", "Faith Chebet",
+  "Kilimani Apartments", "Walk-in customer", "Mwangi & Sons Butchery", "Uzuri Salon Group",
 ];
-const CHANNELS = ["Walk-in", "Phone", "WhatsApp", "Online", "Corporate"];
+const CHANNELS = ["Walk-in", "Phone", "WhatsApp", "Online", "Wholesale"];
 
 function buildOrders() {
   const orders = [];
@@ -150,8 +150,8 @@ function buildOrders() {
     const count = Math.max(1, wobble(3.3 * DOW_FOOD[dow] * trendAt(offset)));
     for (let i = 0; i < count; i++) {
       const item = pick(SEED_MENU);
-      const bulk = item.category === "Corporate" || item.category === "Events";
-      const mega = bulk && chance(0.045); // rare big event booking
+      const bulk = item.category === "Wholesale";
+      const mega = bulk && chance(0.045); // rare big wholesale order
       const qty = bulk ? Math.round(between(14, 80) * trendAt(offset) * (mega ? 2 : 1)) : between(1, 6);
       const amount = item.price * qty;
       const orderStatus =
@@ -174,7 +174,7 @@ function buildOrders() {
         customer: pick(CUSTOMERS),
         channel: pick(CHANNELS),
         menuItemId: item.id,
-        item: bulk ? `${item.name} (${qty} pax)` : item.name,
+        item: bulk ? `${item.name} (${qty} birds)` : item.name,
         qty,
         unitPrice: item.price,
         amount: orderStatus === "Cancelled" ? 0 : amount,
@@ -261,8 +261,8 @@ const OVERHEADS = [
 ];
 
 const ADHOC = [
-  { division: "Food", category: "Supplies", vendor: "City Market produce", range: [6000, 22000] },
-  { division: "Food", category: "Supplies", vendor: "Karim Butchery", range: [4000, 14000] },
+  { division: "Food", category: "Supplies", vendor: "Kenchic Ltd", range: [6000, 22000] },
+  { division: "Food", category: "Supplies", vendor: "Local poultry farm", range: [4000, 14000] },
   { division: "Transport", category: "Maintenance", vendor: "Autoworks Garage", range: [8000, 48000] },
   { division: "Hospitality", category: "Supplies", vendor: "Linen & Co.", range: [3000, 18000] },
   { division: "General", category: "Marketing", vendor: "Digital Hub Agency", range: [5000, 30000] },
@@ -305,8 +305,8 @@ function buildExpenses() {
 /* ---------------------------------------------------------- payments (worker-initiated) */
 
 const PAY_OUT = [
-  { party: "Karim Butchery", division: "Food", category: "Supplies" },
-  { party: "City Market produce", division: "Food", category: "Supplies" },
+  { party: "Kenchic Ltd", division: "Food", category: "Supplies" },
+  { party: "Local poultry farm", division: "Food", category: "Supplies" },
   { party: "Autoworks Garage", division: "Transport", category: "Maintenance" },
   { party: "Shell Kilimani", division: "Transport", category: "Fuel" },
   { party: "Linen & Co.", division: "Hospitality", category: "Supplies" },

@@ -5,7 +5,7 @@
    ============================================================ */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Send, Search, MessagesSquare, Clock, Pencil, Trash2, ArrowLeft } from "lucide-react";
-import { C, DIVISIONS } from "../lib/constants";
+import { C, DIVISIONS, divisionLabel } from "../lib/constants";
 import { relativeTime, formatDateLong } from "../lib/format";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
@@ -131,7 +131,7 @@ function Messages() {
                 <Avatar name={active.user.name} size={36} />
                 <div className="min-w-0">
                   <p className="text-sm font-bold truncate" style={{ color: C.ink }}>{active.user.name}</p>
-                  <p className="text-xs truncate" style={{ color: C.muted }}>{active.user.role} · {active.user.division}</p>
+                  <p className="text-xs truncate" style={{ color: C.muted }}>{active.user.role} · {divisionLabel(active.user.division)}</p>
                 </div>
               </div>
 
@@ -224,7 +224,7 @@ function Reminders() {
         />
       </div>
       <div className="px-3 sm:px-5 pb-3">
-        <ChipRow options={["All", ...DIVISIONS]} value={div} onChange={setDiv} />
+        <ChipRow options={["All", ...DIVISIONS].map((d) => ({ value: d, label: divisionLabel(d) }))} value={div} onChange={setDiv} />
       </div>
       <div className="px-5 pb-5 space-y-1">
         {rows.length === 0 && <EmptyState icon={Clock} text="Nothing here" />}
@@ -237,7 +237,7 @@ function Reminders() {
                 <p className="text-sm truncate" style={{ color: r.done ? C.faint : C.ink, textDecoration: r.done ? "line-through" : "none" }}>{r.title}</p>
                 <p className="text-xs mt-0.5 flex items-center gap-1.5" style={{ color: overdue ? C.coral : C.faint }}>
                   {overdue ? "Overdue · " : "Due "}{formatDateLong(r.due)}
-                  <Badge tone="slate" size="sm">{r.division}</Badge>
+                  <Badge tone="slate" size="sm">{divisionLabel(r.division)}</Badge>
                 </p>
               </div>
               <Badge tone={PRIORITY_TONE[r.priority]} size="sm">{r.priority}</Badge>

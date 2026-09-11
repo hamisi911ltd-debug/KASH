@@ -67,6 +67,13 @@ export const CHART_PALETTE = {
 
 export const DIVISIONS = ["Transport", "Food", "Hospitality", "General"];
 
+/* The "Food" division is configured here as a chicken-selling business -
+   the internal value stays "Food" (it's the key everything else joins
+   on), but everywhere the user reads it, it should say "Chicken". */
+export const DIVISION_LABEL = { Transport: "Transport", Food: "Chicken", Hospitality: "Hospitality", General: "General" };
+export const divisionLabel = (d) => DIVISION_LABEL[d] || d;
+export const divisionOptions = (arr = DIVISIONS) => arr.map((d) => ({ value: d, label: divisionLabel(d) }));
+
 export const DIVISION_META = {
   Transport: { color: C.emerald, chart: "emerald", tone: "emerald" },
   Food: { color: C.amber, chart: "amber", tone: "amber" },

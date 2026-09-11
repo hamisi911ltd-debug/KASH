@@ -2,7 +2,7 @@
    P&L, and export. This is the same data as every other view. */
 import React, { useMemo, useState } from "react";
 import { Download, Printer, TrendingUp, TrendingDown, Wallet, Percent } from "lucide-react";
-import { C, DIVISIONS } from "../lib/constants";
+import { C, DIVISIONS, divisionLabel } from "../lib/constants";
 import { formatKES, formatDateShort, downloadCSV, formatDateLong } from "../lib/format";
 import {
   resolvePeriod, buildLedger, inRange, seriesByMonth, computeMetrics, outstanding, topBy,
@@ -82,7 +82,7 @@ export default function ReportsView() {
 
   const columns = [
     { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
-    { key: "division", header: "Division", sortValue: (r) => r.division, render: (r) => <Badge tone={DIV_TONE[r.division]} size="sm">{r.division}</Badge> },
+    { key: "division", header: "Division", sortValue: (r) => r.division, render: (r) => <Badge tone={DIV_TONE[r.division]} size="sm">{divisionLabel(r.division)}</Badge> },
     { key: "desc", header: "Description", sortValue: (r) => r.desc, wrap: true },
     { key: "category", header: "Category", sortValue: (r) => r.category, muted: true },
     { key: "income", header: "Income", align: "right", sortValue: (r) => (r.kind === "income" ? r.amount : 0), render: (r) => r.kind === "income" ? <span className="font-semibold" style={{ color: C.emerald }}>{formatKES(r.amount)}</span> : <span style={{ color: C.faint }}>-</span> },
@@ -117,7 +117,7 @@ export default function ReportsView() {
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: C.faint }}>Division</label>
             <select value={division} onChange={(e) => setDivision(e.target.value)} className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.line }}>
-              {["All", ...DIVISIONS].map((d) => <option key={d}>{d}</option>)}
+              {["All", ...DIVISIONS].map((d) => <option key={d} value={d}>{divisionLabel(d)}</option>)}
             </select>
           </div>
           <div>
@@ -160,7 +160,7 @@ export default function ReportsView() {
               <div key={r.id} className="flex items-center justify-between text-sm">
                 <div className="min-w-0">
                   <p className="truncate" style={{ color: C.ink }}>{r.who}</p>
-                  <p className="text-xs" style={{ color: C.faint }}>{r.division} · {formatDateShort(r.date)}</p>
+                  <p className="text-xs" style={{ color: C.faint }}>{divisionLabel(r.division)} · {formatDateShort(r.date)}</p>
                 </div>
                 <span className="font-semibold shrink-0" style={{ color: C.ink }}>{formatKES(r.due)}</span>
               </div>
@@ -191,7 +191,7 @@ export default function ReportsView() {
               <tbody>
                 {pnlByDivision.map((d) => (
                   <tr key={d.division} className="border-t" style={{ borderColor: C.line }}>
-                    <td className="px-2 py-2 sm:px-4 sm:py-2.5"><Badge tone={DIV_TONE[d.division]} size="sm">{d.division}</Badge></td>
+                    <td className="px-2 py-2 sm:px-4 sm:py-2.5"><Badge tone={DIV_TONE[d.division]} size="sm">{divisionLabel(d.division)}</Badge></td>
                     <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right" style={{ color: C.emerald }}>{formatKES(d.income)}</td>
                     <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right hidden sm:table-cell" style={{ color: C.coral }}>{formatKES(d.expense)}</td>
                     <td className="px-2 py-2 sm:px-4 sm:py-2.5 text-right font-semibold" style={{ color: d.profit >= 0 ? C.ink : C.coral }}>{formatKES(d.profit)}</td>

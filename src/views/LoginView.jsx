@@ -6,7 +6,7 @@
    ============================================================ */
 import React, { useState } from "react";
 import {
-  Mail, Lock, Eye, EyeOff, Truck, UtensilsCrossed, BedDouble, ArrowRight,
+  Mail, Lock, Eye, EyeOff, Truck, Drumstick, BedDouble, ArrowRight,
   LayoutDashboard, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { C } from "../lib/constants";
@@ -18,7 +18,7 @@ import { useStore } from "../lib/store.jsx";
 const BUSINESSES = [
   { key: "overview", label: "Admin", sub: "Whole business overview", icon: LayoutDashboard, color: C.blue, soft: C.blueSoft, role: "Super Admin" },
   { key: "transport", label: "Transport", sub: "Fleet, trips & drivers", icon: Truck, color: C.emerald, soft: C.emeraldSoft, role: "Transport Manager" },
-  { key: "food", label: "Food", sub: "Orders & the kitchen", icon: UtensilsCrossed, color: C.amber, soft: C.amberSoft, role: "Food Manager" },
+  { key: "food", label: "Chicken", sub: "Orders & stock", icon: Drumstick, color: C.amber, soft: C.amberSoft, role: "Food Manager" },
   { key: "hospitality", label: "Hospitality", sub: "Rooms & bookings", icon: BedDouble, color: C.coral, soft: C.coralSoft, role: "Hospitality Manager" },
 ];
 
@@ -26,7 +26,7 @@ function Panel({ accent }) {
   const { data } = useStore();
   const stats = [
     { icon: Truck, label: "Transport", value: `${data.vehicles.filter((v) => v.status === "Active").length} vehicles active` },
-    { icon: UtensilsCrossed, label: "Food", value: `${data.menu.filter((m) => m.active).length} live menu items` },
+    { icon: Drumstick, label: "Chicken", value: `${data.menu.filter((m) => m.active).length} products in stock` },
     { icon: BedDouble, label: "Hospitality", value: `${data.rooms.length} rooms managed` },
   ];
   return (

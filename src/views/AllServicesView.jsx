@@ -1,7 +1,7 @@
 /* Side-by-side comparison of all three divisions. */
 import React, { useMemo } from "react";
-import { Truck, UtensilsCrossed, BedDouble, ArrowRight } from "lucide-react";
-import { C } from "../lib/constants";
+import { Truck, Drumstick, BedDouble, ArrowRight } from "lucide-react";
+import { C, divisionLabel } from "../lib/constants";
 import { formatKES } from "../lib/format";
 import { resolvePeriod, computeMetrics, seriesByDay } from "../lib/derive";
 import { TODAY } from "../lib/seed";
@@ -13,7 +13,7 @@ import { PageHeader, Page } from "../components/Page.jsx";
 
 const META = {
   Transport: { icon: Truck, color: C.emerald, view: "transport", unit: "trips" },
-  Food: { icon: UtensilsCrossed, color: C.amber, view: "food", unit: "orders" },
+  Food: { icon: Drumstick, color: C.amber, view: "food", unit: "orders" },
   Hospitality: { icon: BedDouble, color: C.coral, view: "hospitality", unit: "bookings" },
 };
 
@@ -53,7 +53,7 @@ export default function AllServicesView() {
                     <Icon size={19} style={{ color: meta.color }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm" style={{ color: C.ink }}>{d.division}</p>
+                    <p className="font-semibold text-sm" style={{ color: C.ink }}>{divisionLabel(d.division)}</p>
                     <p className="text-xs" style={{ color: C.muted }}>{counts[d.division]} {meta.unit}</p>
                   </div>
                 </div>
@@ -83,7 +83,7 @@ export default function AllServicesView() {
 
               <div className="mt-4">
                 <Button variant="outline" size="sm" onClick={() => navigate(meta.view)}>
-                  Open {d.division} <ArrowRight size={13} />
+                  Open {divisionLabel(d.division)} <ArrowRight size={13} />
                 </Button>
               </div>
             </Card>

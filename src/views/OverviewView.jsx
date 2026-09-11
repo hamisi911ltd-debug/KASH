@@ -6,9 +6,9 @@
 import React, { useMemo } from "react";
 import {
   TrendingUp, ChevronRight, AlertTriangle, Activity, ArrowUpRight, ArrowDownRight,
-  Truck, UtensilsCrossed, BedDouble, ArrowRight,
+  Truck, Drumstick, BedDouble, ArrowRight,
 } from "lucide-react";
-import { C } from "../lib/constants";
+import { C, divisionLabel } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import { computeMetrics, resolvePeriod, weeklySeries, buildAlerts, outstanding } from "../lib/derive";
 import { TODAY } from "../lib/seed";
@@ -22,9 +22,9 @@ import { Page } from "../components/Page.jsx";
 const DIV_TONE = { Transport: "emerald", Food: "amber", Hospitality: "coral", General: "violet" };
 const SEV_VAR = { high: "var(--coral)", warn: "var(--amber)", info: "var(--blue)" };
 const SERVICES = [
-  { name: "Transport", key: "transport", icon: Truck, color: C.emerald },
-  { name: "Food", key: "food", icon: UtensilsCrossed, color: C.amber },
-  { name: "Hospitality", key: "hospitality", icon: BedDouble, color: C.coral },
+  { name: "Transport", label: "Transport", key: "transport", icon: Truck, color: C.emerald },
+  { name: "Food", label: "Chicken", key: "food", icon: Drumstick, color: C.amber },
+  { name: "Hospitality", label: "Hospitality", key: "hospitality", icon: BedDouble, color: C.coral },
 ];
 
 export default function OverviewView() {
@@ -119,7 +119,7 @@ export default function OverviewView() {
                 <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: sv.color + "22" }}>
                   <sv.icon size={14} style={{ color: sv.color }} />
                 </div>
-                <p className="font-bold text-sm" style={{ color: C.ink }}>{sv.name}</p>
+                <p className="font-bold text-sm" style={{ color: C.ink }}>{sv.label}</p>
                 <ChevronRight size={14} className="ml-auto" style={{ color: C.faint }} />
               </div>
 
@@ -182,7 +182,7 @@ export default function OverviewView() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm truncate" style={{ color: C.ink }}>
-                    {l.kind === "income" ? "Received" : "Spent"} · {l.division}
+                    {l.kind === "income" ? "Received" : "Spent"} · {divisionLabel(l.division)}
                   </p>
                   <p className="text-xs" style={{ color: C.faint }}>{formatDateShort(l.date)}</p>
                 </div>

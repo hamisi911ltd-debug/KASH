@@ -17,6 +17,7 @@
    Cancelled records contribute nothing on either side.
    ============================================================ */
 import { parseDate, toISODate, addDays, daysBetween, delta } from "./format";
+import { divisionLabel } from "./constants";
 
 export const CANCELLED = "Cancelled";
 
@@ -558,7 +559,7 @@ export function searchAll(data, query, limit = 24) {
   });
   data.expenses.forEach((e) => {
     if (`${e.category} ${e.notes || ""} ${e.vendor || ""}`.toLowerCase().includes(q))
-      add("Expense", "expenses", e.notes || e.category, `${e.division} - ${e.date}`, e.id);
+      add("Expense", "expenses", e.notes || e.category, `${divisionLabel(e.division)} - ${e.date}`, e.id);
   });
   data.users.forEach((u) => {
     if (`${u.name} ${u.email}`.toLowerCase().includes(q))
