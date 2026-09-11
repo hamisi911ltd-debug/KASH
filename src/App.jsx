@@ -219,7 +219,14 @@ export default function App() {
   useHotkey("mod+b", () => setDrawerOpen((o) => !o), []);
 
   if (!session) {
-    return <LoginView onSignIn={(s) => { setSession(s); setActiveView("overview"); }} />;
+    return (
+      <LoginView
+        onSignIn={(s, startView) => {
+          setSession(s);
+          setActiveView(startView && canOpenView(s.role, startView) ? startView : "overview");
+        }}
+      />
+    );
   }
 
   const ActiveView = VIEWS[canOpenView(role, activeView) ? activeView : "overview"] || OverviewView;

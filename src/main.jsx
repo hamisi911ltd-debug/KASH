@@ -47,7 +47,7 @@ createRoot(document.getElementById("root")).render(
    minimum so the logo animation always gets to play). */
 (() => {
   const START = performance.now();
-  const MIN_MS = 900;
+  const MIN_MS = 3000; // the KASH mark gets a full 3s on screen before the app takes over
   const dismiss = () => {
     const el = document.getElementById("kash-splash");
     if (!el || el.classList.contains("hide")) return;
