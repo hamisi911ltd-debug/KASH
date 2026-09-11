@@ -1,15 +1,13 @@
 /* Food division: orders, menu, sales mix and kitchen margin. */
 import React, { useMemo, useState } from "react";
-import { Plus, Drumstick, TrendingUp, Coins, Clock, Pencil, Trash2, ShoppingBag, BookMarked } from "lucide-react";
+import { Plus, Drumstick, ArrowDownRight, ArrowUpRight, Clock, Pencil, Trash2, ShoppingBag, BookMarked } from "lucide-react";
 import { C } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
-import { resolvePeriod, computeMetrics, weeklySeries, inRange, CANCELLED } from "../lib/derive";
+import { resolvePeriod, computeMetrics, inRange, CANCELLED } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
-import { GroupedBars } from "../components/Charts.jsx";
-import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
@@ -18,7 +16,6 @@ import { statusTone, ORDER_STATUSES, PAYMENT_STATUSES } from "../lib/constants";
 export default function FoodView() {
   const { data, prefs } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
-  const pal = useChartPalette();
   const [tab, setTab] = useState("orders");
   const [q, setQ] = useState("");
   const [oStatus, setOStatus] = useState("All");
@@ -34,10 +31,6 @@ export default function FoodView() {
   const ordersInRange = useMemo(
     () => data.orders.filter((o) => inRange(o.date, range.from, range.to)),
     [data.orders, range]
-  );
-  const series = useMemo(
-    () => weeklySeries(m.ledger.filter((l) => l.division === "Food"), 8, new Date(TODAY)),
-    [m.ledger]
   );
   const openOrders = ordersInRange.filter((o) => ["Preparing", "Out for Delivery"].includes(o.orderStatus)).length;
   const avgOrder = ordersInRange.length ? Math.round(ordersInRange.reduce((s, o) => s + o.amount, 0) / ordersInRange.length) : 0;
@@ -97,24 +90,11 @@ export default function FoodView() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        <StatCard icon={TrendingUp} label={`Revenue · ${range.label}`} value={formatKES(food?.income || 0)} trend={food?.incomeDelta} tint={C.emerald} />
-        <StatCard icon={Coins} label="Net profit" value={formatKES(food?.profit || 0)} sub={`${Math.round(food?.margin || 0)}% margin`} tint={C.blue} />
+        <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(food?.income || 0)} trend={food?.incomeDelta} tint={C.emerald} />
+        <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(food?.expense || 0)} tint={C.coral} />
         <StatCard icon={ShoppingBag} label="Orders" value={ordersInRange.length} sub={`avg ${formatKES(avgOrder)}`} tint={C.amber} />
-        <StatCard icon={Clock} label="Open orders" value={openOrders} sub="preparing / delivering" tint={C.coral} />
+        <StatCard icon={Clock} label="Open orders" value={openOrders} sub="preparing / delivering" tint={C.violet} />
       </div>
-
-      <Card className="lg:max-w-2xl">
-        <SectionTitle title="Received vs spent" subtitle="Weekly, last 8 weeks" />
-        <GroupedBars
-          data={series}
-          series={[
-            { key: "income", label: "Received", color: pal.blue },
-            { key: "expense", label: "Spent", color: pal.coral },
-          ]}
-          height={165}
-          maxBarSize={26}
-        />
-      </Card>
 
       <Card padded={false}>
         <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">

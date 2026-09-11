@@ -4,12 +4,11 @@ import React, { useMemo, useState } from "react";
 import { Plus, Wallet, Pencil, Trash2, Lock, Receipt } from "lucide-react";
 import { C, DIVISIONS, EXPENSE_CATEGORIES, PAYMENT_METHODS, divisionLabel, divisionOptions } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
-import { resolvePeriod, computeMetrics, buildLedger, inRange, topBy } from "../lib/derive";
+import { resolvePeriod, buildLedger, inRange } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, ChipRow, Segmented } from "../components/ui.jsx";
-import { BarSeries, DonutChart } from "../components/Charts.jsx";
 import DataTable from "../components/DataTable.jsx";
 import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
@@ -28,7 +27,6 @@ export default function ExpensesView() {
   const [to, setTo] = useState("");
 
   const range = useMemo(() => resolvePeriod(prefs.period, prefs.customRange, new Date(TODAY)), [prefs]);
-  const m = useMemo(() => computeMetrics(data, range), [data, range]);
 
   const expenseLines = useMemo(
     () => buildLedger(data).filter((l) => l.kind === "expense" && inRange(l.date, range.from, range.to)),
@@ -50,8 +48,6 @@ export default function ExpensesView() {
     total: expenseLines.filter((l) => l.division === d).reduce((s, l) => s + l.amount, 0),
   }));
 
-  const byCategory = topBy(filtered, (l) => l.category, (l) => l.amount, 8);
-  const donutData = totalsByDivision.filter((d) => d.total > 0).map((d) => ({ name: d.division, value: d.total }));
   const autoTotal = expenseLines.filter((l) => l.source !== "manual").reduce((s, l) => s + l.amount, 0);
 
   const columns = [
@@ -91,20 +87,9 @@ export default function ExpensesView() {
           />
         ))}
       </div>
-
-      <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2">
-          <SectionTitle title="Spend by category" subtitle={range.label} />
-          <BarSeries data={byCategory} horizontal height={220} color={C.coral} />
-        </Card>
-        <Card>
-          <SectionTitle title="Split by division" />
-          <DonutChart data={donutData} centerLabel="Total" centerValue={formatKES(m.expense).replace("KSh ", "")} />
-          <p className="text-xs mt-3" style={{ color: C.faint }}>
-            {formatKES(autoTotal)} of this is auto-posted from trips and orders.
-          </p>
-        </Card>
-      </div>
+      <p className="text-xs -mt-1" style={{ color: C.faint }}>
+        {formatKES(autoTotal)} of this is auto-posted from trips and orders.
+      </p>
 
       <Card padded={false}>
         <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">

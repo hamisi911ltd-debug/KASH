@@ -1,17 +1,15 @@
 /* Transport division: fleet, drivers, trips, and trip-level P&L. */
 import React, { useMemo, useState } from "react";
-import { Plus, Truck, Users, Fuel, TrendingUp, Coins, Pencil, Trash2, MapPin, Route } from "lucide-react";
+import { Plus, Truck, Users, ArrowDownRight, ArrowUpRight, Coins, Pencil, Trash2, MapPin, Route } from "lucide-react";
 import { C } from "../lib/constants";
 import { formatKES, formatNumber, formatDateShort } from "../lib/format";
 import {
-  resolvePeriod, computeMetrics, weeklySeries, inRange, CANCELLED,
+  resolvePeriod, computeMetrics, inRange, CANCELLED,
 } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
-import { GroupedBars } from "../components/Charts.jsx";
-import { useChartPalette } from "../lib/hooks.js";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
@@ -20,7 +18,6 @@ import { statusTone, TRIP_STATUSES, VEHICLE_STATUSES, DRIVER_STATUSES } from "..
 export default function TransportView() {
   const { data, prefs } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
-  const pal = useChartPalette();
   const [tab, setTab] = useState("trips");
   const [q, setQ] = useState("");
   const [tStatus, setTStatus] = useState("All");
@@ -37,10 +34,6 @@ export default function TransportView() {
   const tripsInRange = useMemo(
     () => data.trips.filter((t) => inRange(t.date, range.from, range.to)),
     [data.trips, range]
-  );
-  const series = useMemo(
-    () => weeklySeries(m.ledger.filter((l) => l.division === "Transport"), 8, new Date(TODAY)),
-    [m.ledger]
   );
   const driverName = (id) => data.drivers.find((d) => d.id === id)?.name || "-";
   const vehicleReg = (id) => data.vehicles.find((v) => v.id === id)?.reg || "-";
@@ -65,7 +58,6 @@ export default function TransportView() {
 
   const activeVehicles = data.vehicles.filter((v) => v.status === "Active").length;
   const onDuty = data.drivers.filter((d) => d.status === "On Duty").length;
-  const fuelSpend = m.current.filter((l) => l.division === "Transport" && l.category === "Fuel").reduce((s, l) => s + l.amount, 0);
 
   const tripColumns = [
     { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
@@ -123,24 +115,11 @@ export default function TransportView() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        <StatCard icon={TrendingUp} label={`Revenue · ${range.label}`} value={formatKES(transport?.income || 0)} trend={transport?.incomeDelta} tint={C.emerald} />
+        <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(transport?.income || 0)} trend={transport?.incomeDelta} tint={C.emerald} />
+        <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(transport?.expense || 0)} tint={C.coral} />
         <StatCard icon={Coins} label="Net profit" value={formatKES(transport?.profit || 0)} sub={`${Math.round(transport?.margin || 0)}% margin`} tint={C.blue} />
-        <StatCard icon={Truck} label="Fleet" value={`${activeVehicles}/${data.vehicles.length}`} sub="active vehicles" tint={C.violet} />
-        <StatCard icon={Fuel} label="Fuel spend" value={formatKES(fuelSpend)} sub={`${onDuty} drivers on duty`} tint={C.coral} />
+        <StatCard icon={Truck} label="Fleet" value={`${activeVehicles}/${data.vehicles.length}`} sub={`${onDuty} drivers on duty`} tint={C.violet} />
       </div>
-
-      <Card className="lg:max-w-2xl">
-        <SectionTitle title="Received vs spent" subtitle="Weekly, last 8 weeks" />
-        <GroupedBars
-          data={series}
-          series={[
-            { key: "income", label: "Received", color: pal.blue },
-            { key: "expense", label: "Spent", color: pal.coral },
-          ]}
-          height={165}
-          maxBarSize={26}
-        />
-      </Card>
 
       <Card padded={false}>
         <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">

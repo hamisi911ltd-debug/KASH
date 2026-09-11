@@ -5,22 +5,19 @@ import { Download, Printer, TrendingUp, TrendingDown, Wallet, Percent } from "lu
 import { C, DIVISIONS, divisionLabel } from "../lib/constants";
 import { formatKES, formatDateShort, downloadCSV, formatDateLong } from "../lib/format";
 import {
-  resolvePeriod, buildLedger, inRange, seriesByMonth, computeMetrics, outstanding, topBy,
+  resolvePeriod, buildLedger, inRange, outstanding,
 } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
-import { GroupedBars, BarSeries } from "../components/Charts.jsx";
 import DataTable from "../components/DataTable.jsx";
 import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
-import { useChartPalette } from "../lib/hooks.js";
 
 const DIV_TONE = { Transport: "emerald", Food: "amber", Hospitality: "coral", General: "violet" };
 
 export default function ReportsView() {
   const { data, prefs, setPrefs } = useStore();
-  const pal = useChartPalette();
   const [division, setDivision] = useState("All");
   const [kind, setKind] = useState("all"); // all | income | expense
   const [q, setQ] = useState("");
@@ -50,11 +47,6 @@ export default function ReportsView() {
   const expense = rows.filter((r) => r.kind === "expense").reduce((s, r) => s + r.amount, 0);
   const profit = income - expense;
   const margin = income ? (profit / income) * 100 : 0;
-
-  const monthly = useMemo(
-    () => seriesByMonth(division === "All" ? ledger : ledger.filter((l) => l.division === division), 8, new Date(TODAY)),
-    [ledger, division]
-  );
 
   const pnlByDivision = DIVISIONS.map((d) => {
     const inc = rows.filter((r) => r.division === d && r.kind === "income").reduce((s, r) => s + r.amount, 0);
@@ -140,35 +132,22 @@ export default function ReportsView() {
         <StatCard icon={Percent} label="Margin" value={income ? `${Math.round(margin)}%` : "-"} tint={C.violet} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2">
-          <SectionTitle title="Monthly trend" subtitle={division === "All" ? "All divisions · last 8 months" : division} />
-          <GroupedBars
-            data={monthly}
-            series={[
-              { key: "income", label: "Income", color: pal.blue },
-              { key: "expense", label: "Expenses", color: pal.coral },
-            ]}
-            height={220}
-          />
-        </Card>
-        <Card>
-          <SectionTitle title="Outstanding" subtitle="Invoiced, not yet paid" />
-          <p className="text-2xl font-bold font-display" style={{ color: C.amber }}>{formatKES(ar.total)}</p>
-          <div className="mt-3 space-y-2 max-h-[210px] overflow-y-auto n1-scroll">
-            {ar.rows.slice(0, 8).map((r) => (
-              <div key={r.id} className="flex items-center justify-between text-sm">
-                <div className="min-w-0">
-                  <p className="truncate" style={{ color: C.ink }}>{r.who}</p>
-                  <p className="text-xs" style={{ color: C.faint }}>{divisionLabel(r.division)} · {formatDateShort(r.date)}</p>
-                </div>
-                <span className="font-semibold shrink-0" style={{ color: C.ink }}>{formatKES(r.due)}</span>
+      <Card>
+        <SectionTitle title="Outstanding" subtitle="Invoiced, not yet paid" />
+        <p className="text-2xl font-bold font-display" style={{ color: C.amber }}>{formatKES(ar.total)}</p>
+        <div className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-2 max-h-[260px] overflow-y-auto n1-scroll">
+          {ar.rows.slice(0, 12).map((r) => (
+            <div key={r.id} className="flex items-center justify-between text-sm">
+              <div className="min-w-0">
+                <p className="truncate" style={{ color: C.ink }}>{r.who}</p>
+                <p className="text-xs" style={{ color: C.faint }}>{divisionLabel(r.division)} · {formatDateShort(r.date)}</p>
               </div>
-            ))}
-            {ar.rows.length === 0 && <p className="text-sm py-6 text-center" style={{ color: C.faint }}>Everything is paid up.</p>}
-          </div>
-        </Card>
-      </div>
+              <span className="font-semibold shrink-0" style={{ color: C.ink }}>{formatKES(r.due)}</span>
+            </div>
+          ))}
+          {ar.rows.length === 0 && <p className="text-sm py-6 text-center" style={{ color: C.faint }}>Everything is paid up.</p>}
+        </div>
+      </Card>
 
       {pnlByDivision.length > 0 && (
         <Card>

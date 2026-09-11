@@ -3,12 +3,11 @@ import React, { useMemo } from "react";
 import { Truck, Drumstick, BedDouble, ArrowRight } from "lucide-react";
 import { C, divisionLabel } from "../lib/constants";
 import { formatKES } from "../lib/format";
-import { resolvePeriod, computeMetrics, seriesByDay } from "../lib/derive";
+import { resolvePeriod, computeMetrics } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, SectionTitle, Button, TrendPill, ProgressBar } from "../components/ui.jsx";
-import { Sparkline } from "../components/Charts.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 
 const META = {
@@ -40,11 +39,6 @@ export default function AllServicesView() {
         {rows.map((d) => {
           const meta = META[d.division];
           const Icon = meta.icon;
-          const spark = seriesByDay(
-            m.current.filter((l) => l.division === d.division && l.kind === "income"),
-            range.from,
-            range.to
-          ).map((b) => ({ value: b.income }));
           return (
             <Card key={d.division} hover>
               <div className="flex items-center justify-between">
@@ -58,10 +52,6 @@ export default function AllServicesView() {
                   </div>
                 </div>
                 <TrendPill value={d.incomeDelta} />
-              </div>
-
-              <div className="mt-3 -mx-1">
-                <Sparkline data={spark} color={meta.color} height={48} />
               </div>
 
               <div className="mt-3 space-y-2 text-sm">

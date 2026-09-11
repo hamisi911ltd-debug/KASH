@@ -6,20 +6,17 @@
 import React, { useMemo } from "react";
 import {
   TrendingUp, ChevronRight, AlertTriangle, Activity, ArrowUpRight, ArrowDownRight,
-  Truck, Drumstick, BedDouble, ArrowRight,
+  Truck, Drumstick, BedDouble,
 } from "lucide-react";
 import { C, divisionLabel } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
-import { computeMetrics, resolvePeriod, weeklySeries, buildAlerts, outstanding } from "../lib/derive";
+import { computeMetrics, resolvePeriod, buildAlerts, outstanding } from "../lib/derive";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
-import { useChartPalette } from "../lib/hooks.js";
-import { Card, SectionTitle, Badge, Button, TrendPill, EmptyState, ProgressBar } from "../components/ui.jsx";
-import { GroupedBars, MiniBars } from "../components/Charts.jsx";
+import { Card, StatCard, SectionTitle, Badge, Button, EmptyState, ProgressBar } from "../components/ui.jsx";
 import { Page } from "../components/Page.jsx";
 
-const DIV_TONE = { Transport: "emerald", Food: "amber", Hospitality: "coral", General: "violet" };
 const SEV_VAR = { high: "var(--coral)", warn: "var(--amber)", info: "var(--blue)" };
 const SERVICES = [
   { name: "Transport", label: "Transport", key: "transport", icon: Truck, color: C.emerald },
@@ -30,31 +27,17 @@ const SERVICES = [
 export default function OverviewView() {
   const { data, prefs, setPrefs, session } = useStore();
   const { navigate } = useActions();
-  const pal = useChartPalette();
 
   const range = useMemo(
     () => resolvePeriod(prefs.period, prefs.customRange, new Date(TODAY)),
     [prefs.period, prefs.customRange]
   );
   const m = useMemo(() => computeMetrics(data, range), [data, range]);
-  const weekly = useMemo(() => weeklySeries(m.ledger, 12, new Date(TODAY)), [m.ledger]);
-  const divWeekly = useMemo(() => {
-    const map = {};
-    SERVICES.forEach((sv) => {
-      map[sv.name] = weeklySeries(
-        m.ledger.filter((l) => l.division === sv.name && l.kind === "income"),
-        8,
-        new Date(TODAY)
-      ).map((w) => ({ label: w.label, v: w.income }));
-    });
-    return map;
-  }, [m.ledger]);
   const alerts = useMemo(() => buildAlerts(data, TODAY), [data]);
   const ar = useMemo(() => outstanding(data), [data]);
   const firstName = (session?.name || "there").split(" ")[0];
 
-  const recent = m.current.slice(0, 6);
-  const netTone = m.profit >= 0 ? C.blue : C.coral;
+  const recent = m.current.slice(0, 8);
 
   return (
     <Page>
@@ -76,33 +59,14 @@ export default function OverviewView() {
         </select>
       </div>
 
-      {/* net position */}
-      <Card
-        className="relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${C.blueSoft}, ${C.surface} 68%)` }}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-          <div className="min-w-0">
-            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide" style={{ color: C.muted }}>
-              Net position · {range.label}
-            </p>
-            <p className="mt-1 text-[24px] sm:text-3xl font-bold font-display leading-none" style={{ color: netTone }}>
-              {formatKES(m.profit)}
-            </p>
-            <div className="mt-2 flex items-center gap-2 flex-wrap">
-              <TrendPill value={m.profitDelta} />
-              <span className="text-xs" style={{ color: C.faint }}>vs previous period</span>
-            </div>
-          </div>
+      {/* money in / money out / net position */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5">
+        <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(m.income)} trend={m.incomeDelta} tint={C.emerald} />
+        <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(m.expense)} tint={C.coral} />
+        <StatCard icon={TrendingUp} label="Net position" value={formatKES(m.profit)} trend={m.profitDelta} tint={C.blue} />
+      </div>
 
-          <div className="flex gap-2 sm:gap-3">
-            <MoneyChip icon={ArrowDownRight} label="Money in" value={formatKES(m.income)} tone={C.emerald} />
-            <MoneyChip icon={ArrowUpRight} label="Money out" value={formatKES(m.expense)} tone={C.coral} />
-          </div>
-        </div>
-      </Card>
-
-      {/* per-service: revenue + its own trend + share of the whole */}
+      {/* per-service: revenue + share of the whole */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
         {SERVICES.map((sv, i) => {
           const d = m.byDivision.find((x) => x.division === sv.name) || { income: 0, profit: 0, incomeDelta: null };
@@ -127,10 +91,6 @@ export default function OverviewView() {
                 {formatKES(d.income)}
               </p>
 
-              <div className="mt-1.5">
-                <MiniBars data={divWeekly[sv.name]} color={sv.color} height={96} />
-              </div>
-
               <div className="mt-2 flex items-center gap-2">
                 <ProgressBar value={share} tone={sv.color} height={5} />
                 <span className="text-[10px] font-semibold shrink-0" style={{ color: C.muted }}>{share}% of revenue</span>
@@ -139,28 +99,6 @@ export default function OverviewView() {
           );
         })}
       </div>
-
-      {/* money in vs money out */}
-      <Card>
-        <SectionTitle
-          title="Money in vs money out"
-          subtitle="Each week for the last 12 weeks"
-          action={
-            <div className="flex gap-3">
-              <Legend color={pal.blue} label="In" />
-              <Legend color={pal.coral} label="Out" />
-            </div>
-          }
-        />
-        <GroupedBars
-          data={weekly}
-          series={[
-            { key: "income", label: "Money in", color: pal.blue },
-            { key: "expense", label: "Money out", color: pal.coral },
-          ]}
-          height={220}
-        />
-      </Card>
 
       {/* what happened + what to check */}
       <div className="grid lg:grid-cols-2 gap-3 sm:gap-4">
@@ -226,24 +164,5 @@ export default function OverviewView() {
         </Card>
       </div>
     </Page>
-  );
-}
-
-function MoneyChip({ icon: Icon, label, value, tone }) {
-  return (
-    <div className="rounded-xl border px-3 py-2" style={{ borderColor: C.line, background: C.surface }}>
-      <p className="text-[10px] font-semibold flex items-center gap-1" style={{ color: C.muted }}>
-        <Icon size={11} style={{ color: tone }} /> {label}
-      </p>
-      <p className="mt-0.5 text-sm font-bold font-display" style={{ color: C.ink }}>{value}</p>
-    </div>
-  );
-}
-
-function Legend({ color, label }) {
-  return (
-    <span className="flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
-      <span className="h-2 w-2 rounded-full" style={{ background: color }} /> {label}
-    </span>
   );
 }
