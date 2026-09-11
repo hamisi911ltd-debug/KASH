@@ -14,7 +14,7 @@ import { computeMetrics, resolvePeriod, buildAlerts, outstanding } from "../lib/
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
-import { Card, StatCard, SectionTitle, Badge, Button, EmptyState, ProgressBar } from "../components/ui.jsx";
+import { Card, StatCard, SectionTitle, Badge, Button, EmptyState } from "../components/ui.jsx";
 import { Page } from "../components/Page.jsx";
 
 const SEV_VAR = { high: "var(--coral)", warn: "var(--amber)", info: "var(--blue)" };
@@ -59,43 +59,22 @@ export default function OverviewView() {
         </select>
       </div>
 
-      {/* money in / money out / net position */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5">
-        <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(m.income)} trend={m.incomeDelta} tint={C.emerald} />
-        <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(m.expense)} tint={C.coral} />
-        <StatCard icon={TrendingUp} label="Net position" value={formatKES(m.profit)} trend={m.profitDelta} tint={C.blue} />
-      </div>
-
-      {/* per-service: revenue + share of the whole */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
-        {SERVICES.map((sv, i) => {
+      {/* net position + each service, as four cards of the same size */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+        <StatCard icon={TrendingUp} label={`Net position · ${range.label}`} value={formatKES(m.profit)} trend={m.profitDelta} tint={C.blue} />
+        {SERVICES.map((sv) => {
           const d = m.byDivision.find((x) => x.division === sv.name) || { income: 0, profit: 0, incomeDelta: null };
           const share = m.income ? Math.round((d.income / m.income) * 100) : 0;
           return (
-            <Card
+            <StatCard
               key={sv.key}
-              as="button"
-              hover
+              icon={sv.icon}
+              label={sv.label}
+              value={formatKES(d.income)}
+              sub={`${share}% of revenue`}
+              tint={sv.color}
               onClick={() => navigate(sv.key)}
-              className={`text-left w-full ${i === 2 ? "col-span-2 sm:col-span-1" : ""}`}
-            >
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: sv.color + "22" }}>
-                  <sv.icon size={14} style={{ color: sv.color }} />
-                </div>
-                <p className="font-bold text-sm" style={{ color: C.ink }}>{sv.label}</p>
-                <ChevronRight size={14} className="ml-auto" style={{ color: C.faint }} />
-              </div>
-
-              <p className="mt-2 text-[15px] sm:text-base font-bold font-display truncate" style={{ color: C.ink }}>
-                {formatKES(d.income)}
-              </p>
-
-              <div className="mt-2 flex items-center gap-2">
-                <ProgressBar value={share} tone={sv.color} height={5} />
-                <span className="text-[10px] font-semibold shrink-0" style={{ color: C.muted }}>{share}% of revenue</span>
-              </div>
-            </Card>
+            />
           );
         })}
       </div>
