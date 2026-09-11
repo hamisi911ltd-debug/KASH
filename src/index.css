@@ -84,14 +84,14 @@ body,
 #root {
   height: 100%;
 }
-html,
-body {
-  overflow: hidden;            /* the app manages its own single scroll area */
-  overscroll-behavior: none;   /* no page-level rubber-banding on mobile */
-  position: fixed;
-  inset: 0;
-  width: 100%;
-}
+/* Note: html/body are deliberately left free to scroll. The authenticated
+   app shell (App.jsx) caps itself to h-[100svh] + overflow-hidden and owns
+   its own single scroll region (<main>), so it never needs the page to
+   scroll. Screens outside that shell - the sign-in flow, the error
+   fallback - have no other scroll container, so if we lock html/body here
+   too, any of their content taller than the viewport becomes unreachable
+   (this clipped the sign-in page). Leaving the page scrollable is the
+   safe default; it's a no-op once the dashboard is mounted. */
 
 body {
   margin: 0;
