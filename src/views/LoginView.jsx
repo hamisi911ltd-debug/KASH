@@ -1,19 +1,18 @@
 /* ============================================================
    Sign-in flow: first pick which part of the business you're
    entering (Admin / Transport / Food / Hospitality), then sign in -
-   demo auth, so any of the listed accounts + any non-empty password
-   gets in. Picking a tile lands you straight in that division.
+   real accounts now, backed by the KASH API. Picking a tile lands
+   you straight in that division once you're in.
    ============================================================ */
 import React, { useState } from "react";
 import {
   Mail, Lock, Eye, EyeOff, Truck, Drumstick, BedDouble, ArrowRight,
-  LayoutDashboard, ChevronLeft, ChevronRight,
+  LayoutDashboard, ChevronLeft, User, Phone,
 } from "lucide-react";
 import { C } from "../lib/constants";
-import { DEMO_ACCOUNTS, findAccount, accountForRole } from "../lib/auth";
+import { DEMO_LOGINS, DEMO_PASSWORD, login, register } from "../lib/auth";
 import { Button, Spinner } from "../components/ui.jsx";
 import { KashLogo } from "../components/Logo.jsx";
-import { useStore } from "../lib/store.jsx";
 
 const BUSINESSES = [
   { key: "overview", label: "Admin", sub: "Whole business overview", icon: LayoutDashboard, color: C.blue, soft: C.blueSoft, role: "Super Admin" },
@@ -22,13 +21,13 @@ const BUSINESSES = [
   { key: "hospitality", label: "Hospitality", sub: "Rooms & bookings", icon: BedDouble, color: C.coral, soft: C.coralSoft, role: "Hospitality Manager" },
 ];
 
+const VALUE_PROPS = [
+  { icon: Truck, label: "Transport", value: "Fleet, drivers & trips" },
+  { icon: Drumstick, label: "Chicken", value: "Orders & stock" },
+  { icon: BedDouble, label: "Hospitality", value: "Rooms & bookings" },
+];
+
 function Panel({ accent }) {
-  const { data } = useStore();
-  const stats = [
-    { icon: Truck, label: "Transport", value: `${data.vehicles.filter((v) => v.status === "Active").length} vehicles active` },
-    { icon: Drumstick, label: "Chicken", value: `${data.menu.filter((m) => m.active).length} products in stock` },
-    { icon: BedDouble, label: "Hospitality", value: `${data.rooms.length} rooms managed` },
-  ];
   return (
     <div
       className="hidden lg:flex flex-col justify-between w-[44%] p-12 relative overflow-hidden border-r"
@@ -49,7 +48,7 @@ function Panel({ accent }) {
           <p className="mt-3 text-sm font-bold tracking-wide" style={{ color: C.blue }}>Manage &nbsp;·&nbsp; Track &nbsp;·&nbsp; Grow</p>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          {stats.map((s) => (
+          {VALUE_PROPS.map((s) => (
             <div key={s.label} className="rounded-xl p-4 border" style={{ background: C.surface, borderColor: C.line, boxShadow: C.shadowSm }}>
               <s.icon size={18} className="mb-2" style={{ color: C.blue }} />
               <p className="text-[11px]" style={{ color: C.muted }}>{s.label}</p>
@@ -59,7 +58,7 @@ function Panel({ accent }) {
         </div>
       </div>
 
-      <p className="relative text-xs" style={{ color: C.faint }}>© {new Date().getFullYear()} {data.company.name}</p>
+      <p className="relative text-xs" style={{ color: C.faint }}>© {new Date().getFullYear()} KASH Group Ltd</p>
     </div>
   );
 }
@@ -105,24 +104,52 @@ function BusinessPicker({ onPick, onSkip }) {
   );
 }
 
+/* -------------------------------------------------------- field helper */
+
+function TextField({ label, icon: Icon, error, right, ...props }) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>{label}</label>
+      <div className="relative">
+        {Icon && <Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />}
+        <input
+          {...props}
+          className="w-full rounded-lg border py-2.5 text-sm outline-none"
+          style={{ borderColor: error ? C.coral : C.line, paddingLeft: Icon ? 36 : 12, paddingRight: right ? 36 : 12 }}
+        />
+        {right}
+      </div>
+      {error && <p className="text-xs mt-1 font-medium" style={{ color: C.coral }}>{error}</p>}
+    </div>
+  );
+}
+
 /* -------------------------------------------------------- main view */
 
 export default function LoginView({ onSignIn }) {
   const [step, setStep] = useState("choose"); // choose | auth
   const [chosen, setChosen] = useState(null); // the BUSINESSES entry, if any
   const [mode, setMode] = useState("signin"); // signin | register | reset
-  const [email, setEmail] = useState(DEMO_ACCOUNTS[0].email);
-  const [password, setPassword] = useState("kash");
+  const [email, setEmail] = useState(DEMO_LOGINS[0].email);
+  const [password, setPassword] = useState(DEMO_PASSWORD);
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
+  // register mode
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirm, setRegConfirm] = useState("");
+  const [regErrors, setRegErrors] = useState({});
+
   const pickBusiness = (biz) => {
     setChosen(biz);
-    const acct = accountForRole(biz.role);
+    const acct = DEMO_LOGINS.find((a) => a.role === biz.role) || DEMO_LOGINS[0];
     setEmail(acct.email);
-    setPassword("kash");
+    setPassword(DEMO_PASSWORD);
     setError("");
     setMode("signin");
     setStep("auth");
@@ -134,23 +161,45 @@ export default function LoginView({ onSignIn }) {
     setError("");
   };
 
-  const submitSignIn = (e) => {
+  const submitSignIn = async (e) => {
     e.preventDefault();
     setError("");
-    const account = findAccount(email);
-    if (!account) {
-      setError("No account for that email. Try one of the demo accounts below.");
-      return;
-    }
     if (!password.trim()) {
-      setError("Enter any password to continue.");
+      setError("Enter your password to continue.");
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await login(email, password);
+      onSignIn({ token: res.token, ...res.user }, chosen?.key);
+    } catch (err) {
+      setError(err.message || "Could not sign in. Try again.");
+    } finally {
       setLoading(false);
-      onSignIn({ email: account.email, name: account.name, role: account.role, driverId: account.driverId }, chosen?.key);
-    }, 550);
+    }
+  };
+
+  const submitRegister = async (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!regName.trim()) errs.name = "Enter your full name.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regEmail)) errs.email = "Enter a valid email.";
+    if (!regPhone.trim()) errs.phone = "Enter a contact number.";
+    if (regPassword.length < 6) errs.password = "At least 6 characters.";
+    if (regConfirm !== regPassword) errs.confirm = "Passwords don't match.";
+    setRegErrors(errs);
+    if (Object.keys(errs).length) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await register(regName.trim(), regEmail.trim(), regPhone.trim(), regPassword);
+      onSignIn({ token: res.token, ...res.user }, chosen?.key);
+    } catch (err) {
+      setError(err.message || "Could not create your account.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const accent = chosen?.color || C.blue;
@@ -159,8 +208,8 @@ export default function LoginView({ onSignIn }) {
     <div className="min-h-screen w-full flex" style={{ background: C.bg }}>
       <Panel accent={accent} />
 
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-sm">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 overflow-y-auto">
+        <div className="w-full max-w-sm py-6">
           <div className="lg:hidden mb-8">
             <KashLogo size={28} />
           </div>
@@ -209,38 +258,17 @@ export default function LoginView({ onSignIn }) {
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Email</label>
-                    <div className="relative">
-                      <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />
-                      <input
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        type="email"
-                        required
-                        className="w-full rounded-lg border pl-9 pr-3 py-2.5 text-sm outline-none"
-                        style={{ borderColor: C.line }}
-                      />
-                    </div>
-                  </div>
+                  <TextField label="Email" icon={Mail} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
 
-                  <div>
-                    <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Password</label>
-                    <div className="relative">
-                      <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />
-                      <input
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        type={showPw ? "text" : "password"}
-                        required
-                        className="w-full rounded-lg border pl-9 pr-9 py-2.5 text-sm outline-none"
-                        style={{ borderColor: C.line }}
-                      />
+                  <TextField
+                    label="Password" icon={Lock} type={showPw ? "text" : "password"} required
+                    value={password} onChange={(e) => setPassword(e.target.value)}
+                    right={
                       <button type="button" onClick={() => setShowPw((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }}>
                         {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
-                    </div>
-                  </div>
+                    }
+                  />
 
                   {error && (
                     <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ background: C.coralSoft, color: C.coral }}>{error}</p>
@@ -264,11 +292,11 @@ export default function LoginView({ onSignIn }) {
                   <div className="pt-2">
                     <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: C.faint }}>Demo accounts - click to fill</p>
                     <div className="grid grid-cols-2 gap-1.5">
-                      {DEMO_ACCOUNTS.map((a) => (
+                      {DEMO_LOGINS.map((a) => (
                         <button
                           key={a.email}
                           type="button"
-                          onClick={() => { setEmail(a.email); setPassword("kash"); setError(""); }}
+                          onClick={() => { setEmail(a.email); setPassword(DEMO_PASSWORD); setError(""); }}
                           className="text-left rounded-lg border px-2.5 py-1.5 transition-colors hover:opacity-80"
                           style={{ borderColor: email === a.email ? C.blue : C.line, background: email === a.email ? C.blueSoft : C.surface }}
                         >
@@ -282,28 +310,39 @@ export default function LoginView({ onSignIn }) {
               )}
 
               {mode === "register" && (
-                <div className="space-y-4">
-                  <h1 className="text-2xl font-bold font-display" style={{ color: C.ink }}>Create your account</h1>
-                  {done ? (
-                    <p className="rounded-lg p-4 text-sm" style={{ background: C.blueSoft, color: C.blue }}>
-                      Request received. A Super Admin will review and approve your access shortly.
-                    </p>
-                  ) : (
-                    <form onSubmit={(e) => { e.preventDefault(); setDone(true); }} className="space-y-4">
-                      {[
-                        { label: "Full name", ph: "Jane Doe", type: "text" },
-                        { label: "Work email", ph: "you@company.com", type: "email" },
-                        { label: "Company", ph: "KASH Group Ltd", type: "text" },
-                      ].map((f) => (
-                        <div key={f.label}>
-                          <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>{f.label}</label>
-                          <input required type={f.type} placeholder={f.ph} className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none" style={{ borderColor: C.line }} />
-                        </div>
-                      ))}
-                      <Button type="submit" size="lg" className="w-full">Request access <ArrowRight size={15} /></Button>
-                    </form>
+                <form onSubmit={submitRegister} className="space-y-4">
+                  <div>
+                    <h1 className="text-2xl font-bold font-display" style={{ color: C.ink }}>Create your account</h1>
+                    <p className="text-sm mt-1" style={{ color: C.muted }}>Starts on Staff access - an admin can raise your role any time.</p>
+                  </div>
+
+                  <TextField label="Full name" icon={User} type="text" placeholder="Jane Doe" value={regName} onChange={(e) => setRegName(e.target.value)} error={regErrors.name} />
+                  <TextField label="Email" icon={Mail} type="email" placeholder="you@company.com" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} error={regErrors.email} />
+                  <TextField label="Contact number" icon={Phone} type="tel" placeholder="+254 7.." value={regPhone} onChange={(e) => setRegPhone(e.target.value)} error={regErrors.phone} />
+                  <TextField
+                    label="Password" icon={Lock} type={showPw ? "text" : "password"} placeholder="At least 6 characters"
+                    value={regPassword} onChange={(e) => setRegPassword(e.target.value)} error={regErrors.password}
+                    right={
+                      <button type="button" onClick={() => setShowPw((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }}>
+                        {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    }
+                  />
+                  <TextField
+                    label="Confirm password" icon={Lock} type={showPw ? "text" : "password"} placeholder="Re-enter your password"
+                    value={regConfirm} onChange={(e) => setRegConfirm(e.target.value)} error={regErrors.confirm}
+                  />
+
+                  {error && (
+                    <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ background: C.coralSoft, color: C.coral }}>{error}</p>
                   )}
-                </div>
+
+                  <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                    {loading ? <Spinner color="#fff" /> : null}
+                    {loading ? "Creating account..." : "Create account"}
+                    {!loading && <ArrowRight size={15} />}
+                  </Button>
+                </form>
               )}
 
               {mode === "reset" && (

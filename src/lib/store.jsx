@@ -1,21 +1,27 @@
 /* ============================================================
    Application state.
 
-   One provider owns the business data, the user's preferences and
-   the toast queue. Everything is persisted to localStorage, so the
-   dashboard survives a refresh, a reboot and a closed laptop.
+   Business data now lives in a real backend (a Cloudflare Worker +
+   KV store, src/lib/api.js) - this provider fetches it on sign-in
+   and keeps a local copy for the UI to read instantly, applying each
+   mutation to that local copy as soon as the API confirms it. Only
+   the signed-in session, UI preferences and theme stay in
+   localStorage (purely client-side concerns).
    ============================================================ */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { buildSeedData, TODAY } from "./seed";
-import { genId, daysBetween, toISODate } from "./format";
-import { STORAGE_KEY, PREFS_KEY, THEME_KEY, SESSION_KEY } from "./constants";
+import { COLLECTIONS, SINGULAR } from "./schema.js";
+import { genId } from "./format";
+import { PREFS_KEY, THEME_KEY, SESSION_KEY } from "./constants";
+import { api } from "./api.js";
+
+export { SINGULAR } from "./schema.js";
 
 const StoreContext = createContext(null);
 
-const COLLECTIONS = [
-  "drivers", "vehicles", "trips", "menu", "orders",
-  "rooms", "bookings", "expenses", "payments", "users", "reminders", "messages", "notifications",
-];
+const EMPTY_DATA = {
+  company: { name: "KASH Group Ltd" },
+  ...Object.fromEntries(COLLECTIONS.map((c) => [c, []])),
+};
 
 const DEFAULT_PREFS = {
   period: "Last 7 days",
@@ -24,7 +30,7 @@ const DEFAULT_PREFS = {
   notify: { bookings: true, orders: true, trips: true, expenses: true, alerts: true },
 };
 
-/* ---------------------------------------------------------- storage */
+/* ---------------------------------------------------------- local-only storage */
 
 function readJSON(key, fallback) {
   try {
@@ -34,182 +40,21 @@ function readJSON(key, fallback) {
     return fallback;
   }
 }
-
 function writeJSON(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-    return true;
   } catch {
-    return false; // private mode / quota - the app keeps working in memory
+    /* private mode / quota - session just won't survive a refresh */
   }
 }
-
-function loadData() {
-  const stored = readJSON(STORAGE_KEY, null);
-  if (!stored || typeof stored !== "object" || !Array.isArray(stored.trips)) return buildSeedData();
-  const seed = buildSeedData();
-  // Merge so a stored file from an older version still opens cleanly.
-  const merged = { ...seed, ...stored, company: { ...seed.company, ...(stored.company || {}) } };
-  COLLECTIONS.forEach((c) => {
-    if (!Array.isArray(merged[c])) merged[c] = seed[c] || [];
-  });
-  return merged;
-}
-
-/* ---------------------------------------------------------- normalisers */
-
-const num = (v) => (v === "" || v == null ? 0 : Number(v) || 0);
-
-const normalisers = {
-  trips: (v) => ({
-    date: v.date || TODAY,
-    vehicleId: v.vehicleId || "",
-    driverId: v.driverId || "",
-    origin: (v.origin || "").trim(),
-    destination: (v.destination || "").trim(),
-    distanceKm: num(v.distanceKm),
-    client: (v.client || "").trim(),
-    amount: num(v.amount),
-    fuelCost: num(v.fuelCost),
-    otherCost: num(v.otherCost),
-    status: v.status || "Scheduled",
-  }),
-  vehicles: (v) => ({
-    reg: (v.reg || "").trim().toUpperCase(),
-    type: v.type || "Van",
-    model: (v.model || "").trim(),
-    driverId: v.driverId || "",
-    status: v.status || "Active",
-    mileage: num(v.mileage),
-    serviceDueKm: num(v.serviceDueKm),
-    insuranceExpiry: v.insuranceExpiry || "",
-    capacity: num(v.capacity),
-  }),
-  drivers: (v) => ({
-    name: (v.name || "").trim(),
-    phone: (v.phone || "").trim(),
-    licence: (v.licence || "").trim(),
-    status: v.status || "On Duty",
-    rating: num(v.rating) || 4.5,
-    hiredOn: v.hiredOn || TODAY,
-  }),
-  orders: (v, data) => {
-    const menuItem = data.menu.find((m) => m.id === v.menuItemId);
-    const qty = num(v.qty) || 1;
-    const unitPrice = num(v.unitPrice) || menuItem?.price || 0;
-    return {
-      date: v.date || TODAY,
-      customer: (v.customer || "").trim(),
-      channel: v.channel || "Walk-in",
-      menuItemId: v.menuItemId || "",
-      item: (v.item || menuItem?.name || "").trim(),
-      qty,
-      unitPrice,
-      amount: num(v.amount) || unitPrice * qty,
-      cost: num(v.cost) || (menuItem ? menuItem.cost * qty : 0),
-      paymentStatus: v.paymentStatus || "Pending",
-      orderStatus: v.orderStatus || "Preparing",
-    };
-  },
-  menu: (v) => ({
-    name: (v.name || "").trim(),
-    category: v.category || "Mains",
-    price: num(v.price),
-    cost: num(v.cost),
-    active: v.active === false || v.active === "false" ? false : true,
-  }),
-  rooms: (v) => ({
-    number: (v.number || "").trim(),
-    type: v.type || "Standard",
-    price: num(v.price),
-    status: v.status || "Available",
-    floor: num(v.floor) || 1,
-  }),
-  bookings: (v, data) => {
-    const room = data.rooms.find((r) => r.id === v.roomId);
-    const nights = Math.max(1, daysBetween(v.checkIn, v.checkOut) || 1);
-    const amount = num(v.amount) || (room ? room.price * nights : 0);
-    const paymentStatus = v.paymentStatus || "Pending";
-    return {
-      guest: (v.guest || "").trim(),
-      roomId: v.roomId || "",
-      checkIn: v.checkIn || TODAY,
-      checkOut: v.checkOut || toISODate(new Date()),
-      nights,
-      guests: num(v.guests) || 1,
-      source: v.source || "Direct",
-      amount,
-      paid: paymentStatus === "Paid" ? amount : paymentStatus === "Partial" ? num(v.paid) || Math.round(amount / 2) : 0,
-      paymentStatus,
-      status: v.status || "Confirmed",
-    };
-  },
-  payments: (v) => {
-    const direction = v.direction === "in" ? "in" : "out";
-    return {
-      date: v.date || TODAY,
-      direction,
-      amount: num(v.amount),
-      party: (v.party || "").trim(),
-      division: v.division || "General",
-      category: direction === "out" ? (v.category || "Other") : "Payment received",
-      method: v.method || "M-Pesa",
-      phone: (v.phone || "").trim(),
-      reference: (v.reference || "").trim(),
-      notes: (v.notes || "").trim(),
-      status: v.status || "Recorded",
-      createdBy: v.createdBy || "",
-    };
-  },
-  expenses: (v) => ({
-    date: v.date || TODAY,
-    division: v.division || "General",
-    category: v.category || "Other",
-    vendor: (v.vendor || "").trim(),
-    amount: num(v.amount),
-    method: v.method || "M-Pesa",
-    notes: (v.notes || "").trim(),
-    source: "manual",
-  }),
-  users: (v) => ({
-    name: (v.name || "").trim(),
-    email: (v.email || "").trim().toLowerCase(),
-    role: v.role || "Staff",
-    division: v.division || "All",
-    status: v.status || "Invited",
-    lastActive: v.lastActive || null,
-  }),
-  messages: (v) => ({
-    from: (v.from || "").trim(),
-    to: (v.to || "").trim(),
-    text: (v.text || "").trim(),
-    ts: v.ts || new Date().toISOString(),
-    read: v.read === undefined ? false : !!v.read,
-  }),
-  reminders: (v) => ({
-    title: (v.title || "").trim(),
-    due: v.due || TODAY,
-    division: v.division || "General",
-    priority: v.priority || "Normal",
-    done: !!v.done,
-  }),
-};
-
-const ID_PREFIX = {
-  trips: "t", vehicles: "v", drivers: "d", orders: "o", menu: "m",
-  rooms: "r", bookings: "b", expenses: "e", payments: "pay", users: "u", reminders: "rem", messages: "msg", notifications: "n",
-};
-
-/* Human labels used in toasts and confirmation copy. */
-export const SINGULAR = {
-  trips: "Trip", vehicles: "Vehicle", drivers: "Driver", orders: "Order", menu: "Menu item",
-  rooms: "Room", bookings: "Booking", expenses: "Expense", payments: "Payment", users: "User", reminders: "Reminder", messages: "Message",
-};
 
 /* ---------------------------------------------------------- provider */
 
 export function StoreProvider({ children }) {
-  const [data, setData] = useState(loadData);
+  const [session, setSessionState] = useState(() => readJSON(SESSION_KEY, null));
+  const [data, setData] = useState(EMPTY_DATA);
+  const [dataLoading, setDataLoading] = useState(!!session);
+  const [dataError, setDataError] = useState(null);
   const [prefs, setPrefs] = useState(() => {
     const stored = readJSON(PREFS_KEY, {});
     return { ...DEFAULT_PREFS, ...stored, notify: { ...DEFAULT_PREFS.notify, ...(stored.notify || {}) } };
@@ -221,34 +66,46 @@ export function StoreProvider({ children }) {
       return "light";
     }
   });
-  const [session, setSession] = useState(() => readJSON(SESSION_KEY, null));
   const [toasts, setToasts] = useState([]);
-  const [storageOk, setStorageOk] = useState(true);
-  const saveTimer = useRef(null);
 
-  /* --- persistence (debounced so bulk edits do not thrash the disk) --- */
-  useEffect(() => {
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => setStorageOk(writeJSON(STORAGE_KEY, data)), 250);
-    return () => clearTimeout(saveTimer.current);
-  }, [data]);
+  const token = session?.token;
 
-  useEffect(() => {
-    writeJSON(PREFS_KEY, prefs);
-  }, [prefs]);
-  useEffect(() => {
-    writeJSON(SESSION_KEY, session);
-  }, [session]);
+  const setSession = useCallback((next) => {
+    setSessionState((prev) => (typeof next === "function" ? next(prev) : next));
+  }, []);
 
+  useEffect(() => writeJSON(SESSION_KEY, session), [session]);
+  useEffect(() => writeJSON(PREFS_KEY, prefs), [prefs]);
   useEffect(() => {
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme);
-    try {
-      localStorage.setItem(THEME_KEY, theme);
-    } catch {
-      /* ignore */
-    }
+    writeJSON(THEME_KEY, theme);
   }, [theme]);
+
+  /* --- pull the whole (role-scoped) dataset whenever the session changes --- */
+  const resync = useCallback(async () => {
+    if (!token) {
+      setData(EMPTY_DATA);
+      setDataLoading(false);
+      return;
+    }
+    setDataLoading(true);
+    try {
+      const res = await api.sync(token);
+      setData((d) => ({ ...EMPTY_DATA, ...res.data, notifications: d.notifications }));
+      setSessionState((s) => (s ? { ...s, ...res.user, token: s.token } : s));
+      setDataError(null);
+    } catch (e) {
+      if (e.status === 401) setSessionState(null); // dead/expired token - back to sign-in
+      else setDataError(e.message || "Could not reach the server.");
+    } finally {
+      setDataLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    resync();
+  }, [resync]);
 
   /* --- toasts --- */
   const dismissToast = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), []);
@@ -263,19 +120,16 @@ export function StoreProvider({ children }) {
     [dismissToast]
   );
 
-  /* --- notifications --- */
-  const notify = useCallback(
-    (message, { type = "info", division = "General" } = {}) => {
-      setData((d) => ({
-        ...d,
-        notifications: [
-          { id: genId("n"), message, ts: new Date().toISOString(), read: false, type, division },
-          ...d.notifications,
-        ].slice(0, 100),
-      }));
-    },
-    []
-  );
+  /* --- notifications: a purely local activity feed, never synced --- */
+  const notify = useCallback((message, { type = "info", division = "General" } = {}) => {
+    setData((d) => ({
+      ...d,
+      notifications: [
+        { id: genId("n"), message, ts: new Date().toISOString(), read: false, type, division },
+        ...d.notifications,
+      ].slice(0, 100),
+    }));
+  }, []);
 
   const notifyIfEnabled = useCallback(
     (channel, message, meta) => {
@@ -285,55 +139,52 @@ export function StoreProvider({ children }) {
     [notify, prefs.notify]
   );
 
-  /* --- CRUD --- */
-  const addRecord = useCallback((collection, values) => {
-    let created = null;
-    setData((d) => {
-      const shape = normalisers[collection] ? normalisers[collection](values, d) : values;
-      created = { id: genId(ID_PREFIX[collection] || "x"), ...shape };
-      return { ...d, [collection]: [created, ...d[collection]] };
-    });
-    return created;
-  }, []);
+  /* --- CRUD, backed by the API --- */
+  const addRecord = useCallback(
+    async (collection, values) => {
+      const record = await api.create(token, collection, values);
+      setData((d) => ({ ...d, [collection]: [record, ...d[collection]] }));
+      return record;
+    },
+    [token]
+  );
 
-  const updateRecord = useCallback((collection, id, values) => {
-    setData((d) => ({
-      ...d,
-      [collection]: d[collection].map((r) =>
-        r.id === id
-          ? { ...r, ...(normalisers[collection] ? normalisers[collection]({ ...r, ...values }, d) : values) }
-          : r
-      ),
-    }));
-  }, []);
+  const updateRecord = useCallback(
+    async (collection, id, values) => {
+      const record = await api.update(token, collection, id, values);
+      setData((d) => ({ ...d, [collection]: d[collection].map((r) => (r.id === id ? record : r)) }));
+      return record;
+    },
+    [token]
+  );
 
-  const patchRecord = useCallback((collection, id, patch) => {
-    setData((d) => ({
-      ...d,
-      [collection]: d[collection].map((r) => (r.id === id ? { ...r, ...patch } : r)),
-    }));
-  }, []);
+  const patchRecord = useCallback(
+    async (collection, id, patch) => {
+      const record = await api.patch(token, collection, id, patch);
+      setData((d) => ({ ...d, [collection]: d[collection].map((r) => (r.id === id ? record : r)) }));
+      return record;
+    },
+    [token]
+  );
 
-  /** Delete with a restore closure, so the toast can offer Undo. */
-  const removeRecord = useCallback((collection, id) => {
-    let removed = null;
-    let index = -1;
-    setData((d) => {
-      index = d[collection].findIndex((r) => r.id === id);
-      if (index === -1) return d;
-      removed = d[collection][index];
-      return { ...d, [collection]: d[collection].filter((r) => r.id !== id) };
-    });
-    return () =>
-      setData((d) => {
-        if (!removed || d[collection].some((r) => r.id === removed.id)) return d;
-        const next = [...d[collection]];
-        next.splice(Math.max(0, index), 0, removed);
-        return { ...d, [collection]: next };
-      });
-  }, []);
+  /** Delete, then hand back an async restore closure so the toast can
+      offer Undo (the restored record gets a new id - the delete already
+      really happened server-side, so undo re-creates rather than un-deletes). */
+  const removeRecord = useCallback(
+    async (collection, id) => {
+      const removed = data[collection]?.find((r) => r.id === id);
+      await api.remove(token, collection, id);
+      setData((d) => ({ ...d, [collection]: d[collection].filter((r) => r.id !== id) }));
+      return async () => {
+        if (!removed) return;
+        const { id: _drop, ...rest } = removed;
+        const restored = await api.create(token, collection, rest);
+        setData((d) => ({ ...d, [collection]: [restored, ...d[collection]] }));
+      };
+    },
+    [token, data]
+  );
 
-  /* --- notifications helpers --- */
   const markNotificationRead = useCallback(
     (id) => setData((d) => ({ ...d, notifications: d.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) })),
     []
@@ -345,55 +196,39 @@ export function StoreProvider({ children }) {
   const clearNotifications = useCallback(() => setData((d) => ({ ...d, notifications: [] })), []);
 
   const toggleReminder = useCallback(
-    (id) => setData((d) => ({ ...d, reminders: d.reminders.map((r) => (r.id === id ? { ...r, done: !r.done } : r)) })),
-    []
+    (id) => {
+      const cur = data.reminders.find((r) => r.id === id);
+      if (cur) return patchRecord("reminders", id, { done: !cur.done });
+    },
+    [data.reminders, patchRecord]
   );
 
-  const updateCompany = useCallback((patch) => setData((d) => ({ ...d, company: { ...d.company, ...patch } })), []);
+  const patchRoom = useCallback((id, status) => patchRecord("rooms", id, { status }), [patchRecord]);
 
-  /* --- data management --- */
-  const resetDemoData = useCallback(() => setData(buildSeedData()), []);
+  const updateCompany = useCallback(
+    async (patch) => {
+      const company = await api.updateCompany(token, patch);
+      setData((d) => ({ ...d, company }));
+    },
+    [token]
+  );
 
   const exportBackup = useCallback(() => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `kash-backup-${toISODate(new Date())}.json`;
+    a.download = `kash-backup-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }, [data]);
 
-  const importBackup = useCallback(
-    (file) =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const parsed = JSON.parse(String(reader.result));
-            if (!parsed || !Array.isArray(parsed.trips)) throw new Error("Not a KASH backup file");
-            const seed = buildSeedData();
-            const merged = { ...seed, ...parsed, company: { ...seed.company, ...(parsed.company || {}) } };
-            COLLECTIONS.forEach((c) => {
-              if (!Array.isArray(merged[c])) merged[c] = seed[c] || [];
-            });
-            setData(merged);
-            resolve(merged);
-          } catch (err) {
-            reject(err);
-          }
-        };
-        reader.onerror = () => reject(new Error("Could not read that file"));
-        reader.readAsText(file);
-      }),
-    []
-  );
-
   const value = useMemo(
     () => ({
-      data, setData, prefs, setPrefs, theme,
+      data, dataLoading, dataError, resync,
+      prefs, setPrefs, theme,
       setTheme: setThemeState,
       toggleTheme: () => setThemeState((t) => (t === "dark" ? "light" : "dark")),
       session, setSession,
@@ -401,15 +236,12 @@ export function StoreProvider({ children }) {
       notify, notifyIfEnabled,
       addRecord, updateRecord, patchRecord, removeRecord,
       markNotificationRead, markAllNotificationsRead, clearNotifications,
-      toggleReminder, updateCompany,
-      resetDemoData, exportBackup, importBackup,
-      storageOk,
+      toggleReminder, patchRoom, updateCompany, exportBackup,
     }),
     [
-      data, prefs, theme, session, toasts, storageOk, toast, dismissToast, notify, notifyIfEnabled,
+      data, dataLoading, dataError, resync, prefs, theme, session, toasts, toast, dismissToast, notify, notifyIfEnabled,
       addRecord, updateRecord, patchRecord, removeRecord, markNotificationRead,
-      markAllNotificationsRead, clearNotifications, toggleReminder, updateCompany,
-      resetDemoData, exportBackup, importBackup,
+      markAllNotificationsRead, clearNotifications, toggleReminder, patchRoom, updateCompany, exportBackup,
     ]
   );
 

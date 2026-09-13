@@ -9,13 +9,23 @@ import {
   resolvePeriod, computeMetrics, inRange, CANCELLED,
 } from "../lib/derive";
 import { TODAY } from "../lib/seed";
+import { coordsFor } from "../lib/geo";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
 import DataTable from "../components/DataTable.jsx";
+import MapView from "../components/MapView.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { statusTone, TRIP_STATUSES, VEHICLE_STATUSES, DRIVER_STATUSES } from "../lib/constants";
+
+/** Where a vehicle last was, going purely off its most recent trip's
+    destination (no live GPS feed here - this is the honest proxy). */
+function lastKnownLocation(vehicle, trips) {
+  const mine = trips.filter((t) => t.vehicleId === vehicle.id).sort((a, b) => (a.date < b.date ? 1 : -1));
+  const at = mine[0]?.destination;
+  return coordsFor(at) ? { coords: coordsFor(at), place: at } : { coords: coordsFor("Nairobi"), place: "Nairobi (base)" };
+}
 
 export default function TransportView() {
   const { data, prefs, session } = useStore();
@@ -69,6 +79,14 @@ export default function TransportView() {
 
   const activeVehicles = data.vehicles.filter((v) => v.status === "Active").length;
   const onDuty = data.drivers.filter((d) => d.status === "On Duty").length;
+
+  const fleetPoints = useMemo(() => {
+    const vehicles = restricted ? (myVehicle ? [myVehicle] : []) : data.vehicles.filter((v) => v.status !== "Inactive");
+    return vehicles.map((v) => {
+      const { coords, place } = lastKnownLocation(v, data.trips);
+      return { coords, color: v.status === "Maintenance" ? "#CE9114" : "#12958A", label: `${v.reg} · ${v.model}`, sub: `Last seen near ${place} · ${driverName(v.driverId)}` };
+    });
+  }, [restricted, myVehicle, data.vehicles, data.trips]);
 
   const tripColumns = [
     { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
@@ -190,6 +208,13 @@ export default function TransportView() {
           </>
         )}
       </div>
+
+      {fleetPoints.length > 0 && (
+        <Card>
+          <SectionTitle title={restricted ? "Your vehicle" : "Fleet map"} subtitle="Last known location, from each vehicle's most recent trip." />
+          <MapView points={fleetPoints} height={restricted ? 220 : 300} />
+        </Card>
+      )}
 
       <Card padded={false}>
         {!restricted && (

@@ -3,3 +3,6 @@ dist
 dist-single
 .DS_Store
 *.local
+.wrangler
+worker/.jwtsecret.tmp
+worker/.seed-bulk.json

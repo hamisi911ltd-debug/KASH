@@ -1,8 +1,8 @@
 /* Settings: company profile (used across the app), notification
-   preferences (gate the notification feed), appearance, and
-   data management - export / import / reset the whole workspace. */
-import React, { useRef, useState } from "react";
-import { Building2, Bell, Palette, Database, Download, Upload, RotateCcw, Sun, Moon, Monitor, Check } from "lucide-react";
+   preferences (gate the notification feed), appearance, and account
+   info. Data lives on the server now, shared across the team. */
+import React, { useState } from "react";
+import { Building2, Bell, Palette, Database, Download, Sun, Moon, Check } from "lucide-react";
 import { C } from "../lib/constants";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
@@ -22,16 +22,18 @@ function Labelled({ label, children, hint }) {
 const input = "w-full rounded-lg border px-3 py-2 text-sm outline-none";
 
 export default function SettingsView() {
-  const { data, updateCompany, prefs, setPrefs, theme, setTheme, toast, exportBackup, importBackup, resetDemoData, session, storageOk } = useStore();
+  const { data, updateCompany, prefs, setPrefs, theme, setTheme, toast, exportBackup, session } = useStore();
   const { caps, navigate } = useActions();
   const [company, setCompany] = useState(data.company);
-  const [confirmReset, setConfirmReset] = useState(false);
-  const fileRef = useRef(null);
 
-  const saveCompany = (e) => {
+  const saveCompany = async (e) => {
     e.preventDefault();
-    updateCompany(company);
-    toast("Company profile saved");
+    try {
+      await updateCompany(company);
+      toast("Company profile saved");
+    } catch (err) {
+      toast(err.message || "Could not save that.", { tone: "error" });
+    }
   };
 
   const notifRows = [
@@ -41,18 +43,6 @@ export default function SettingsView() {
     { key: "expenses", label: "Logged expenses" },
     { key: "alerts", label: "Operational alerts" },
   ];
-
-  const onImport = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      await importBackup(file);
-      toast("Workspace restored from backup");
-    } catch (err) {
-      toast(err.message || "Could not import that file", { tone: "error" });
-    }
-    e.target.value = "";
-  };
 
   return (
     <Page>
@@ -148,22 +138,10 @@ export default function SettingsView() {
       <Card>
         <SectionTitle title="Data management" action={<Database size={16} style={{ color: C.muted }} />} />
         <p className="text-sm" style={{ color: C.muted }}>
-          Everything you enter is stored in this browser.
-          {storageOk ? "" : " Storage is unavailable right now - changes will be lost on refresh."}
+          Everything you enter is stored securely on the server and shared across your whole team, on any device.
         </p>
         <div className="flex flex-wrap gap-2 mt-4">
-          <Button variant="outline" size="sm" onClick={exportBackup}><Download size={14} /> Export backup (JSON)</Button>
-          <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}><Upload size={14} /> Import backup</Button>
-          <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={onImport} />
-          {!confirmReset ? (
-            <Button variant="danger" size="sm" onClick={() => setConfirmReset(true)}><RotateCcw size={14} /> Reset to demo data</Button>
-          ) : (
-            <span className="flex items-center gap-2">
-              <span className="text-xs font-semibold" style={{ color: C.coral }}>Erase all changes?</span>
-              <Button variant="danger" size="sm" onClick={() => { resetDemoData(); setConfirmReset(false); toast("Workspace reset to demo data"); }}>Yes, reset</Button>
-              <Button variant="ghost" size="sm" onClick={() => setConfirmReset(false)}>Cancel</Button>
-            </span>
-          )}
+          <Button variant="outline" size="sm" onClick={exportBackup}><Download size={14} /> Export what I can see (JSON)</Button>
         </div>
       </Card>
 

@@ -3,7 +3,7 @@
    period filter, trend delta and chart has real history behind it.
    Deterministic (seeded PRNG) => the same demo on every first load.
    ============================================================ */
-import { toISODate, addDays, genId } from "./format";
+import { toISODate, addDays, genId } from "./format.js";
 
 function mulberry32(a) {
   return function () {
@@ -38,7 +38,16 @@ const noise = () => rnd() + rnd() - 1;
 // count with a mild proportional wobble (keeps weekly bars readable, not spiky)
 const wobble = (mean) => Math.max(0, Math.round(mean * (1 + noise() * 0.26)));
 
-export const TODAY = toISODate(new Date());
+/* `let`, not `const`: module-top-level Date() is frozen (returns the
+   epoch) inside a Cloudflare Worker's global scope - real time is only
+   available once a request is actually being handled. The browser build
+   never needs this (its module scope sees real time fine); the Worker
+   calls setToday() with a real Date computed inside its fetch handler,
+   before generating/seeding anything that depends on "today". */
+export let TODAY = toISODate(new Date());
+export function setToday(iso) {
+  TODAY = iso;
+}
 const DAYS = 120;
 const dayOf = (offset) => toISODate(addDays(TODAY, -offset));
 
@@ -418,12 +427,16 @@ function buildPayments() {
 /* ---------------------------------------------------------- people & comms */
 
 export const SEED_USERS = [
-  { id: "u1", name: "Wanjiku Kamande", email: "wanjiku@kash.co.ke", role: "Super Admin", division: "All", status: "Active", lastActive: TODAY },
-  { id: "u2", name: "Peter Mwangi", email: "peter.m@kash.co.ke", role: "Transport Manager", division: "Transport", status: "Active", lastActive: TODAY },
-  { id: "u3", name: "Aisha Noor", email: "aisha.n@kash.co.ke", role: "Food Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
-  { id: "u4", name: "Daniel Kiprop", email: "daniel.k@kash.co.ke", role: "Hospitality Manager", division: "Hospitality", status: "Active", lastActive: dayOf(2) },
-  { id: "u5", name: "Mercy Adhiambo", email: "mercy.a@kash.co.ke", role: "Staff", division: "Food", status: "Active", lastActive: TODAY },
-  { id: "u6", name: "Victor Kimani", email: "victor.k@kash.co.ke", role: "Accountant", division: "All", status: "Active", lastActive: dayOf(1) },
+  { id: "u1", name: "Wanjiku Kamande", email: "wanjiku@kash.co.ke", phone: "+254 722 001 001", role: "Super Admin", division: "All", status: "Active", lastActive: TODAY },
+  { id: "u2", name: "Peter Mwangi", email: "peter.m@kash.co.ke", phone: "+254 722 001 002", role: "Transport Manager", division: "Transport", status: "Active", lastActive: TODAY },
+  { id: "u7", name: "Kevin Mutua", email: "kevin.mutua@gmail.com", phone: "+254 701 887 001", role: "Driver", division: "Transport", driverId: "d7", status: "Active", lastActive: TODAY },
+  { id: "u8", name: "Fatuma Ali", email: "fatuma.ali@gmail.com", phone: "+254 708 664 002", role: "Driver", division: "Transport", driverId: "d8", status: "Active", lastActive: dayOf(1) },
+  { id: "u3", name: "Aisha Noor", email: "aisha.n@kash.co.ke", phone: "+254 722 001 003", role: "Food Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
+  { id: "u9", name: "Brian Oduya", email: "brian.o@kash.co.ke", phone: "+254 722 001 009", role: "Chicken Attendant", division: "Food", status: "Active", lastActive: dayOf(1) },
+  { id: "u4", name: "Daniel Kiprop", email: "daniel.k@kash.co.ke", phone: "+254 722 001 004", role: "Hospitality Manager", division: "Hospitality", status: "Active", lastActive: dayOf(2) },
+  { id: "u10", name: "Linet Moraa", email: "linet.m@kash.co.ke", phone: "+254 722 001 010", role: "Hospitality Attendant", division: "Hospitality", status: "Active", lastActive: dayOf(1) },
+  { id: "u6", name: "Victor Kimani", email: "victor.k@kash.co.ke", phone: "+254 722 001 006", role: "Accountant", division: "All", status: "Active", lastActive: dayOf(1) },
+  { id: "u5", name: "Mercy Adhiambo", email: "mercy.a@kash.co.ke", phone: "+254 722 001 005", role: "Staff", division: "Food", status: "Active", lastActive: TODAY },
 ];
 
 export const SEED_REMINDERS = [

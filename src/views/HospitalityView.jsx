@@ -12,10 +12,12 @@ import {
   roomStates, inRange, CANCELLED,
 } from "../lib/derive";
 import { TODAY } from "../lib/seed";
+import { COMPANY_COORDS } from "../lib/geo";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
 import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
 import DataTable from "../components/DataTable.jsx";
+import MapView from "../components/MapView.jsx";
 import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import { statusTone, BOOKING_STATUSES, PAYMENT_STATUSES, ROOM_TYPES } from "../lib/constants";
@@ -99,6 +101,15 @@ export default function HospitalityView() {
         <StatCard icon={BedDouble} label="Occupancy today" value={`${occNow}%`} sub={`avg ${avgOcc}% / 12 weeks`} tint={C.blue} />
         <StatCard icon={CalendarCheck} label="Front desk today" value={`${arrivals} in · ${departures} out`} sub={`${data.rooms.length} rooms`} tint={C.violet} />
       </div>
+
+      <Card>
+        <SectionTitle title="Property location" subtitle={data.company?.address || "Find us"} />
+        <MapView
+          points={[{ coords: COMPANY_COORDS, color: "#C82E58", label: data.company?.name || "KASH", sub: data.company?.address }]}
+          height={220}
+          zoom={14}
+        />
+      </Card>
 
       <Card>
         <SectionTitle title="Rooms right now" subtitle="Occupied is derived from live bookings" />

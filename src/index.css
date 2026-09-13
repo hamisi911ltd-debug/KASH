@@ -267,6 +267,32 @@ input[type="checkbox"] {
 /* wide blocks scroll inside themselves, never the page */
 .n1-xscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
+/* ---------- maps (Leaflet) ---------- */
+.n1-map {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  isolation: isolate; /* keep Leaflet's own z-index stack out of the app's */
+}
+.n1-map .leaflet-popup-content-wrapper,
+.n1-map .leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--ink);
+}
+.n1-map .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 9px;
+}
+html.dark .n1-map .leaflet-control-attribution {
+  background: rgba(14, 44, 62, 0.75);
+  color: var(--muted);
+}
+html.dark .n1-map .leaflet-control-attribution a { color: var(--muted); }
+html.dark .n1-map .leaflet-control-zoom a {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
 /* Mobile bottom bar: pinned to the visual viewport, never moves with scroll
    or the browser chrome, clears the iOS home indicator. */
 .n1-bottomnav {
