@@ -91,6 +91,23 @@ async function requireUser(request, env) {
   return user || null;
 }
 
+/** Whether a role can reach a given division's page at all - the same
+    question the sidebar/top-tabs ask client-side, re-asked server-side
+    so a Driver can't reach Chicken/Hospitality data (or write to it)
+    just by calling the API directly instead of clicking through the UI. */
+function sees(role, view) {
+  return canOpenView(role, view) || canOpenView(role, "overview") || canOpenView(role, "all");
+}
+
+/** Which division a collection belongs to, for the check above. Anything
+    not listed here (payments, expenses, reminders, messages, users, ...)
+    isn't tied to one division and skips this check entirely. */
+const COLLECTION_VIEW = {
+  trips: "transport", vehicles: "transport", drivers: "transport", maintenance: "transport",
+  orders: "food", menu: "food",
+  bookings: "hospitality", rooms: "hospitality",
+};
+
 /** What a restricted role may see over the wire - never trust the client's
     idea of its own role; this is the real, server-side enforcement. Two
     layers: which DIVISIONS a role has no view into at all get zeroed out
@@ -100,8 +117,6 @@ async function requireUser(request, env) {
 function scopeData(full, user) {
   const caps = capsForRole(user.role);
   const d = { ...full };
-  const sees = (view) =>
-    canOpenView(user.role, view) || canOpenView(user.role, "overview") || canOpenView(user.role, "all");
 
   if (!caps.write) {
     d.payments = full.payments.filter((p) => p.createdBy === user.name);
@@ -112,17 +127,17 @@ function scopeData(full, user) {
     d.vehicles = full.vehicles.filter((v) => v.driverId === user.driverId);
     d.drivers = full.drivers.filter((dr) => dr.id === user.driverId);
     d.maintenance = full.maintenance.filter((m) => m.vehicleId === (d.vehicles[0]?.id));
-  } else if (!sees("transport")) {
+  } else if (!sees(user.role, "transport")) {
     d.trips = []; d.vehicles = []; d.drivers = []; d.maintenance = [];
   }
 
   if (user.role === "Chicken Attendant") {
     d.orders = full.orders.filter((o) => o.createdBy === user.name);
-  } else if (!sees("food")) {
+  } else if (!sees(user.role, "food")) {
     d.orders = [];
   }
 
-  if (!sees("hospitality")) {
+  if (!sees(user.role, "hospitality")) {
     d.bookings = []; d.rooms = [];
   }
   // Hospitality Attendant does see everyone's bookings/rooms (sees("hospitality")
@@ -221,6 +236,10 @@ export default {
       // /api/:collection[/:id]
       const [collection, id] = parts;
       if (!COLLECTIONS.includes(collection)) return err("Unknown collection.", 404);
+      const requiredView = COLLECTION_VIEW[collection];
+      if (requiredView && !sees(user.role, requiredView)) {
+        return err("You don't have access to that.", 403);
+      }
       const rows = await getCollection(env, collection);
 
       if (request.method === "POST") {

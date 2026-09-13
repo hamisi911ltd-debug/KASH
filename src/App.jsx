@@ -85,8 +85,17 @@ export default function App() {
   const caps = useMemo(() => capsForRole(role), [role]);
   const forms = useMemo(() => buildForms(data, session), [data, session]);
   const canUseForm = useCallback(
-    (form) => (form.key === "payment" ? caps.payments : caps.write || (form.ownAllowed && caps.writeOwn)),
-    [caps.write, caps.writeOwn, caps.payments]
+    (form) => {
+      // A form tied to one division (trip/vehicle -> transport, order -> food,
+      // booking -> hospitality, ...) only ever shows up for a role that can
+      // actually open that division's page - so a Driver's quick-create menu
+      // never offers "New order", and a Transport Manager's never offers
+      // "New booking". Quick actions mirror the navigation, not a superset.
+      if (form.view && !canOpenView(role, form.view)) return false;
+      if (form.key === "payment") return caps.payments;
+      return caps.write || (form.ownAllowed && caps.writeOwn);
+    },
+    [role, caps.write, caps.writeOwn, caps.payments]
   );
   const quickActions = useMemo(
     () => QUICK_ACTION_KEYS.map((k) => forms[k]).filter(Boolean).filter(canUseForm),

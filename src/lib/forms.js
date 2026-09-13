@@ -58,6 +58,7 @@ export function buildForms(data, session) {
     trip: {
       key: "trip",
       collection: "trips",
+      view: "transport",
       label: "New Trip",
       icon: Truck,
       title: "Log a trip",
@@ -92,6 +93,7 @@ export function buildForms(data, session) {
     startTrip: {
       key: "startTrip",
       collection: "trips",
+      view: "transport",
       label: "Start Trip",
       icon: PlayCircle,
       title: "Start a trip",
@@ -105,12 +107,13 @@ export function buildForms(data, session) {
       },
       fields: [
         { key: "origin", label: "Pickup location", type: "text", default: "Nairobi", required: true },
-        { key: "client", label: "Client / passenger (optional)", type: "text", placeholder: "Walk-in / Uber app" },
+        { key: "client", label: "Client / passenger", type: "text", placeholder: "Walk-in / Uber app" },
       ],
     },
     endTrip: {
       key: "endTrip",
       collection: "trips",
+      view: "transport",
       label: "End Trip",
       icon: StopCircle,
       title: "End trip",
@@ -123,13 +126,14 @@ export function buildForms(data, session) {
       fields: [
         { key: "destination", label: "Drop-off location", type: "text", placeholder: "e.g. Westlands", required: true },
         { key: "amount", label: "Amount received (KSh)", type: "number", min: 0, required: true },
-        { key: "distanceKm", label: "Distance (km, optional)", type: "number", min: 0, default: "" },
-        { key: "fuelCost", label: "Fuel cost (KSh, optional)", type: "number", min: 0, default: "", hint: "Posted as a Transport expense automatically." },
+        { key: "distanceKm", label: "Distance (km)", type: "number", min: 0, default: "" },
+        { key: "fuelCost", label: "Fuel cost (KSh)", type: "number", min: 0, default: "", hint: "Posted as a Transport expense automatically." },
       ],
     },
     maintenance: {
       key: "maintenance",
       collection: "maintenance",
+      view: "transport",
       label: "Log Maintenance",
       icon: Wrench,
       title: "Log maintenance",
@@ -152,6 +156,7 @@ export function buildForms(data, session) {
     vehicle: {
       key: "vehicle",
       collection: "vehicles",
+      view: "transport",
       label: "Add Vehicle",
       icon: Car,
       title: "Add a vehicle",
@@ -172,6 +177,7 @@ export function buildForms(data, session) {
     driver: {
       key: "driver",
       collection: "drivers",
+      view: "transport",
       label: "Add Driver",
       icon: UserPlus,
       title: "Add a driver",
@@ -193,6 +199,7 @@ export function buildForms(data, session) {
     order: {
       key: "order",
       collection: "orders",
+      view: "food",
       label: "New Order",
       icon: Drumstick,
       title: "Take an order",
@@ -202,7 +209,7 @@ export function buildForms(data, session) {
       notify: { channel: "orders", message: (v) => `New order from ${v.customer || "walk-in"}`, type: "order", division: "Food" },
       fields: [
         { key: "date", label: "Date", type: "date", default: TODAY, required: true },
-        { key: "customer", label: "Customer name (optional)", type: "text", placeholder: "Leave blank for a walk-in / cash sale" },
+        { key: "customer", label: "Customer name", type: "text", placeholder: "Leave blank for a walk-in / cash sale" },
         { key: "channel", label: "Channel", type: "select", options: opt(["Walk-in", "Phone", "WhatsApp", "Online", "Wholesale"]) },
         { key: "menuItemId", label: "Product", type: "select", options: menuOpts, required: true },
         { key: "qty", label: "Quantity", type: "number", min: 1, default: "1", required: true },
@@ -222,6 +229,7 @@ export function buildForms(data, session) {
     menuItem: {
       key: "menuItem",
       collection: "menu",
+      view: "food",
       label: "Add Product",
       icon: BookMarked,
       title: "Add a product",
@@ -246,6 +254,7 @@ export function buildForms(data, session) {
     booking: {
       key: "booking",
       collection: "bookings",
+      view: "hospitality",
       label: "New Booking",
       icon: BedDouble,
       title: "Create a booking",
@@ -284,6 +293,7 @@ export function buildForms(data, session) {
     room: {
       key: "room",
       collection: "rooms",
+      view: "hospitality",
       label: "Add Room",
       icon: DoorOpen,
       title: "Add a room",
@@ -373,8 +383,8 @@ export function buildForms(data, session) {
           validate: (v, all) =>
             all.method === "M-Pesa" && !String(v || "").trim() ? "Enter the M-Pesa number" : null,
         },
-        { key: "reference", label: "Reference (optional)", type: "text", placeholder: "Invoice / receipt no." },
-        { key: "notes", label: "Notes (optional)", type: "textarea" },
+        { key: "reference", label: "Reference", type: "text", placeholder: "Invoice / receipt no." },
+        { key: "notes", label: "Notes", type: "textarea" },
       ],
     },
 
