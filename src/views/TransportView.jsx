@@ -78,19 +78,36 @@ export default function TransportView() {
     { key: "reg", header: "Reg", render: (r) => <span className="font-semibold">{r.reg}</span> },
     { key: "model", header: "Type / model", sortValue: (r) => r.model, render: (r) => `${r.type} · ${r.model}` },
     { key: "driverId", header: "Driver", sortValue: (r) => driverName(r.driverId), render: (r) => driverName(r.driverId) },
-    { key: "mileage", header: "Odometer", align: "right", sortValue: (r) => r.mileage, render: (r) => `${formatNumber(r.mileage)} km`, muted: true },
-    { key: "service", header: "Service", align: "right", sortValue: (r) => (r.serviceDueKm || 0) - r.mileage, render: (r) => {
+    { key: "insuranceExpiry", header: "Insurance", sortValue: (r) => r.insuranceExpiry || "", render: (r) => {
+      if (!r.insuranceExpiry) return <span style={{ color: C.faint }}>-</span>;
+      const days = Math.round((new Date(r.insuranceExpiry) - new Date(TODAY)) / 86400000);
+      const tone = days < 0 ? C.coral : days <= 30 ? C.amber : C.muted;
+      return <span style={{ color: tone }}>{formatDateShort(r.insuranceExpiry)}</span>;
+    } },
+    { key: "gpsId", header: "GPS", sortValue: (r) => r.gpsId || "", render: (r) => r.gpsId ? r.gpsId : <span style={{ color: C.faint }}>Not fitted</span>, muted: true },
+    { key: "service", header: "Service status", align: "right", sortValue: (r) => (r.serviceDueKm || 0) - r.mileage, render: (r) => {
       if (!r.serviceDueKm) return "-";
       const left = r.serviceDueKm - r.mileage;
-      return <span style={{ color: left <= 0 ? C.coral : left < 2500 ? C.amber : C.muted }}>{left <= 0 ? `${formatNumber(-left)} km over` : `${formatNumber(left)} km`}</span>;
+      return <span style={{ color: left <= 0 ? C.coral : left < 2500 ? C.amber : C.muted }}>{left <= 0 ? `${formatNumber(-left)} km over` : `${formatNumber(left)} km left`}</span>;
     } },
     { key: "status", header: "Status", sortValue: (r) => r.status, render: (r) => <Badge tone={statusTone(r.status)} size="sm">{r.status}</Badge> },
   ];
 
   const driverColumns = [
     { key: "name", header: "Name", render: (r) => <span className="font-semibold">{r.name}</span> },
-    { key: "phone", header: "Phone", muted: true },
-    { key: "licence", header: "Licence", muted: true },
+    { key: "idNumber", header: "ID / Licence", sortValue: (r) => r.idNumber || "", render: (r) => (
+      <span className="text-xs">
+        <span style={{ color: C.ink }}>{r.idNumber || "-"}</span>
+        <br /><span style={{ color: C.faint }}>{r.licence || "-"}</span>
+      </span>
+    ) },
+    { key: "phone", header: "Contact", sortValue: (r) => r.phone || "", render: (r) => (
+      <span className="text-xs">
+        <span style={{ color: C.ink }}>{r.phone}</span>
+        <br /><span style={{ color: C.faint }}>{r.email || "-"}</span>
+      </span>
+    ) },
+    { key: "nextOfKin", header: "Next of kin", muted: true },
     { key: "rating", header: "Rating", align: "right", sortValue: (r) => r.rating, render: (r) => `★ ${r.rating?.toFixed(1) ?? "-"}` },
     { key: "status", header: "Status", sortValue: (r) => r.status, render: (r) => <Badge tone={statusTone(r.status)} size="sm">{r.status}</Badge> },
   ];

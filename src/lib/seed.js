@@ -45,21 +45,21 @@ const dayOf = (offset) => toISODate(addDays(TODAY, -offset));
 /* ---------------------------------------------------------- people */
 
 export const SEED_DRIVERS = [
-  { id: "d1", name: "Peter Mwangi", phone: "+254 712 345 678", licence: "DL-448120", status: "On Duty", rating: 4.8, hiredOn: dayOf(940) },
-  { id: "d2", name: "James Otieno", phone: "+254 722 456 789", licence: "DL-337091", status: "On Duty", rating: 4.6, hiredOn: dayOf(610) },
-  { id: "d3", name: "Samuel Kiptoo", phone: "+254 733 567 890", licence: "DL-905233", status: "Off Duty", rating: 4.4, hiredOn: dayOf(430) },
-  { id: "d4", name: "Grace Wanjiru", phone: "+254 700 111 222", licence: "DL-661874", status: "On Leave", rating: 4.9, hiredOn: dayOf(300) },
-  { id: "d5", name: "Ibrahim Hassan", phone: "+254 745 909 100", licence: "DL-220458", status: "On Duty", rating: 4.7, hiredOn: dayOf(180) },
-  { id: "d6", name: "Caroline Nduta", phone: "+254 719 220 337", licence: "DL-118763", status: "On Duty", rating: 4.5, hiredOn: dayOf(95) },
+  { id: "d1", name: "Peter Mwangi", idNumber: "23456781", phone: "+254 712 345 678", email: "peter.mwangi@gmail.com", licence: "DL-448120", nextOfKin: "+254 712 345 001", status: "On Duty", rating: 4.8, hiredOn: dayOf(940) },
+  { id: "d2", name: "James Otieno", idNumber: "23456782", phone: "+254 722 456 789", email: "james.otieno@gmail.com", licence: "DL-337091", nextOfKin: "+254 722 456 002", status: "On Duty", rating: 4.6, hiredOn: dayOf(610) },
+  { id: "d3", name: "Samuel Kiptoo", idNumber: "23456783", phone: "+254 733 567 890", email: "samuel.kiptoo@gmail.com", licence: "DL-905233", nextOfKin: "+254 733 567 003", status: "Off Duty", rating: 4.4, hiredOn: dayOf(430) },
+  { id: "d4", name: "Grace Wanjiru", idNumber: "23456784", phone: "+254 700 111 222", email: "grace.wanjiru@gmail.com", licence: "DL-661874", nextOfKin: "+254 700 111 004", status: "On Leave", rating: 4.9, hiredOn: dayOf(300) },
+  { id: "d5", name: "Ibrahim Hassan", idNumber: "23456785", phone: "+254 745 909 100", email: "ibrahim.hassan@gmail.com", licence: "DL-220458", nextOfKin: "+254 745 909 005", status: "On Duty", rating: 4.7, hiredOn: dayOf(180) },
+  { id: "d6", name: "Caroline Nduta", idNumber: "23456786", phone: "+254 719 220 337", email: "caroline.nduta@gmail.com", licence: "DL-118763", nextOfKin: "+254 719 220 006", status: "On Duty", rating: 4.5, hiredOn: dayOf(95) },
 ];
 
 export const SEED_VEHICLES = [
-  { id: "v1", reg: "KDA 245A", type: "Bus", model: "Scania K410", driverId: "d1", status: "Active", mileage: 182340, serviceDueKm: 186000, insuranceExpiry: dayOf(-21), capacity: 49 },
-  { id: "v2", reg: "KCB 102X", type: "Shuttle", model: "Toyota Hiace", driverId: "d2", status: "Active", mileage: 96500, serviceDueKm: 101000, insuranceExpiry: dayOf(-96), capacity: 14 },
-  { id: "v3", reg: "KDG 771B", type: "Truck", model: "Isuzu FRR", driverId: "d3", status: "Maintenance", mileage: 210800, serviceDueKm: 210000, insuranceExpiry: dayOf(-58), capacity: 8 },
-  { id: "v4", reg: "KDN 330F", type: "Van", model: "Nissan NV350", driverId: "d4", status: "Active", mileage: 54200, serviceDueKm: 60000, insuranceExpiry: dayOf(-134), capacity: 12 },
-  { id: "v5", reg: "KDJ 812K", type: "Shuttle", model: "Toyota Hiace", driverId: "d5", status: "Active", mileage: 71450, serviceDueKm: 73000, insuranceExpiry: dayOf(-12), capacity: 14 },
-  { id: "v6", reg: "KCX 559M", type: "Bus", model: "Yutong ZK6100", driverId: "d6", status: "Active", mileage: 133900, serviceDueKm: 140000, insuranceExpiry: dayOf(-175), capacity: 41 },
+  { id: "v1", reg: "KDA 245A", type: "Bus", model: "Scania K410", driverId: "d1", status: "Active", mileage: 182340, serviceDueKm: 186000, insuranceExpiry: dayOf(-21), gpsId: "GPS-10021", capacity: 49 },
+  { id: "v2", reg: "KCB 102X", type: "Shuttle", model: "Toyota Hiace", driverId: "d2", status: "Active", mileage: 96500, serviceDueKm: 101000, insuranceExpiry: dayOf(-96), gpsId: "GPS-10022", capacity: 14 },
+  { id: "v3", reg: "KDG 771B", type: "Truck", model: "Isuzu FRR", driverId: "d3", status: "Maintenance", mileage: 210800, serviceDueKm: 210000, insuranceExpiry: dayOf(-58), gpsId: "", capacity: 8 },
+  { id: "v4", reg: "KDN 330F", type: "Van", model: "Nissan NV350", driverId: "d4", status: "Active", mileage: 54200, serviceDueKm: 60000, insuranceExpiry: dayOf(-134), gpsId: "GPS-10024", capacity: 12 },
+  { id: "v5", reg: "KDJ 812K", type: "Shuttle", model: "Toyota Hiace", driverId: "d5", status: "Active", mileage: 71450, serviceDueKm: 73000, insuranceExpiry: dayOf(-12), gpsId: "GPS-10025", capacity: 14 },
+  { id: "v6", reg: "KCX 559M", type: "Bus", model: "Yutong ZK6100", driverId: "d6", status: "Active", mileage: 133900, serviceDueKm: 140000, insuranceExpiry: dayOf(-175), gpsId: "", capacity: 41 },
 ];
 
 /* ---------------------------------------------------------- transport */
