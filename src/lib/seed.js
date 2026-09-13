@@ -75,6 +75,36 @@ export const SEED_VEHICLES = [
   { id: "v8", reg: "KMEA 118Q", type: "Tuktuk", model: "Bajaj RE", driverId: "d8", status: "Active", mileage: 18100, serviceDueKm: 20000, insuranceExpiry: dayOf(-15), gpsId: "", capacity: 3 },
 ];
 
+const MAINTENANCE_KINDS = [
+  { category: "Service", note: "Full service", cost: [4500, 9000] },
+  { category: "Tyres", note: "Tyre replacement", cost: [6000, 18000] },
+  { category: "Repair", note: "Brake pads", cost: [3000, 7000] },
+  { category: "Repair", note: "Battery replacement", cost: [5000, 9000] },
+  { category: "Inspection", note: "NTSA inspection", cost: [1500, 3000] },
+];
+
+function buildMaintenance() {
+  const list = [];
+  const activeVehicles = SEED_VEHICLES.filter((v) => v.status !== "Inactive");
+  activeVehicles.forEach((v) => {
+    const count = between(2, 5);
+    for (let i = 0; i < count; i++) {
+      const offset = between(5, DAYS);
+      const kind = pick(MAINTENANCE_KINDS);
+      list.push({
+        id: genId("mx"),
+        date: dayOf(offset),
+        vehicleId: v.id,
+        category: kind.category,
+        description: kind.note,
+        cost: round50(between(kind.cost[0], kind.cost[1])),
+        createdBy: SEED_DRIVERS.find((d) => d.id === v.driverId)?.name || "",
+      });
+    }
+  });
+  return list.sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
 /* ---------------------------------------------------------- transport */
 
 const ROUTES = [
@@ -262,15 +292,17 @@ function buildOrders() {
 /* ---------------------------------------------------------- hospitality */
 
 export const SEED_ROOMS = [
-  { id: "r1", number: "101", type: "Standard", price: 6500, status: "Available", floor: 1 },
-  { id: "r2", number: "102", type: "Standard", price: 6500, status: "Available", floor: 1 },
-  { id: "r3", number: "103", type: "Standard", price: 6500, status: "Cleaning", floor: 1 },
-  { id: "r4", number: "201", type: "Deluxe", price: 11500, status: "Available", floor: 2 },
-  { id: "r5", number: "202", type: "Deluxe", price: 11500, status: "Available", floor: 2 },
-  { id: "r6", number: "203", type: "Family", price: 14500, status: "Available", floor: 2 },
-  { id: "r7", number: "301", type: "Executive Suite", price: 22000, status: "Available", floor: 3 },
-  { id: "r8", number: "302", type: "Executive Suite", price: 22000, status: "Maintenance", floor: 3 },
+  { id: "r1", number: "101", property: "Riverside House", type: "Standard", price: 6500, status: "Available", floor: 1 },
+  { id: "r2", number: "102", property: "Riverside House", type: "Standard", price: 6500, status: "Available", floor: 1 },
+  { id: "r3", number: "103", property: "Riverside House", type: "Standard", price: 6500, status: "Cleaning", floor: 1 },
+  { id: "r4", number: "201", property: "Riverside House", type: "Deluxe", price: 11500, status: "Available", floor: 2 },
+  { id: "r5", number: "202", property: "Riverside House", type: "Deluxe", price: 11500, status: "Available", floor: 2 },
+  { id: "r6", number: "203", property: "Riverside House", type: "Family", price: 14500, status: "Available", floor: 2 },
+  { id: "r7", number: "301", property: "Garden Wing", type: "Executive Suite", price: 22000, status: "Available", floor: 3 },
+  { id: "r8", number: "302", property: "Garden Wing", type: "Executive Suite", price: 22000, status: "Maintenance", floor: 3 },
 ];
+
+export const PROPERTIES = [...new Set(SEED_ROOMS.map((r) => r.property))];
 
 const GUESTS = [
   "David & Linda Achieng", "Tom Barasa", "Njeri Consulting Ltd", "Faith Chebet", "Ahmed Farah",
@@ -501,6 +533,7 @@ export function buildSeedData() {
     },
     drivers: SEED_DRIVERS,
     vehicles: SEED_VEHICLES,
+    maintenance: buildMaintenance(),
     trips: buildTrips(),
     menu: SEED_MENU,
     orders: buildOrders(),

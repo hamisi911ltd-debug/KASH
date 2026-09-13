@@ -5,7 +5,7 @@
    ============================================================ */
 import {
   Truck, Wallet, Drumstick, BedDouble, Users, Bell, Car, DoorOpen, UserPlus, BookMarked,
-  ArrowLeftRight, MessagesSquare,
+  ArrowLeftRight, MessagesSquare, Wrench, PlayCircle, StopCircle,
 } from "lucide-react";
 import { TODAY } from "./seed";
 import {
@@ -14,6 +14,7 @@ import {
   DRIVER_STATUSES, VEHICLE_STATUSES, ROOM_STATUSES, PAYMENT_DIRECTIONS,
   divisionOptions,
 } from "./constants";
+import { capsForRole } from "./auth";
 import { daysBetween } from "./format";
 
 const opt = (arr) => arr.map((v) => ({ value: v, label: v }));
@@ -24,7 +25,14 @@ export function buildForms(data, session) {
   const roomOpts = () => data.rooms.map((r) => ({ value: r.id, label: `Room ${r.number} - ${r.type} (KSh ${r.price.toLocaleString()})` }));
   const menuOpts = () => data.menu.filter((m) => m.active).map((m) => ({ value: m.id, label: `${m.name} - KSh ${m.price.toLocaleString()}` }));
 
-  const userOpts = () => data.users.map((u) => ({ value: u.name, label: `${u.name} - ${u.role}` }));
+  /* A worker (Driver / Chicken Attendant / Hospitality Attendant) messages
+     up to their manager/admin, not sideways to every other worker. */
+  const myCaps = capsForRole(session?.role);
+  const userOpts = () => {
+    const pool = data.users.filter((u) => u.name !== session?.name);
+    const scoped = myCaps?.writeOwn ? pool.filter((u) => /Manager|Admin/i.test(u.role)) : pool;
+    return scoped.map((u) => ({ value: u.name, label: `${u.name} - ${u.role}` }));
+  };
 
   /* A driver logging their own trip doesn't pick a vehicle/driver -
      it's always their own, filled in automatically on submit. */
@@ -53,23 +61,13 @@ export function buildForms(data, session) {
       label: "New Trip",
       icon: Truck,
       title: "Log a trip",
-      subtitle: isOwnDriver && myVehicle
-        ? `Logged against your vehicle, ${myVehicle.reg}.`
-        : "Fare and fuel post straight to the ledger.",
+      subtitle: "Fare and fuel post straight to the ledger. Drivers use Start/End trip instead - see below.",
       submitLabel: "Add trip",
-      ownAllowed: true,
-      autofillFor: (s, d) => {
-        if (s?.role !== "Driver" || !s?.driverId) return {};
-        const veh = d.vehicles.find((v) => v.driverId === s.driverId);
-        return { driverId: s.driverId, vehicleId: veh?.id };
-      },
       notify: { channel: "trips", message: (v) => `Trip logged: ${v.origin} to ${v.destination}`, type: "trip", division: "Transport" },
       fields: [
         { key: "date", label: "Date", type: "date", default: TODAY, required: true },
-        ...(isOwnDriver ? [] : [
-          { key: "vehicleId", label: "Vehicle", type: "select", options: vehicleOpts, required: true },
-          { key: "driverId", label: "Driver", type: "select", options: driverOpts, required: true },
-        ]),
+        { key: "vehicleId", label: "Vehicle", type: "select", options: vehicleOpts, required: true },
+        { key: "driverId", label: "Driver", type: "select", options: driverOpts, required: true },
         { key: "origin", label: "Origin", type: "text", default: "Nairobi", required: true },
         { key: "destination", label: "Destination", type: "text", placeholder: "e.g. Kisumu", required: true },
         { key: "client", label: "Client / charter", type: "text", placeholder: "Walk-in" },
@@ -84,6 +82,71 @@ export function buildForms(data, session) {
             return `Net KSh ${net.toLocaleString()}`;
           },
         },
+      ],
+    },
+    /* Uber-style two-step logging for a driver's own trips: start with
+       just a pickup, end with the drop-off and what the app/customer
+       actually paid. Both post to the same "trips" collection as the
+       full manual "trip" form above - just entered in two moves instead
+       of one, and only ever touching the driver's own record. */
+    startTrip: {
+      key: "startTrip",
+      collection: "trips",
+      label: "Start Trip",
+      icon: PlayCircle,
+      title: "Start a trip",
+      subtitle: myVehicle ? `Logged against your vehicle, ${myVehicle.reg}.` : "Where are you picking up from?",
+      submitLabel: "Start trip",
+      ownAllowed: true,
+      autofillFor: (s, d) => {
+        if (s?.role !== "Driver" || !s?.driverId) return {};
+        const veh = d.vehicles.find((v) => v.driverId === s.driverId);
+        return { driverId: s.driverId, vehicleId: veh?.id, status: "In Transit", destination: "", amount: 0 };
+      },
+      fields: [
+        { key: "origin", label: "Pickup location", type: "text", default: "Nairobi", required: true },
+        { key: "client", label: "Client / passenger (optional)", type: "text", placeholder: "Walk-in / Uber app" },
+      ],
+    },
+    endTrip: {
+      key: "endTrip",
+      collection: "trips",
+      label: "End Trip",
+      icon: StopCircle,
+      title: "End trip",
+      editTitle: "End trip",
+      subtitle: "Enter where you dropped off and what the app or customer paid.",
+      submitLabel: "End trip",
+      editSubmitLabel: "End trip",
+      ownAllowed: true,
+      autofillFor: () => ({ status: "Completed" }),
+      fields: [
+        { key: "destination", label: "Drop-off location", type: "text", placeholder: "e.g. Westlands", required: true },
+        { key: "amount", label: "Amount received (KSh)", type: "number", min: 0, required: true },
+        { key: "distanceKm", label: "Distance (km, optional)", type: "number", min: 0, default: "" },
+        { key: "fuelCost", label: "Fuel cost (KSh, optional)", type: "number", min: 0, default: "", hint: "Posted as a Transport expense automatically." },
+      ],
+    },
+    maintenance: {
+      key: "maintenance",
+      collection: "maintenance",
+      label: "Log Maintenance",
+      icon: Wrench,
+      title: "Log maintenance",
+      subtitle: myVehicle ? `Logged against your vehicle, ${myVehicle.reg}.` : "Keeps the fleet's service history and books in sync.",
+      submitLabel: "Log maintenance",
+      ownAllowed: true,
+      autofillFor: (s, d) => {
+        if (s?.role !== "Driver" || !s?.driverId) return {};
+        const veh = d.vehicles.find((v) => v.driverId === s.driverId);
+        return { vehicleId: veh?.id };
+      },
+      fields: [
+        { key: "date", label: "Date", type: "date", default: TODAY, required: true },
+        ...(isOwnDriver ? [] : [{ key: "vehicleId", label: "Vehicle", type: "select", options: vehicleOpts, required: true }]),
+        { key: "category", label: "Type", type: "select", options: opt(["Service", "Repair", "Tyres", "Inspection", "Other"]) },
+        { key: "description", label: "What was done?", type: "text", placeholder: "e.g. Brake pads replaced", required: true },
+        { key: "cost", label: "Cost (KSh)", type: "number", min: 0, required: true, hint: "Posted as a Transport expense automatically." },
       ],
     },
     vehicle: {
@@ -227,6 +290,7 @@ export function buildForms(data, session) {
       submitLabel: "Add room",
       fields: [
         { key: "number", label: "Room number", type: "text", required: true },
+        { key: "property", label: "House / property", type: "text", placeholder: "e.g. Riverside House", default: "Main House" },
         { key: "type", label: "Type", type: "select", options: opt(ROOM_TYPES) },
         { key: "floor", label: "Floor", type: "number", min: 0, default: "1" },
         { key: "price", label: "Rate per night (KSh)", type: "number", min: 0, required: true },
@@ -348,4 +412,4 @@ export function buildForms(data, session) {
 }
 
 /** The subset shown in the top bar's quick-create menu and command palette. */
-export const QUICK_ACTION_KEYS = ["payment", "message", "trip", "order", "booking", "expense", "reminder", "vehicle", "room", "user"];
+export const QUICK_ACTION_KEYS = ["payment", "message", "trip", "startTrip", "maintenance", "order", "booking", "expense", "reminder", "vehicle", "room", "user"];

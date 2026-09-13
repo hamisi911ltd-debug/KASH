@@ -146,8 +146,17 @@ export default function App() {
 
       try {
         if (modal.initial && modal.initial.id) {
-          await updateRecord(form.collection, modal.initial.id, values);
+          const autofill = form.autofillFor ? form.autofillFor(session, data) : {};
+          await updateRecord(form.collection, modal.initial.id, { ...autofill, ...values });
           toast(`${SINGULAR[form.collection] || "Record"} updated`);
+          // Uber-style flow: ending a trip rolls straight into collecting the fare.
+          if (form.key === "endTrip") {
+            const party = modal.initial.client || "Passenger";
+            const amount = values.amount;
+            setTimeout(() => {
+              openForm("payment", { direction: "in", division: "Transport", party, amount, method: "M-Pesa" });
+            }, 0);
+          }
           return;
         }
 
@@ -187,7 +196,7 @@ export default function App() {
         toast(e.message || "Something went wrong saving that.", { tone: "error" });
       }
     },
-    [forms, modal, addRecord, updateRecord, toast, notifyIfEnabled, session, data]
+    [forms, modal, addRecord, updateRecord, toast, notifyIfEnabled, session, data, openForm]
   );
 
   const confirmMpesa = useCallback(() => {

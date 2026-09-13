@@ -10,7 +10,7 @@ import { TODAY } from "./seed.js";
 import { daysBetween, toISODate } from "./format.js";
 
 export const COLLECTIONS = [
-  "drivers", "vehicles", "trips", "menu", "orders",
+  "drivers", "vehicles", "trips", "maintenance", "menu", "orders",
   "rooms", "bookings", "expenses", "payments", "users", "reminders", "messages", "notifications",
 ];
 
@@ -41,6 +41,13 @@ export const normalisers = {
     insuranceExpiry: v.insuranceExpiry || "",
     gpsId: (v.gpsId || "").trim(),
     capacity: num(v.capacity),
+  }),
+  maintenance: (v) => ({
+    date: v.date || TODAY,
+    vehicleId: v.vehicleId || "",
+    category: v.category || "Service",
+    description: (v.description || "").trim(),
+    cost: num(v.cost),
   }),
   drivers: (v) => ({
     name: (v.name || "").trim(),
@@ -80,6 +87,7 @@ export const normalisers = {
   }),
   rooms: (v) => ({
     number: (v.number || "").trim(),
+    property: (v.property || "").trim() || "Main House",
     type: v.type || "Standard",
     price: num(v.price),
     status: v.status || "Available",
@@ -159,12 +167,12 @@ export const normalisers = {
 };
 
 export const ID_PREFIX = {
-  trips: "t", vehicles: "v", drivers: "d", orders: "o", menu: "m",
+  trips: "t", vehicles: "v", drivers: "d", maintenance: "mx", orders: "o", menu: "m",
   rooms: "r", bookings: "b", expenses: "e", payments: "pay", users: "u", reminders: "rem", messages: "msg", notifications: "n",
 };
 
 /* Human labels used in toasts and confirmation copy. */
 export const SINGULAR = {
-  trips: "Trip", vehicles: "Vehicle", drivers: "Driver", orders: "Order", menu: "Menu item",
+  trips: "Trip", vehicles: "Vehicle", drivers: "Driver", maintenance: "Maintenance record", orders: "Order", menu: "Menu item",
   rooms: "Room", bookings: "Booking", expenses: "Expense", payments: "Payment", users: "User", reminders: "Reminder", messages: "Message",
 };

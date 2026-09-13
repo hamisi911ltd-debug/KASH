@@ -1,10 +1,16 @@
-/* Transport division: fleet, drivers, trips, and trip-level P&L.
-   A Driver session sees this same page, self-scoped to just their
-   own trips and vehicle - see `restricted` below. */
+/* Transport division: fleet, drivers, trips, maintenance and
+   trip-level P&L. A Driver session sees this same page, self-scoped
+   to just their own trips/vehicle - see `restricted` below - and
+   logs trips Uber-style: Start trip (pickup only) -> the trip sits
+   "In Transit" -> End trip (drop-off + what was paid) rolls straight
+   into Initiate Payment. */
 import React, { useMemo, useState } from "react";
-import { Plus, Truck, Users, ArrowDownRight, ArrowUpRight, Coins, Pencil, Trash2, MapPin, Route } from "lucide-react";
+import {
+  Plus, Truck, Users, ArrowDownRight, ArrowUpRight, Coins, Pencil, Trash2, MapPin, Route,
+  Wrench, PlayCircle, StopCircle, Navigation,
+} from "lucide-react";
 import { C } from "../lib/constants";
-import { formatKES, formatNumber, formatDateShort } from "../lib/format";
+import { formatKES, formatNumber, formatDateShort, relativeTime } from "../lib/format";
 import {
   resolvePeriod, computeMetrics, inRange, CANCELLED,
 } from "../lib/derive";
@@ -33,6 +39,7 @@ export default function TransportView() {
   const restricted = !caps.write; // a Driver only sees and logs their own trips
   const myVehicle = restricted ? data.vehicles.find((v) => v.driverId === session?.driverId) : null;
   const myDriver = restricted ? data.drivers.find((d) => d.id === session?.driverId) : null;
+  const activeTrip = restricted ? data.trips.find((t) => t.driverId === session?.driverId && t.status === "In Transit") : null;
 
   const [tab, setTab] = useState("trips");
   const [q, setQ] = useState("");
@@ -59,6 +66,11 @@ export default function TransportView() {
   const myIncome = tripsInRange.reduce((s, t) => s + (t.amount || 0), 0);
   const myExpense = tripsInRange.reduce((s, t) => s + (t.fuelCost || 0) + (t.otherCost || 0), 0);
 
+  const maintenanceRows = useMemo(
+    () => (restricted ? data.maintenance.filter((mx) => mx.vehicleId === myVehicle?.id) : data.maintenance),
+    [data.maintenance, restricted, myVehicle]
+  );
+
   const ql = q.trim().toLowerCase();
   const shownTrips = useMemo(() => tripsInRange
     .filter((t) => tStatus === "All" || t.status === tStatus)
@@ -74,6 +86,9 @@ export default function TransportView() {
     .filter((d) => dStatus === "All" || d.status === dStatus)
     .filter((d) => !ql || `${d.name} ${d.phone} ${d.licence || ""}`.toLowerCase().includes(ql)),
     [data.drivers, dStatus, ql]);
+  const shownMaintenance = useMemo(() => maintenanceRows
+    .filter((mx) => !ql || `${mx.description} ${mx.category} ${vehicleReg(mx.vehicleId)}`.toLowerCase().includes(ql)),
+    [maintenanceRows, ql]);
   const dirty = ql || tStatus !== "All" || tVehicle !== "All" || vStatus !== "All" || dStatus !== "All" || from || to;
   const clearFilters = () => { setQ(""); setTStatus("All"); setTVehicle("All"); setVStatus("All"); setDStatus("All"); setFrom(""); setTo(""); };
 
@@ -91,7 +106,7 @@ export default function TransportView() {
   const tripColumns = [
     { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
     { key: "route", header: "Route", sortValue: (r) => r.destination, render: (r) => (
-      <span className="flex items-center gap-1.5"><Route size={13} style={{ color: C.faint }} />{r.origin} → {r.destination}</span>
+      <span className="flex items-center gap-1.5"><Route size={13} style={{ color: C.faint }} />{r.origin} → {r.destination || <span style={{ color: C.faint }}>in progress</span>}</span>
     ) },
     ...(restricted ? [] : [
       { key: "vehicleId", header: "Vehicle", sortValue: (r) => vehicleReg(r.vehicleId), render: (r) => vehicleReg(r.vehicleId) },
@@ -143,6 +158,14 @@ export default function TransportView() {
     { key: "status", header: "Status", sortValue: (r) => r.status, render: (r) => <Badge tone={statusTone(r.status)} size="sm">{r.status}</Badge> },
   ];
 
+  const maintenanceColumns = [
+    { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
+    ...(restricted ? [] : [{ key: "vehicleId", header: "Vehicle", sortValue: (r) => vehicleReg(r.vehicleId), render: (r) => vehicleReg(r.vehicleId) }]),
+    { key: "category", header: "Type", sortValue: (r) => r.category, render: (r) => <Badge tone="slate" size="sm">{r.category}</Badge> },
+    { key: "description", header: "Details", wrap: true },
+    { key: "cost", header: "Cost", align: "right", sortValue: (r) => r.cost, render: (r) => <span className="font-semibold">{formatKES(r.cost)}</span> },
+  ];
+
   const rowActions = (collection) => caps.write ? [
     { label: "Edit", icon: Pencil, onClick: (r) => editRecord(collection, r.id) },
     { label: "Delete", icon: Trash2, tone: "danger", onClick: (r) => deleteRecord(collection, r.id) },
@@ -151,25 +174,61 @@ export default function TransportView() {
   const tripActions = caps.payments ? [
     {
       label: "Collect fare", icon: Coins,
-      hidden: (r) => r.status === "Cancelled",
+      hidden: (r) => r.status === "Cancelled" || r.status === "In Transit",
       onClick: (r) => openForm("payment", { direction: "in", division: "Transport", party: r.client || "Passenger", amount: r.amount, method: "M-Pesa" }),
     },
     ...rowActions("trips"),
   ] : rowActions("trips");
 
+  const TABS = restricted
+    ? [
+        { value: "trips", label: `My trips ${tripsInRange.length}` },
+        { value: "maintenance", label: `Maintenance ${maintenanceRows.length}` },
+      ]
+    : [
+        { value: "trips", label: `Trips ${tripsInRange.length}` },
+        { value: "vehicles", label: `Vehicles ${data.vehicles.length}` },
+        { value: "drivers", label: `Drivers ${data.drivers.length}` },
+        { value: "maintenance", label: `Maintenance ${data.maintenance.length}` },
+      ];
+
   return (
     <Page>
       <PageHeader
         title={restricted ? "My Transport" : "Transport"}
-        subtitle={restricted ? "Your trips and vehicle." : "Fleet, drivers and trip performance."}
+        subtitle={restricted ? "Your trips, vehicle and maintenance log." : "Fleet, drivers and trip performance."}
         actions={(caps.write || caps.writeOwn) && (
           <>
             {caps.write && <Button variant="outline" size="sm" onClick={() => openForm("driver")}><Plus size={14} /> Driver</Button>}
             {caps.write && <Button variant="outline" size="sm" onClick={() => openForm("vehicle")}><Plus size={14} /> Vehicle</Button>}
-            <Button size="sm" onClick={() => openForm("trip")}><Plus size={14} /> New trip</Button>
+            {caps.write && <Button size="sm" onClick={() => openForm("trip")}><Plus size={14} /> New trip</Button>}
+            {restricted && <Button variant="outline" size="sm" onClick={() => openForm("maintenance")}><Wrench size={14} /> Maintenance</Button>}
+            {restricted && !activeTrip && <Button size="sm" onClick={() => openForm("startTrip")}><PlayCircle size={14} /> Start trip</Button>}
           </>
         )}
       />
+
+      {restricted && activeTrip && (
+        <Card className="relative overflow-hidden" style={{ borderColor: C.blue, background: C.blueSoft }}>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: C.blue }}>
+                <Navigation size={18} style={{ color: "#fff" }} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: C.blue }}>Trip in progress</p>
+                <p className="text-sm font-bold truncate" style={{ color: C.ink }}>
+                  {activeTrip.origin} → <span style={{ color: C.muted }}>drop-off pending</span>
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: C.muted }}>
+                  {activeTrip.client ? `${activeTrip.client} · ` : ""}Started {relativeTime(new Date(activeTrip.date).toISOString())}
+                </p>
+              </div>
+            </div>
+            <Button onClick={() => openForm("endTrip", activeTrip)}><StopCircle size={14} /> End trip</Button>
+          </div>
+        </Card>
+      )}
 
       {restricted && (myVehicle || myDriver) && (
         <Card>
@@ -217,45 +276,35 @@ export default function TransportView() {
       )}
 
       <Card padded={false}>
-        {!restricted && (
-          <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
-            <SectionTitle title={{ trips: "Trips", vehicles: "Vehicles", drivers: "Drivers" }[tab]} />
-            <Segmented
-              options={[
-                { value: "trips", label: `Trips ${tripsInRange.length}` },
-                { value: "vehicles", label: `Vehicles ${data.vehicles.length}` },
-                { value: "drivers", label: `Drivers ${data.drivers.length}` },
-              ]}
-              value={tab}
-              onChange={setTab}
-            />
-          </div>
-        )}
-        {restricted && (
-          <div className="p-4 sm:p-5 pb-3">
-            <SectionTitle title={`My trips · ${tripsInRange.length}`} />
-          </div>
-        )}
+        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
+          <SectionTitle title={{ trips: restricted ? "My trips" : "Trips", vehicles: "Vehicles", drivers: "Drivers", maintenance: "Maintenance" }[tab]} />
+          <Segmented options={TABS} value={tab} onChange={setTab} />
+        </div>
         <div className="px-3 sm:px-5 pb-5">
           <FilterBar
-            search={{ value: q, onChange: setQ, placeholder: tab === "trips" ? "Route, client, vehicle..." : tab === "vehicles" ? "Reg or model..." : "Name or phone..." }}
+            search={{
+              value: q, onChange: setQ,
+              placeholder: tab === "trips" ? "Route, client, vehicle..." : tab === "vehicles" ? "Reg or model..." : tab === "drivers" ? "Name or phone..." : "Vehicle, type, details...",
+            }}
             selects={
-              restricted
-                ? [selectFilter("s", "Status", TRIP_STATUSES, tStatus, setTStatus)]
-                : tab === "trips"
-                  ? [
+              tab === "trips"
+                ? restricted
+                  ? [selectFilter("s", "Status", TRIP_STATUSES, tStatus, setTStatus)]
+                  : [
                       selectFilter("s", "Status", TRIP_STATUSES, tStatus, setTStatus),
                       selectFilter("v", "Vehicle", data.vehicles.map((v) => v.reg), tVehicle, setTVehicle),
                     ]
-                  : tab === "vehicles"
-                    ? [selectFilter("vs", "Status", VEHICLE_STATUSES, vStatus, setVStatus)]
-                    : [selectFilter("ds", "Status", DRIVER_STATUSES, dStatus, setDStatus)]
+                : tab === "vehicles"
+                  ? [selectFilter("vs", "Status", VEHICLE_STATUSES, vStatus, setVStatus)]
+                  : tab === "drivers"
+                    ? [selectFilter("ds", "Status", DRIVER_STATUSES, dStatus, setDStatus)]
+                    : []
             }
-            range={(restricted || tab === "trips") ? { from, to, onFrom: setFrom, onTo: setTo } : undefined}
+            range={tab === "trips" ? { from, to, onFrom: setFrom, onTo: setTo } : undefined}
             dirty={!!dirty}
             onClear={clearFilters}
           />
-          {(restricted || tab === "trips") && (
+          {tab === "trips" && (
             <DataTable columns={tripColumns} rows={shownTrips} actions={tripActions} exportName={`kash-trips-${range.label}`} initialSort={{ key: "date", dir: "desc" }} emptyIcon={MapPin} emptyText="No trips match these filters." />
           )}
           {!restricted && tab === "vehicles" && (
@@ -263,6 +312,9 @@ export default function TransportView() {
           )}
           {!restricted && tab === "drivers" && (
             <DataTable columns={driverColumns} rows={shownDrivers} actions={rowActions("drivers")} exportName="kash-drivers" emptyIcon={Users} emptyText="No drivers match." />
+          )}
+          {tab === "maintenance" && (
+            <DataTable columns={maintenanceColumns} rows={shownMaintenance} actions={rowActions("maintenance")} exportName="kash-maintenance" emptyIcon={Wrench} emptyText="No maintenance logged yet." />
           )}
         </div>
       </Card>

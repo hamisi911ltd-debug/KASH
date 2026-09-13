@@ -123,6 +123,15 @@ export function buildLedger(data) {
     }
   });
 
+  (data.maintenance || []).forEach((mx) => {
+    if (!mx.cost) return;
+    lines.push({
+      id: `${mx.id}-mx`, refId: mx.id, date: mx.date, division: "Transport", kind: "expense",
+      category: "Maintenance", desc: `${mx.category} - ${mx.description} (${vehicleReg(mx.vehicleId)})`,
+      amount: Number(mx.cost) || 0, source: "maintenance", method: "Auto-posted",
+    });
+  });
+
   data.orders.forEach((o) => {
     if (o.orderStatus === CANCELLED) return;
     if (o.amount) {

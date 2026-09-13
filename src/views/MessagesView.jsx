@@ -259,7 +259,7 @@ function Reminders() {
 
 export default function MessagesView() {
   const { data, session } = useStore();
-  const { openForm } = useActions();
+  const { openForm, caps } = useActions();
   const [tab, setTab] = useState("messages");
 
   const unread = data.messages.filter((m) => m.to === session?.name && !m.read).length;
@@ -269,11 +269,11 @@ export default function MessagesView() {
     <Page>
       <PageHeader
         title="Messages"
-        subtitle="Message anyone on the platform, and track shared reminders."
+        subtitle={caps.write ? "Message anyone on the platform, and track shared reminders." : "Message your manager directly, and track shared reminders."}
         actions={
           <>
             {tab === "reminders" ? (
-              <Button size="sm" onClick={() => openForm("reminder")}><Plus size={14} /> Add reminder</Button>
+              caps.write && <Button size="sm" onClick={() => openForm("reminder")}><Plus size={14} /> Add reminder</Button>
             ) : (
               <Button size="sm" onClick={() => openForm("message")}><Plus size={14} /> New message</Button>
             )}

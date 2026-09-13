@@ -98,16 +98,18 @@ export const ROLES = [
    Chicken Attendant, Hospitality Attendant) each open only their own
    division's page - that page then scopes itself down further (see
    `writeOwn` below) so a worker only ever sees their own records,
-   never the rest of the team's or the company's totals. */
+   never the rest of the team's or the company's totals. Every role
+   gets "updates" (Messages) - workers raise things straight to their
+   manager there, it's not just an admin broadcast channel. */
 export const ROLE_VIEWS = {
   "Super Admin": "*",
   Admin: "*",
   "Transport Manager": ["overview", "transport", "payments", "expenses", "reports", "updates", "settings"],
-  Driver: ["transport", "payments", "settings"],
+  Driver: ["transport", "payments", "updates", "settings"],
   "Food Manager": ["overview", "food", "payments", "expenses", "reports", "updates", "settings"],
-  "Chicken Attendant": ["food", "payments", "settings"],
+  "Chicken Attendant": ["food", "payments", "updates", "settings"],
   "Hospitality Manager": ["overview", "hospitality", "payments", "expenses", "reports", "updates", "settings"],
-  "Hospitality Attendant": ["hospitality", "payments", "settings"],
+  "Hospitality Attendant": ["hospitality", "payments", "updates", "settings"],
   Accountant: ["overview", "all", "payments", "expenses", "reports", "updates", "settings"],
   Staff: ["overview", "payments", "updates", "settings"],
 };

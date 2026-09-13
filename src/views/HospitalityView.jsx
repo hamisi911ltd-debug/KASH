@@ -111,36 +111,47 @@ export default function HospitalityView() {
         />
       </Card>
 
-      <Card>
-        <SectionTitle title="Rooms right now" subtitle="Occupied is derived from live bookings" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {rooms.map((r) => (
-            <div key={r.id} className="rounded-xl border p-3" style={{ borderColor: C.line, background: C.surface2 }}>
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold" style={{ color: C.ink }}>Room {r.number}</p>
-                <Badge tone={STATE_TONE[r.state]} size="sm">{r.state}</Badge>
-              </div>
-              <p className="text-xs mt-1" style={{ color: C.muted }}>{r.type} · {formatKES(r.price)}/night</p>
-              {r.stay && <p className="text-xs mt-1.5 truncate" style={{ color: C.ink }}>{r.stay.guest} → {formatDateShort(r.stay.checkOut)}</p>}
-              {!r.stay && r.arriving && <p className="text-xs mt-1.5 truncate" style={{ color: C.blue }}>Arriving: {r.arriving.guest}</p>}
-              {caps.write && r.state !== "Occupied" && (
-                <div className="mt-2 flex gap-1">
-                  {["Available", "Cleaning", "Maintenance"].filter((s) => s !== r.status).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => patchRoom(r.id, s)}
-                      className="text-[10px] font-semibold px-1.5 py-1 rounded-md transition-colors"
-                      style={{ background: C.surface, color: C.muted }}
-                    >
-                      {s}
-                    </button>
-                  ))}
+      {Object.entries(
+        rooms.reduce((groups, r) => {
+          const key = r.property || "Main House";
+          (groups[key] = groups[key] || []).push(r);
+          return groups;
+        }, {})
+      ).map(([property, propRooms]) => (
+        <Card key={property}>
+          <SectionTitle
+            title={property}
+            subtitle={`${propRooms.length} room${propRooms.length === 1 ? "" : "s"} · Occupied is derived from live bookings`}
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {propRooms.map((r) => (
+              <div key={r.id} className="rounded-xl border p-3" style={{ borderColor: C.line, background: C.surface2 }}>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold" style={{ color: C.ink }}>Room {r.number}</p>
+                  <Badge tone={STATE_TONE[r.state]} size="sm">{r.state}</Badge>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </Card>
+                <p className="text-xs mt-1" style={{ color: C.muted }}>{r.type} · {formatKES(r.price)}/night</p>
+                {r.stay && <p className="text-xs mt-1.5 truncate" style={{ color: C.ink }}>{r.stay.guest} → {formatDateShort(r.stay.checkOut)}</p>}
+                {!r.stay && r.arriving && <p className="text-xs mt-1.5 truncate" style={{ color: C.blue }}>Arriving: {r.arriving.guest}</p>}
+                {caps.write && r.state !== "Occupied" && (
+                  <div className="mt-2 flex gap-1">
+                    {["Available", "Cleaning", "Maintenance"].filter((s) => s !== r.status).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => patchRoom(r.id, s)}
+                        className="text-[10px] font-semibold px-1.5 py-1 rounded-md transition-colors"
+                        style={{ background: C.surface, color: C.muted }}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      ))}
 
       <Card padded={false}>
         <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">

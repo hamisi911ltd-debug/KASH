@@ -12,7 +12,7 @@
      DELETE /api/:collection/:id          -> delete
 
    Every collection uses the exact same normaliser/id-prefix rules as
-   the browser build (imported from src/lib/store.jsx), so a record
+   the browser build (imported from src/lib/schema.js), so a record
    created here and one created client-side-before-sync are identical
    in shape. Role checks are re-derived from src/lib/constants.js -
    the same table the UI reads - so there is exactly one definition
@@ -111,8 +111,9 @@ function scopeData(full, user) {
     d.trips = full.trips.filter((t) => t.driverId === user.driverId);
     d.vehicles = full.vehicles.filter((v) => v.driverId === user.driverId);
     d.drivers = full.drivers.filter((dr) => dr.id === user.driverId);
+    d.maintenance = full.maintenance.filter((m) => m.vehicleId === (d.vehicles[0]?.id));
   } else if (!sees("transport")) {
-    d.trips = []; d.vehicles = []; d.drivers = [];
+    d.trips = []; d.vehicles = []; d.drivers = []; d.maintenance = [];
   }
 
   if (user.role === "Chicken Attendant") {
@@ -127,8 +128,20 @@ function scopeData(full, user) {
   // Hospitality Attendant does see everyone's bookings/rooms (sees("hospitality")
   // is true for them) - front desk needs every guest, not just their own.
 
+  // Messages are private to the two people in the thread, always - even
+  // an Admin only sees threads they're personally part of.
+  d.messages = full.messages.filter((m) => m.from === user.name || m.to === user.name);
+
   d.users = full.users.map(stripSecret);
   return d;
+}
+
+/** Whether a writeOwn user (a worker who can log their own records but
+    not manage the whole division) owns this particular record. */
+function ownsRecord(collection, record, user) {
+  if (collection === "trips") return record.driverId === user.driverId;
+  if (collection === "orders" || collection === "bookings" || collection === "maintenance") return record.createdBy === user.name;
+  return false;
 }
 
 const FREE_PATCH_COLLECTIONS = new Set(["notifications", "reminders"]);
@@ -211,16 +224,16 @@ export default {
       const rows = await getCollection(env, collection);
 
       if (request.method === "POST") {
-        const canOwn = caps.writeOwn && ["trips", "orders", "bookings"].includes(collection);
+        const canOwn = caps.writeOwn && ["trips", "orders", "bookings", "maintenance"].includes(collection);
         const canPay = collection === "payments" && caps.payments;
         if (!caps.write && !canOwn && !canPay) return err("You don't have access to add that.", 403);
 
         const body = await request.json();
         let values = { ...body, createdBy: user.name };
-        if (collection === "trips" && user.role === "Driver" && user.driverId) {
+        if ((collection === "trips" || collection === "maintenance") && user.role === "Driver" && user.driverId) {
           const vehicles = await getCollection(env, "vehicles");
           const mine = vehicles.find((v) => v.driverId === user.driverId);
-          values = { ...values, driverId: user.driverId, vehicleId: mine?.id };
+          values = collection === "trips" ? { ...values, driverId: user.driverId, vehicleId: mine?.id } : { ...values, vehicleId: mine?.id };
         }
         if (collection === "payments") {
           values.reference = values.reference || `MP${Math.random().toString(36).slice(2, 9).toUpperCase()}`;
@@ -235,7 +248,10 @@ export default {
       if (!id) return err("Missing record id.", 400);
 
       if (request.method === "PUT") {
-        if (!caps.write) return err("You don't have access to edit that.", 403);
+        const existing = rows.find((r) => r.id === id);
+        if (!existing) return err("Not found.", 404);
+        const allowed = caps.write || (caps.writeOwn && ownsRecord(collection, existing, user));
+        if (!allowed) return err("You don't have access to edit that.", 403);
         const body = await request.json();
         const next = rows.map((r) => (r.id === id ? { ...r, ...(normalisers[collection] ? normalisers[collection]({ ...r, ...body }, {}) : body) } : r));
         await putCollection(env, collection, next);
@@ -243,7 +259,12 @@ export default {
       }
 
       if (request.method === "PATCH") {
-        if (!caps.write && !FREE_PATCH_COLLECTIONS.has(collection)) return err("You don't have access to change that.", 403);
+        const existing = rows.find((r) => r.id === id);
+        const allowed =
+          caps.write ||
+          FREE_PATCH_COLLECTIONS.has(collection) ||
+          (caps.writeOwn && existing && ownsRecord(collection, existing, user));
+        if (!allowed) return err("You don't have access to change that.", 403);
         const body = await request.json();
         const next = rows.map((r) => (r.id === id ? { ...r, ...body } : r));
         await putCollection(env, collection, next);
