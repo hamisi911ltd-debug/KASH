@@ -85,30 +85,48 @@ export const ROLES = [
   "Super Admin",
   "Admin",
   "Transport Manager",
+  "Driver",
   "Food Manager",
+  "Chicken Attendant",
   "Hospitality Manager",
+  "Hospitality Attendant",
   "Accountant",
   "Staff",
 ];
 
-/* Which views each role may open. */
+/* Which views each role may open. The three "worker" roles (Driver,
+   Chicken Attendant, Hospitality Attendant) each open only their own
+   division's page - that page then scopes itself down further (see
+   `writeOwn` below) so a worker only ever sees their own records,
+   never the rest of the team's or the company's totals. */
 export const ROLE_VIEWS = {
   "Super Admin": "*",
   Admin: "*",
   "Transport Manager": ["overview", "transport", "payments", "expenses", "reports", "updates", "settings"],
+  Driver: ["transport", "payments", "settings"],
   "Food Manager": ["overview", "food", "payments", "expenses", "reports", "updates", "settings"],
+  "Chicken Attendant": ["food", "payments", "settings"],
   "Hospitality Manager": ["overview", "hospitality", "payments", "expenses", "reports", "updates", "settings"],
+  "Hospitality Attendant": ["hospitality", "payments", "settings"],
   Accountant: ["overview", "all", "payments", "expenses", "reports", "updates", "settings"],
   Staff: ["overview", "payments", "updates", "settings"],
 };
 
-/* Roles allowed to create/edit/delete records, and to manage people. */
+/* Roles allowed to create/edit/delete records, and to manage people.
+   `write` = full management of the division (add vehicles/rooms/menu
+   items, edit or delete anyone's records). `writeOwn` = can log new
+   trips/orders/bookings of their own, but can't edit or delete any
+   record (their own included) or manage the fleet/menu/rooms - only
+   an Admin/Manager corrects the books. */
 export const ROLE_CAPS = {
   "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
   Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
   "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
+  Driver: { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
   "Food Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
+  "Chicken Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
   "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
+  "Hospitality Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
   Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
   Staff: { write: false, manageUsers: false, deleteAny: false, settings: false, payments: true },
 };
@@ -130,7 +148,7 @@ export const EXPENSE_CATEGORIES = [
   "Other",
 ];
 
-export const VEHICLE_TYPES = ["Bus", "Shuttle", "Truck", "Van", "Saloon"];
+export const VEHICLE_TYPES = ["Bus", "Shuttle", "Truck", "Van", "Saloon", "Uber", "Tuktuk"];
 export const PAYMENT_DIRECTIONS = [
   { value: "out", label: "Money out - pay someone" },
   { value: "in", label: "Money in - receive a payment" },

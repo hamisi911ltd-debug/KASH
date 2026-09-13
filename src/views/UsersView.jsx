@@ -15,8 +15,11 @@ const ACCESS_SUMMARY = {
   "Super Admin": "Everything, including users & settings",
   Admin: "Everything, including users & settings",
   "Transport Manager": "Transport, Expenses, Reports, Messages",
+  Driver: "Only their own trips & vehicle, Payments",
   "Food Manager": "Chicken, Expenses, Reports, Messages",
+  "Chicken Attendant": "Only orders they rang up, Payments",
   "Hospitality Manager": "Hospitality, Expenses, Reports, Messages",
+  "Hospitality Attendant": "Rooms & bookings (no money figures), Payments",
   Accountant: "All divisions read-only, Expenses & Reports",
   Staff: "Overview, Messages & Settings only",
 };

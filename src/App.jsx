@@ -62,7 +62,7 @@ export default function App() {
     if (!wanted) return;
     const acct = accountForRole(wanted);
     if (acct && acct.role !== session?.role) {
-      setSession({ email: acct.email, name: acct.name, role: acct.role });
+      setSession({ email: acct.email, name: acct.name, role: acct.role, driverId: acct.driverId });
     }
     const v = q.get("view");
     if (v) setActiveView(v);
@@ -73,13 +73,14 @@ export default function App() {
 
   const role = session?.role || "Staff";
   const caps = useMemo(() => capsForRole(role), [role]);
-  const forms = useMemo(() => buildForms(data), [data]);
+  const forms = useMemo(() => buildForms(data, session), [data, session]);
+  const canUseForm = useCallback(
+    (form) => (form.key === "payment" ? caps.payments : caps.write || (form.ownAllowed && caps.writeOwn)),
+    [caps.write, caps.writeOwn, caps.payments]
+  );
   const quickActions = useMemo(
-    () =>
-      QUICK_ACTION_KEYS.map((k) => forms[k])
-        .filter(Boolean)
-        .filter((f) => (f.key === "payment" ? caps.payments : caps.write)),
-    [forms, caps.write, caps.payments]
+    () => QUICK_ACTION_KEYS.map((k) => forms[k]).filter(Boolean).filter(canUseForm),
+    [forms, canUseForm]
   );
 
   /* --- navigation guard: bounce to a permitted view if the role loses access --- */
@@ -105,13 +106,13 @@ export default function App() {
 
   /* --- CRUD wired to forms --- */
   const openForm = useCallback((formKey, initial = null) => {
-    const allowed = formKey === "payment" ? caps.payments : caps.write;
-    if (!allowed) {
+    const form = forms[formKey];
+    if (!form || !canUseForm(form)) {
       toast("You can't do that with your role", { tone: "warn" });
       return;
     }
     setModal({ formKey, initial });
-  }, [caps.write, caps.payments, toast]);
+  }, [forms, canUseForm, toast]);
 
   const editRecord = useCallback(
     (collection, id) => {
@@ -138,7 +139,7 @@ export default function App() {
       const form = forms[modal.formKey];
       if (!form) return;
 
-      if (modal.initial) {
+      if (modal.initial && modal.initial.id) {
         updateRecord(form.collection, modal.initial.id, values);
         toast(`${SINGULAR[form.collection] || "Record"} updated`);
         return;
@@ -173,7 +174,8 @@ export default function App() {
         return;
       }
 
-      addRecord(form.collection, values);
+      const autofill = form.autofillFor ? form.autofillFor(session, data) : {};
+      addRecord(form.collection, { ...autofill, ...values, createdBy: session?.name || "" });
       toast(form.successToast || `${SINGULAR[form.collection] || "Record"} added`);
       if (form.notify) {
         notifyIfEnabled(form.notify.channel, form.notify.message(values), {
@@ -182,7 +184,7 @@ export default function App() {
         });
       }
     },
-    [forms, modal, addRecord, updateRecord, toast, notifyIfEnabled, session]
+    [forms, modal, addRecord, updateRecord, toast, notifyIfEnabled, session, data]
   );
 
   const confirmMpesa = useCallback(() => {
@@ -213,6 +215,16 @@ export default function App() {
       action: { label: "Undo", onClick: restore },
     });
   }, [confirm, removeRecord, toast]);
+
+  /* Admin "preview as role" dropdown: pick up a sample driverId so a
+     Driver preview isn't left pointing at no vehicle/trips. */
+  const switchRole = useCallback(
+    (r) => {
+      const sample = accountForRole(r);
+      setSession((s) => ({ ...s, role: r, driverId: sample?.driverId }));
+    },
+    [setSession]
+  );
 
   /* --- shortcuts --- */
   useHotkey("mod+k", () => setPaletteOpen((o) => !o), []);
@@ -249,7 +261,7 @@ export default function App() {
           activeView={activeView}
           onNavigate={navigate}
           onSignOut={() => setSession(null)}
-          onSwitchRole={(r) => setSession((s) => ({ ...s, role: r }))}
+          onSwitchRole={switchRole}
           session={session}
         />
         <MobileDrawer
@@ -259,7 +271,7 @@ export default function App() {
           activeView={activeView}
           onNavigate={navigate}
           onSignOut={() => setSession(null)}
-          onSwitchRole={(r) => setSession((s) => ({ ...s, role: r }))}
+          onSwitchRole={switchRole}
           session={session}
         />
 

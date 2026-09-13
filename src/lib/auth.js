@@ -10,8 +10,12 @@
 export const DEMO_ACCOUNTS = [
   { email: "wanjiku@kash.co.ke", name: "Wanjiku Kamande", role: "Super Admin" },
   { email: "peter.m@kash.co.ke", name: "Peter Mwangi", role: "Transport Manager" },
+  { email: "kevin.mutua@gmail.com", name: "Kevin Mutua", role: "Driver", driverId: "d7" },
+  { email: "fatuma.ali@gmail.com", name: "Fatuma Ali", role: "Driver", driverId: "d8" },
   { email: "aisha.n@kash.co.ke", name: "Aisha Noor", role: "Food Manager" },
+  { email: "brian.o@kash.co.ke", name: "Brian Oduya", role: "Chicken Attendant" },
   { email: "daniel.k@kash.co.ke", name: "Daniel Kiprop", role: "Hospitality Manager" },
+  { email: "linet.m@kash.co.ke", name: "Linet Moraa", role: "Hospitality Attendant" },
   { email: "victor.k@kash.co.ke", name: "Victor Kimani", role: "Accountant" },
   { email: "mercy.a@kash.co.ke", name: "Mercy Adhiambo", role: "Staff" },
 ];

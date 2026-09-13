@@ -1,4 +1,6 @@
-/* Transport division: fleet, drivers, trips, and trip-level P&L. */
+/* Transport division: fleet, drivers, trips, and trip-level P&L.
+   A Driver session sees this same page, self-scoped to just their
+   own trips and vehicle - see `restricted` below. */
 import React, { useMemo, useState } from "react";
 import { Plus, Truck, Users, ArrowDownRight, ArrowUpRight, Coins, Pencil, Trash2, MapPin, Route } from "lucide-react";
 import { C } from "../lib/constants";
@@ -16,8 +18,12 @@ import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { statusTone, TRIP_STATUSES, VEHICLE_STATUSES, DRIVER_STATUSES } from "../lib/constants";
 
 export default function TransportView() {
-  const { data, prefs } = useStore();
+  const { data, prefs, session } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
+  const restricted = !caps.write; // a Driver only sees and logs their own trips
+  const myVehicle = restricted ? data.vehicles.find((v) => v.driverId === session?.driverId) : null;
+  const myDriver = restricted ? data.drivers.find((d) => d.id === session?.driverId) : null;
+
   const [tab, setTab] = useState("trips");
   const [q, setQ] = useState("");
   const [tStatus, setTStatus] = useState("All");
@@ -32,11 +38,16 @@ export default function TransportView() {
   const transport = m.byDivision.find((d) => d.division === "Transport");
 
   const tripsInRange = useMemo(
-    () => data.trips.filter((t) => inRange(t.date, range.from, range.to)),
-    [data.trips, range]
+    () => data.trips
+      .filter((t) => inRange(t.date, range.from, range.to))
+      .filter((t) => !restricted || t.driverId === session?.driverId),
+    [data.trips, range, restricted, session?.driverId]
   );
   const driverName = (id) => data.drivers.find((d) => d.id === id)?.name || "-";
   const vehicleReg = (id) => data.vehicles.find((v) => v.id === id)?.reg || "-";
+
+  const myIncome = tripsInRange.reduce((s, t) => s + (t.amount || 0), 0);
+  const myExpense = tripsInRange.reduce((s, t) => s + (t.fuelCost || 0) + (t.otherCost || 0), 0);
 
   const ql = q.trim().toLowerCase();
   const shownTrips = useMemo(() => tripsInRange
@@ -64,8 +75,10 @@ export default function TransportView() {
     { key: "route", header: "Route", sortValue: (r) => r.destination, render: (r) => (
       <span className="flex items-center gap-1.5"><Route size={13} style={{ color: C.faint }} />{r.origin} → {r.destination}</span>
     ) },
-    { key: "vehicleId", header: "Vehicle", sortValue: (r) => vehicleReg(r.vehicleId), render: (r) => vehicleReg(r.vehicleId) },
-    { key: "driverId", header: "Driver", sortValue: (r) => driverName(r.driverId), render: (r) => driverName(r.driverId) },
+    ...(restricted ? [] : [
+      { key: "vehicleId", header: "Vehicle", sortValue: (r) => vehicleReg(r.vehicleId), render: (r) => vehicleReg(r.vehicleId) },
+      { key: "driverId", header: "Driver", sortValue: (r) => driverName(r.driverId), render: (r) => driverName(r.driverId) },
+    ]),
     { key: "amount", header: "Fare", align: "right", sortValue: (r) => r.amount, render: (r) => <span className="font-semibold">{formatKES(r.amount)}</span> },
     { key: "net", header: "Net", align: "right", sortValue: (r) => r.amount - r.fuelCost - r.otherCost, render: (r) => {
       const net = r.amount - r.fuelCost - r.otherCost;
@@ -117,68 +130,126 @@ export default function TransportView() {
     { label: "Delete", icon: Trash2, tone: "danger", onClick: (r) => deleteRecord(collection, r.id) },
   ] : [];
 
+  const tripActions = caps.payments ? [
+    {
+      label: "Collect fare", icon: Coins,
+      hidden: (r) => r.status === "Cancelled",
+      onClick: (r) => openForm("payment", { direction: "in", division: "Transport", party: r.client || "Passenger", amount: r.amount, method: "M-Pesa" }),
+    },
+    ...rowActions("trips"),
+  ] : rowActions("trips");
+
   return (
     <Page>
       <PageHeader
-        title="Transport"
-        subtitle="Fleet, drivers and trip performance."
-        actions={caps.write && (
+        title={restricted ? "My Transport" : "Transport"}
+        subtitle={restricted ? "Your trips and vehicle." : "Fleet, drivers and trip performance."}
+        actions={(caps.write || caps.writeOwn) && (
           <>
-            <Button variant="outline" size="sm" onClick={() => openForm("driver")}><Plus size={14} /> Driver</Button>
-            <Button variant="outline" size="sm" onClick={() => openForm("vehicle")}><Plus size={14} /> Vehicle</Button>
+            {caps.write && <Button variant="outline" size="sm" onClick={() => openForm("driver")}><Plus size={14} /> Driver</Button>}
+            {caps.write && <Button variant="outline" size="sm" onClick={() => openForm("vehicle")}><Plus size={14} /> Vehicle</Button>}
             <Button size="sm" onClick={() => openForm("trip")}><Plus size={14} /> New trip</Button>
           </>
         )}
       />
 
+      {restricted && (myVehicle || myDriver) && (
+        <Card>
+          <SectionTitle title="Your details" subtitle="Only you and admins can see this." />
+          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            {myDriver && <>
+              <Row label="ID number" value={myDriver.idNumber || "-"} />
+              <Row label="Licence" value={myDriver.licence || "-"} />
+              <Row label="Next of kin" value={myDriver.nextOfKin || "-"} />
+              <Row label="Status" value={<Badge tone={statusTone(myDriver.status)} size="sm">{myDriver.status}</Badge>} />
+            </>}
+            {myVehicle && <>
+              <Row label="Vehicle" value={`${myVehicle.reg} · ${myVehicle.type} ${myVehicle.model}`} />
+              <Row label="GPS" value={myVehicle.gpsId || "Not fitted"} />
+              <Row label="Insurance expires" value={myVehicle.insuranceExpiry ? formatDateShort(myVehicle.insuranceExpiry) : "-"} />
+              <Row label="Vehicle status" value={<Badge tone={statusTone(myVehicle.status)} size="sm">{myVehicle.status}</Badge>} />
+            </>}
+          </div>
+        </Card>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(transport?.income || 0)} trend={transport?.incomeDelta} tint={C.emerald} />
-        <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(transport?.expense || 0)} tint={C.coral} />
-        <StatCard icon={Coins} label="Net profit" value={formatKES(transport?.profit || 0)} sub={`${Math.round(transport?.margin || 0)}% margin`} tint={C.blue} />
-        <StatCard icon={Truck} label="Fleet" value={`${activeVehicles}/${data.vehicles.length}`} sub={`${onDuty} drivers on duty`} tint={C.violet} />
+        {restricted ? (
+          <>
+            <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(myIncome)} tint={C.emerald} />
+            <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(myExpense)} tint={C.coral} />
+            <StatCard icon={Coins} label="Net" value={formatKES(myIncome - myExpense)} tint={C.blue} />
+            <StatCard icon={MapPin} label="Trips" value={tripsInRange.length} sub={range.label} tint={C.violet} />
+          </>
+        ) : (
+          <>
+            <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(transport?.income || 0)} trend={transport?.incomeDelta} tint={C.emerald} />
+            <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(transport?.expense || 0)} tint={C.coral} />
+            <StatCard icon={Coins} label="Net profit" value={formatKES(transport?.profit || 0)} sub={`${Math.round(transport?.margin || 0)}% margin`} tint={C.blue} />
+            <StatCard icon={Truck} label="Fleet" value={`${activeVehicles}/${data.vehicles.length}`} sub={`${onDuty} drivers on duty`} tint={C.violet} />
+          </>
+        )}
       </div>
 
       <Card padded={false}>
-        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
-          <SectionTitle title={{ trips: "Trips", vehicles: "Vehicles", drivers: "Drivers" }[tab]} />
-          <Segmented
-            options={[
-              { value: "trips", label: `Trips ${tripsInRange.length}` },
-              { value: "vehicles", label: `Vehicles ${data.vehicles.length}` },
-              { value: "drivers", label: `Drivers ${data.drivers.length}` },
-            ]}
-            value={tab}
-            onChange={setTab}
-          />
-        </div>
+        {!restricted && (
+          <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
+            <SectionTitle title={{ trips: "Trips", vehicles: "Vehicles", drivers: "Drivers" }[tab]} />
+            <Segmented
+              options={[
+                { value: "trips", label: `Trips ${tripsInRange.length}` },
+                { value: "vehicles", label: `Vehicles ${data.vehicles.length}` },
+                { value: "drivers", label: `Drivers ${data.drivers.length}` },
+              ]}
+              value={tab}
+              onChange={setTab}
+            />
+          </div>
+        )}
+        {restricted && (
+          <div className="p-4 sm:p-5 pb-3">
+            <SectionTitle title={`My trips · ${tripsInRange.length}`} />
+          </div>
+        )}
         <div className="px-3 sm:px-5 pb-5">
           <FilterBar
             search={{ value: q, onChange: setQ, placeholder: tab === "trips" ? "Route, client, vehicle..." : tab === "vehicles" ? "Reg or model..." : "Name or phone..." }}
             selects={
-              tab === "trips"
-                ? [
-                    selectFilter("s", "Status", TRIP_STATUSES, tStatus, setTStatus),
-                    selectFilter("v", "Vehicle", data.vehicles.map((v) => v.reg), tVehicle, setTVehicle),
-                  ]
-                : tab === "vehicles"
-                  ? [selectFilter("vs", "Status", VEHICLE_STATUSES, vStatus, setVStatus)]
-                  : [selectFilter("ds", "Status", DRIVER_STATUSES, dStatus, setDStatus)]
+              restricted
+                ? [selectFilter("s", "Status", TRIP_STATUSES, tStatus, setTStatus)]
+                : tab === "trips"
+                  ? [
+                      selectFilter("s", "Status", TRIP_STATUSES, tStatus, setTStatus),
+                      selectFilter("v", "Vehicle", data.vehicles.map((v) => v.reg), tVehicle, setTVehicle),
+                    ]
+                  : tab === "vehicles"
+                    ? [selectFilter("vs", "Status", VEHICLE_STATUSES, vStatus, setVStatus)]
+                    : [selectFilter("ds", "Status", DRIVER_STATUSES, dStatus, setDStatus)]
             }
-            range={tab === "trips" ? { from, to, onFrom: setFrom, onTo: setTo } : undefined}
+            range={(restricted || tab === "trips") ? { from, to, onFrom: setFrom, onTo: setTo } : undefined}
             dirty={!!dirty}
             onClear={clearFilters}
           />
-          {tab === "trips" && (
-            <DataTable columns={tripColumns} rows={shownTrips} actions={rowActions("trips")} exportName={`kash-trips-${range.label}`} initialSort={{ key: "date", dir: "desc" }} emptyIcon={MapPin} emptyText="No trips match these filters." />
+          {(restricted || tab === "trips") && (
+            <DataTable columns={tripColumns} rows={shownTrips} actions={tripActions} exportName={`kash-trips-${range.label}`} initialSort={{ key: "date", dir: "desc" }} emptyIcon={MapPin} emptyText="No trips match these filters." />
           )}
-          {tab === "vehicles" && (
+          {!restricted && tab === "vehicles" && (
             <DataTable columns={vehicleColumns} rows={shownVehicles} actions={rowActions("vehicles")} exportName="kash-vehicles" emptyIcon={Truck} emptyText="No vehicles match." />
           )}
-          {tab === "drivers" && (
+          {!restricted && tab === "drivers" && (
             <DataTable columns={driverColumns} rows={shownDrivers} actions={rowActions("drivers")} exportName="kash-drivers" emptyIcon={Users} emptyText="No drivers match." />
           )}
         </div>
       </Card>
     </Page>
+  );
+}
+
+function Row({ label, value }) {
+  return (
+    <div className="flex items-center justify-between py-1.5">
+      <span style={{ color: C.muted }}>{label}</span>
+      <span className="font-semibold" style={{ color: C.ink }}>{value}</span>
+    </div>
   );
 }

@@ -149,7 +149,7 @@ export default function LoginView({ onSignIn }) {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      onSignIn({ email: account.email, name: account.name, role: account.role }, chosen?.key);
+      onSignIn({ email: account.email, name: account.name, role: account.role, driverId: account.driverId }, chosen?.key);
     }, 550);
   };
 

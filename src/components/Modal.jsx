@@ -96,7 +96,7 @@ function Field({ field, value, onChange, error }) {
  * and `visibleIf(values)` to conditionally show/hide itself.
  */
 export function FormModal({ config, initial, onClose, onSubmit }) {
-  const isEdit = !!initial;
+  const isEdit = !!(initial && initial.id);
   const [values, setValues] = useState(() => {
     const base = {};
     config.fields.forEach((f) => {

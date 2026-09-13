@@ -1,7 +1,10 @@
 /* Hospitality division: rooms, bookings, occupancy and guest revenue.
-   Room "Occupied" state is derived from bookings, never set by hand. */
+   Room "Occupied" state is derived from bookings, never set by hand.
+   A Hospitality Attendant sees the same front-desk view (they need
+   the full guest list to do their job) but no company money figures -
+   those stay an Admin/Manager concern. */
 import React, { useMemo, useState } from "react";
-import { Plus, BedDouble, ArrowDownRight, ArrowUpRight, CalendarCheck, Pencil, Trash2, DoorOpen, LogIn, LogOut } from "lucide-react";
+import { Plus, BedDouble, ArrowDownRight, ArrowUpRight, CalendarCheck, Pencil, Trash2, DoorOpen, LogIn, LogOut, Smartphone } from "lucide-react";
 import { C } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import {
@@ -22,6 +25,7 @@ const STATE_TONE = { Occupied: "blue", Available: "emerald", Cleaning: "amber", 
 export default function HospitalityView() {
   const { data, prefs } = useStore();
   const { openForm, editRecord, deleteRecord, patchRoom, caps } = useActions();
+  const restricted = !caps.write; // a Hospitality Attendant logs bookings but doesn't see company money figures
   const [tab, setTab] = useState("bookings");
   const [q, setQ] = useState("");
   const [bStatus, setBStatus] = useState("All");
@@ -67,22 +71,31 @@ export default function HospitalityView() {
     { label: "Delete", icon: Trash2, tone: "danger", onClick: (r) => deleteRecord("bookings", r.id) },
   ] : [];
 
+  const bookingActions = caps.payments ? [
+    {
+      label: "Collect payment", icon: Smartphone,
+      hidden: (r) => r.paymentStatus === "Paid",
+      onClick: (r) => openForm("payment", { direction: "in", division: "Hospitality", party: r.guest, amount: r.amount, method: "M-Pesa" }),
+    },
+    ...rowActions,
+  ] : rowActions;
+
   return (
     <Page>
       <PageHeader
         title="Hospitality"
-        subtitle="Rooms, bookings and guest revenue."
-        actions={caps.write && (
+        subtitle={restricted ? "Rooms and bookings." : "Rooms, bookings and guest revenue."}
+        actions={(caps.write || caps.writeOwn) && (
           <>
-            <Button variant="outline" size="sm" onClick={() => openForm("room")}><Plus size={14} /> Room</Button>
+            {caps.write && <Button variant="outline" size="sm" onClick={() => openForm("room")}><Plus size={14} /> Room</Button>}
             <Button size="sm" onClick={() => openForm("booking")}><Plus size={14} /> New booking</Button>
           </>
         )}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(hosp?.income || 0)} trend={hosp?.incomeDelta} tint={C.emerald} />
-        <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(hosp?.expense || 0)} tint={C.coral} />
+      <div className={`grid grid-cols-2 ${restricted ? "sm:grid-cols-2 max-w-md" : "lg:grid-cols-4"} gap-2.5 sm:gap-3.5`}>
+        {!restricted && <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(hosp?.income || 0)} trend={hosp?.incomeDelta} tint={C.emerald} />}
+        {!restricted && <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(hosp?.expense || 0)} tint={C.coral} />}
         <StatCard icon={BedDouble} label="Occupancy today" value={`${occNow}%`} sub={`avg ${avgOcc}% / 12 weeks`} tint={C.blue} />
         <StatCard icon={CalendarCheck} label="Front desk today" value={`${arrivals} in · ${departures} out`} sub={`${data.rooms.length} rooms`} tint={C.violet} />
       </div>
@@ -157,7 +170,7 @@ export default function HospitalityView() {
                 <DataTable
                   columns={bookingColumns}
                   rows={rows}
-                  actions={rowActions}
+                  actions={bookingActions}
                   exportName={`kash-bookings-${tab}`}
                   initialSort={{ key: "checkIn", dir: "desc" }}
                   emptyIcon={DoorOpen}

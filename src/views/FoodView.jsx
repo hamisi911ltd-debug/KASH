@@ -1,6 +1,8 @@
-/* Food division: orders, menu, sales mix and kitchen margin. */
+/* Food division: orders, menu, sales mix and kitchen margin.
+   A Chicken Attendant session sees this same page, self-scoped to
+   just the orders they personally rang up - see `restricted` below. */
 import React, { useMemo, useState } from "react";
-import { Plus, Drumstick, ArrowDownRight, ArrowUpRight, Clock, Pencil, Trash2, ShoppingBag, BookMarked } from "lucide-react";
+import { Plus, Drumstick, ArrowDownRight, ArrowUpRight, Clock, Pencil, Trash2, ShoppingBag, BookMarked, Smartphone } from "lucide-react";
 import { C } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import { resolvePeriod, computeMetrics, inRange, CANCELLED } from "../lib/derive";
@@ -14,8 +16,9 @@ import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { statusTone, ORDER_STATUSES, PAYMENT_STATUSES } from "../lib/constants";
 
 export default function FoodView() {
-  const { data, prefs } = useStore();
+  const { data, prefs, session } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
+  const restricted = !caps.write; // a Chicken Attendant only sees orders they rang up
   const [tab, setTab] = useState("orders");
   const [q, setQ] = useState("");
   const [oStatus, setOStatus] = useState("All");
@@ -29,11 +32,14 @@ export default function FoodView() {
   const food = m.byDivision.find((d) => d.division === "Food");
 
   const ordersInRange = useMemo(
-    () => data.orders.filter((o) => inRange(o.date, range.from, range.to)),
-    [data.orders, range]
+    () => data.orders
+      .filter((o) => inRange(o.date, range.from, range.to))
+      .filter((o) => !restricted || o.createdBy === session?.name),
+    [data.orders, range, restricted, session?.name]
   );
   const openOrders = ordersInRange.filter((o) => ["Preparing", "Out for Delivery"].includes(o.orderStatus)).length;
   const avgOrder = ordersInRange.length ? Math.round(ordersInRange.reduce((s, o) => s + o.amount, 0) / ordersInRange.length) : 0;
+  const myIncome = ordersInRange.reduce((s, o) => s + (o.amount || 0), 0);
 
   const ql = q.trim().toLowerCase();
   const shownOrders = useMemo(() => ordersInRange
@@ -51,7 +57,7 @@ export default function FoodView() {
 
   const orderColumns = [
     { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
-    { key: "customer", header: "Customer", render: (r) => <span className="font-semibold">{r.customer}</span> },
+    { key: "customer", header: "Customer", render: (r) => <span className="font-semibold">{r.customer || "Walk-in"}</span> },
     { key: "item", header: "Item", sortValue: (r) => r.item, wrap: true },
     { key: "qty", header: "Qty", align: "right", sortValue: (r) => r.qty, muted: true },
     { key: "amount", header: "Amount", align: "right", sortValue: (r) => r.amount, render: (r) => <span className="font-semibold">{formatKES(r.amount)}</span> },
@@ -76,43 +82,69 @@ export default function FoodView() {
     { label: "Delete", icon: Trash2, tone: "danger", onClick: (r) => deleteRecord(collection, r.id) },
   ] : [];
 
+  const orderActions = caps.payments ? [
+    {
+      label: "Collect payment", icon: Smartphone,
+      hidden: (r) => r.paymentStatus === "Paid",
+      onClick: (r) => openForm("payment", { direction: "in", division: "Food", party: r.customer || "Walk-in customer", amount: r.amount, method: "M-Pesa" }),
+    },
+    ...rowActions("orders"),
+  ] : rowActions("orders");
+
   return (
     <Page>
       <PageHeader
-        title="Chicken"
-        subtitle="Orders, stock and margin."
-        actions={caps.write && (
+        title={restricted ? "My Sales" : "Chicken"}
+        subtitle={restricted ? "Orders you've rung up." : "Orders, stock and margin."}
+        actions={(caps.write || caps.writeOwn) && (
           <>
-            <Button variant="outline" size="sm" onClick={() => openForm("menuItem")}><Plus size={14} /> Product</Button>
+            {caps.write && <Button variant="outline" size="sm" onClick={() => openForm("menuItem")}><Plus size={14} /> Product</Button>}
             <Button size="sm" onClick={() => openForm("order")}><Plus size={14} /> New order</Button>
           </>
         )}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(food?.income || 0)} trend={food?.incomeDelta} tint={C.emerald} />
-        <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(food?.expense || 0)} tint={C.coral} />
-        <StatCard icon={ShoppingBag} label="Orders" value={ordersInRange.length} sub={`avg ${formatKES(avgOrder)}`} tint={C.amber} />
-        <StatCard icon={Clock} label="Open orders" value={openOrders} sub="preparing / delivering" tint={C.violet} />
+      <div className={`grid grid-cols-2 ${restricted ? "sm:grid-cols-3" : "lg:grid-cols-4"} gap-2.5 sm:gap-3.5`}>
+        {restricted ? (
+          <>
+            <StatCard icon={ArrowDownRight} label={`My sales · ${range.label}`} value={formatKES(myIncome)} tint={C.emerald} />
+            <StatCard icon={ShoppingBag} label="Orders" value={ordersInRange.length} sub={`avg ${formatKES(avgOrder)}`} tint={C.amber} />
+            <StatCard icon={Clock} label="Open orders" value={openOrders} sub="preparing / delivering" tint={C.violet} />
+          </>
+        ) : (
+          <>
+            <StatCard icon={ArrowDownRight} label={`Money in · ${range.label}`} value={formatKES(food?.income || 0)} trend={food?.incomeDelta} tint={C.emerald} />
+            <StatCard icon={ArrowUpRight} label="Money out" value={formatKES(food?.expense || 0)} tint={C.coral} />
+            <StatCard icon={ShoppingBag} label="Orders" value={ordersInRange.length} sub={`avg ${formatKES(avgOrder)}`} tint={C.amber} />
+            <StatCard icon={Clock} label="Open orders" value={openOrders} sub="preparing / delivering" tint={C.violet} />
+          </>
+        )}
       </div>
 
       <Card padded={false}>
-        <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
-          <SectionTitle title={tab === "orders" ? "Orders" : "Products"} />
-          <Segmented
-            options={[
-              { value: "orders", label: `Orders ${ordersInRange.length}` },
-              { value: "menu", label: `Products ${data.menu.length}` },
-            ]}
-            value={tab}
-            onChange={setTab}
-          />
-        </div>
+        {!restricted && (
+          <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
+            <SectionTitle title={tab === "orders" ? "Orders" : "Products"} />
+            <Segmented
+              options={[
+                { value: "orders", label: `Orders ${ordersInRange.length}` },
+                { value: "menu", label: `Products ${data.menu.length}` },
+              ]}
+              value={tab}
+              onChange={setTab}
+            />
+          </div>
+        )}
+        {restricted && (
+          <div className="p-4 sm:p-5 pb-3">
+            <SectionTitle title={`My orders · ${ordersInRange.length}`} />
+          </div>
+        )}
         <div className="px-3 sm:px-5 pb-5">
           <FilterBar
-            search={{ value: q, onChange: setQ, placeholder: tab === "orders" ? "Customer or item..." : "Product..." }}
+            search={{ value: q, onChange: setQ, placeholder: (restricted || tab === "orders") ? "Customer or item..." : "Product..." }}
             selects={
-              tab === "orders"
+              (restricted || tab === "orders")
                 ? [
                     selectFilter("os", "Order status", ORDER_STATUSES, oStatus, setOStatus),
                     selectFilter("ps", "Payment", PAYMENT_STATUSES, pStatus, setPStatus),
@@ -120,15 +152,15 @@ export default function FoodView() {
                   ]
                 : []
             }
-            range={tab === "orders" ? { from, to, onFrom: setFrom, onTo: setTo } : undefined}
+            range={(restricted || tab === "orders") ? { from, to, onFrom: setFrom, onTo: setTo } : undefined}
             dirty={!!dirty}
             onClear={clearFilters}
           />
-          {tab === "orders" ? (
+          {(restricted || tab === "orders") ? (
             <DataTable
               columns={orderColumns}
               rows={shownOrders}
-              actions={rowActions("orders")}
+              actions={orderActions}
               exportName={`kash-orders-${range.label}`}
               initialSort={{ key: "date", dir: "desc" }}
               emptyIcon={ShoppingBag}

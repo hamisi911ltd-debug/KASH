@@ -18,13 +18,18 @@ import { daysBetween } from "./format";
 
 const opt = (arr) => arr.map((v) => ({ value: v, label: v }));
 
-export function buildForms(data) {
+export function buildForms(data, session) {
   const vehicleOpts = () => data.vehicles.map((v) => ({ value: v.id, label: `${v.reg} - ${v.model}` }));
   const driverOpts = () => data.drivers.map((d) => ({ value: d.id, label: d.name }));
   const roomOpts = () => data.rooms.map((r) => ({ value: r.id, label: `Room ${r.number} - ${r.type} (KSh ${r.price.toLocaleString()})` }));
   const menuOpts = () => data.menu.filter((m) => m.active).map((m) => ({ value: m.id, label: `${m.name} - KSh ${m.price.toLocaleString()}` }));
 
   const userOpts = () => data.users.map((u) => ({ value: u.name, label: `${u.name} - ${u.role}` }));
+
+  /* A driver logging their own trip doesn't pick a vehicle/driver -
+     it's always their own, filled in automatically on submit. */
+  const isOwnDriver = session?.role === "Driver" && session?.driverId;
+  const myVehicle = isOwnDriver ? data.vehicles.find((v) => v.driverId === session.driverId) : null;
 
   return {
     /* ---------------- Messaging ---------------- */
@@ -48,13 +53,23 @@ export function buildForms(data) {
       label: "New Trip",
       icon: Truck,
       title: "Log a trip",
-      subtitle: "Fare and fuel post straight to the ledger.",
+      subtitle: isOwnDriver && myVehicle
+        ? `Logged against your vehicle, ${myVehicle.reg}.`
+        : "Fare and fuel post straight to the ledger.",
       submitLabel: "Add trip",
+      ownAllowed: true,
+      autofillFor: (s, d) => {
+        if (s?.role !== "Driver" || !s?.driverId) return {};
+        const veh = d.vehicles.find((v) => v.driverId === s.driverId);
+        return { driverId: s.driverId, vehicleId: veh?.id };
+      },
       notify: { channel: "trips", message: (v) => `Trip logged: ${v.origin} to ${v.destination}`, type: "trip", division: "Transport" },
       fields: [
         { key: "date", label: "Date", type: "date", default: TODAY, required: true },
-        { key: "vehicleId", label: "Vehicle", type: "select", options: vehicleOpts, required: true },
-        { key: "driverId", label: "Driver", type: "select", options: driverOpts, required: true },
+        ...(isOwnDriver ? [] : [
+          { key: "vehicleId", label: "Vehicle", type: "select", options: vehicleOpts, required: true },
+          { key: "driverId", label: "Driver", type: "select", options: driverOpts, required: true },
+        ]),
         { key: "origin", label: "Origin", type: "text", default: "Nairobi", required: true },
         { key: "destination", label: "Destination", type: "text", placeholder: "e.g. Kisumu", required: true },
         { key: "client", label: "Client / charter", type: "text", placeholder: "Walk-in" },
@@ -120,10 +135,11 @@ export function buildForms(data) {
       title: "Take an order",
       subtitle: "Pick a product and quantity - the total fills in.",
       submitLabel: "Add order",
+      ownAllowed: true,
       notify: { channel: "orders", message: (v) => `New order from ${v.customer || "walk-in"}`, type: "order", division: "Food" },
       fields: [
         { key: "date", label: "Date", type: "date", default: TODAY, required: true },
-        { key: "customer", label: "Customer", type: "text", placeholder: "Walk-in customer", required: true },
+        { key: "customer", label: "Customer name (optional)", type: "text", placeholder: "Leave blank for a walk-in / cash sale" },
         { key: "channel", label: "Channel", type: "select", options: opt(["Walk-in", "Phone", "WhatsApp", "Online", "Wholesale"]) },
         { key: "menuItemId", label: "Product", type: "select", options: menuOpts, required: true },
         { key: "qty", label: "Quantity", type: "number", min: 1, default: "1", required: true },
@@ -172,6 +188,7 @@ export function buildForms(data) {
       title: "Create a booking",
       subtitle: "Nightly rate x nights fills the amount automatically.",
       submitLabel: "Add booking",
+      ownAllowed: true,
       notify: { channel: "bookings", message: (v) => `New booking: ${v.guest}`, type: "booking", division: "Hospitality" },
       fields: [
         { key: "guest", label: "Guest name", type: "text", required: true },

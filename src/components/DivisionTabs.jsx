@@ -7,7 +7,11 @@ import { canOpenView } from "../lib/auth";
 
 export default function DivisionTabs({ role, activeView, onNavigate }) {
   const tabs = PRIMARY_TABS.filter((t) => canOpenView(role, t.key));
-  if (tabs.length <= 1) return null;
+  /* A role with just one permitted tab (a Driver only has "Transport",
+     say) still needs it shown - it's their only way back to their own
+     division page once they've navigated to Payments/Settings, since
+     division pages are deliberately left out of the sidebar. */
+  if (tabs.length === 0) return null;
 
   return (
     <div

@@ -51,6 +51,8 @@ export const SEED_DRIVERS = [
   { id: "d4", name: "Grace Wanjiru", idNumber: "23456784", phone: "+254 700 111 222", email: "grace.wanjiru@gmail.com", licence: "DL-661874", nextOfKin: "+254 700 111 004", status: "On Leave", rating: 4.9, hiredOn: dayOf(300) },
   { id: "d5", name: "Ibrahim Hassan", idNumber: "23456785", phone: "+254 745 909 100", email: "ibrahim.hassan@gmail.com", licence: "DL-220458", nextOfKin: "+254 745 909 005", status: "On Duty", rating: 4.7, hiredOn: dayOf(180) },
   { id: "d6", name: "Caroline Nduta", idNumber: "23456786", phone: "+254 719 220 337", email: "caroline.nduta@gmail.com", licence: "DL-118763", nextOfKin: "+254 719 220 006", status: "On Duty", rating: 4.5, hiredOn: dayOf(95) },
+  { id: "d7", name: "Kevin Mutua", idNumber: "23456787", phone: "+254 701 887 001", email: "kevin.mutua@gmail.com", licence: "DL-552091", nextOfKin: "+254 701 887 007", status: "On Duty", rating: 4.8, hiredOn: dayOf(260) },
+  { id: "d8", name: "Fatuma Ali", idNumber: "23456788", phone: "+254 708 664 002", email: "fatuma.ali@gmail.com", licence: "DL-118420", nextOfKin: "+254 708 664 008", status: "On Duty", rating: 4.7, hiredOn: dayOf(140) },
 ];
 
 export const SEED_VEHICLES = [
@@ -60,6 +62,8 @@ export const SEED_VEHICLES = [
   { id: "v4", reg: "KDN 330F", type: "Van", model: "Nissan NV350", driverId: "d4", status: "Active", mileage: 54200, serviceDueKm: 60000, insuranceExpiry: dayOf(-134), gpsId: "GPS-10024", capacity: 12 },
   { id: "v5", reg: "KDJ 812K", type: "Shuttle", model: "Toyota Hiace", driverId: "d5", status: "Active", mileage: 71450, serviceDueKm: 73000, insuranceExpiry: dayOf(-12), gpsId: "GPS-10025", capacity: 14 },
   { id: "v6", reg: "KCX 559M", type: "Bus", model: "Yutong ZK6100", driverId: "d6", status: "Active", mileage: 133900, serviceDueKm: 140000, insuranceExpiry: dayOf(-175), gpsId: "", capacity: 41 },
+  { id: "v7", reg: "KDL 552P", type: "Uber", model: "Toyota Axio", driverId: "d7", status: "Active", mileage: 45200, serviceDueKm: 50000, insuranceExpiry: dayOf(-45), gpsId: "GPS-10027", capacity: 4 },
+  { id: "v8", reg: "KMEA 118Q", type: "Tuktuk", model: "Bajaj RE", driverId: "d8", status: "Active", mileage: 18100, serviceDueKm: 20000, insuranceExpiry: dayOf(-15), gpsId: "", capacity: 3 },
 ];
 
 /* ---------------------------------------------------------- transport */
@@ -81,9 +85,23 @@ const CLIENTS = [
   "Private charter", "Summit Insurance", "Highland Tea Co.", "Coastal Cargo Ltd", "Walk-in",
 ];
 
-function buildTrips() {
+/* Uber / Tuktuk run frequent short local hops, not the long-haul
+   inter-city routes above - separate route pool + fare-per-km. */
+const LOCAL_ROUTES = [
+  { origin: "Nairobi CBD", destination: "Westlands", km: 9 },
+  { origin: "Nairobi CBD", destination: "Kilimani", km: 6 },
+  { origin: "Nairobi CBD", destination: "Karen", km: 18 },
+  { origin: "Westlands", destination: "Kileleshwa", km: 5 },
+  { origin: "Nairobi CBD", destination: "Eastleigh", km: 7 },
+  { origin: "Nairobi CBD", destination: "South B", km: 8 },
+  { origin: "Kilimani", destination: "Lavington", km: 4 },
+  { origin: "Nairobi CBD", destination: "Buruburu", km: 10 },
+];
+const LOCAL_FARE_PER_KM = { Uber: 62, Tuktuk: 38 };
+
+function buildLongHaulTrips() {
   const trips = [];
-  const activeVehicles = SEED_VEHICLES.filter((v) => v.status === "Active");
+  const activeVehicles = SEED_VEHICLES.filter((v) => v.status === "Active" && v.type !== "Uber" && v.type !== "Tuktuk");
   for (let offset = DAYS; offset >= 0; offset--) {
     const date = dayOf(offset);
     const dow = new Date(date).getDay();
@@ -119,7 +137,52 @@ function buildTrips() {
       });
     }
   }
-  return trips.reverse();
+  return trips;
+}
+
+function buildLocalTrips() {
+  const trips = [];
+  const localVehicles = SEED_VEHICLES.filter((v) => v.status === "Active" && (v.type === "Uber" || v.type === "Tuktuk"));
+  for (let offset = DAYS; offset >= 0; offset--) {
+    const date = dayOf(offset);
+    const dow = new Date(date).getDay();
+    localVehicles.forEach((vehicle) => {
+      const count = wobble(8 * DOW_TRANSPORT[dow] * trendAt(offset)); // several short rides a day
+      for (let i = 0; i < count; i++) {
+        const route = pick(LOCAL_ROUTES);
+        const perKm = LOCAL_FARE_PER_KM[vehicle.type] || 45;
+        const fare = round50(route.km * perKm * (0.85 + rnd() * 0.35) * trendAt(offset));
+        const fuel = vehicle.type === "Tuktuk" ? round50(route.km * between(6, 10)) : round50(route.km * between(14, 20));
+        const status =
+          offset === 0
+            ? pick(["Scheduled", "In Transit", "Completed"])
+            : offset === 1
+              ? pick(["In Transit", "Completed", "Completed"])
+              : chance(0.03)
+                ? "Cancelled"
+                : "Completed";
+        trips.push({
+          id: genId("t"),
+          date,
+          vehicleId: vehicle.id,
+          driverId: vehicle.driverId,
+          origin: route.origin,
+          destination: route.destination,
+          distanceKm: route.km,
+          client: "Walk-in",
+          amount: status === "Cancelled" ? 0 : fare,
+          fuelCost: status === "Cancelled" ? 0 : fuel,
+          otherCost: 0,
+          status,
+        });
+      }
+    });
+  }
+  return trips;
+}
+
+function buildTrips() {
+  return [...buildLongHaulTrips(), ...buildLocalTrips()].sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
 /* ---------------------------------------------------------- food */
