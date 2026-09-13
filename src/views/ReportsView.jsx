@@ -17,8 +17,11 @@ import { PageHeader, Page } from "../components/Page.jsx";
 const DIV_TONE = { Transport: "emerald", Food: "amber", Hospitality: "coral", General: "violet" };
 
 export default function ReportsView() {
-  const { data, prefs, setPrefs } = useStore();
-  const [division, setDivision] = useState("All");
+  const { data, prefs, setPrefs, session } = useStore();
+  // A division Manager's data is already server-scoped to just their own
+  // division - the picker would only ever offer choices that show empty.
+  const lockedDivision = session?.division && session.division !== "All" ? session.division : null;
+  const [division, setDivision] = useState(lockedDivision || "All");
   const [kind, setKind] = useState("all"); // all | income | expense
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("All");
@@ -106,12 +109,14 @@ export default function ReportsView() {
               {["Today", "Last 7 days", "This Month", "Last 90 days", "This Year", "All Time"].map((p) => <option key={p}>{p}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: C.faint }}>Division</label>
-            <select value={division} onChange={(e) => setDivision(e.target.value)} className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.line }}>
-              {["All", ...DIVISIONS].map((d) => <option key={d} value={d}>{divisionLabel(d)}</option>)}
-            </select>
-          </div>
+          {!lockedDivision && (
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: C.faint }}>Division</label>
+              <select value={division} onChange={(e) => setDivision(e.target.value)} className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.line }}>
+                {["All", ...DIVISIONS].map((d) => <option key={d} value={d}>{divisionLabel(d)}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: C.faint }}>Show</label>
             <Segmented

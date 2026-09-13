@@ -24,12 +24,13 @@ function pinIcon(color) {
   });
 }
 
-export default function MapView({ points, height = 260, zoom = 12, className = "" }) {
+export default function MapView({ points, height = 260, zoom = 12, className = "", follow = false }) {
   const { theme } = useStore();
   const elRef = useRef(null);
   const mapRef = useRef(null);
   const layerRef = useRef(null);
-  const markersRef = useRef([]);
+  const markersRef = useRef(new Map());
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     if (!elRef.current || mapRef.current) return;
@@ -59,24 +60,48 @@ export default function MapView({ points, height = 260, zoom = 12, className = "
     if (pane) pane.style.filter = theme === "dark" ? "invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9)" : "none";
   }, [theme]);
 
-  // markers, re-drawn whenever the point set changes
+  // Markers are kept across updates (by id) and moved with setLatLng
+  // instead of being torn down and rebuilt, so a vehicle mid-trip glides
+  // to its next simulated position rather than flickering. The map's
+  // own viewport only re-centers on first load, or (when `follow` is
+  // set, e.g. a driver's own single-vehicle map) as that one point moves.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !points?.length) return;
-    markersRef.current.forEach((m) => map.removeLayer(m));
-    markersRef.current = points.map((p) => {
-      const marker = L.marker(p.coords, { icon: pinIcon(p.color || "#1E6CA8") }).addTo(map);
+    if (!map || !points) return;
+    const prevIds = new Set(markersRef.current.keys());
+    const ids = new Set();
+    points.forEach((p) => {
+      const id = p.id || p.label || JSON.stringify(p.coords);
+      ids.add(id);
+      let marker = markersRef.current.get(id);
+      if (!marker) {
+        marker = L.marker(p.coords, { icon: pinIcon(p.color || "#1E6CA8") }).addTo(map);
+        markersRef.current.set(id, marker);
+      } else {
+        marker.setLatLng(p.coords);
+        marker.setIcon(pinIcon(p.color || "#1E6CA8"));
+      }
       if (p.label) marker.bindPopup(`<b>${p.label}</b>${p.sub ? `<br/>${p.sub}` : ""}`);
-      return marker;
     });
-    if (points.length === 1) {
-      map.setView(points[0].coords, zoom);
-    } else {
-      const bounds = L.latLngBounds(points.map((p) => p.coords));
-      map.fitBounds(bounds, { padding: [30, 30], maxZoom: zoom });
+    prevIds.forEach((id) => {
+      if (!ids.has(id)) {
+        map.removeLayer(markersRef.current.get(id));
+        markersRef.current.delete(id);
+      }
+    });
+
+    if (!points.length) return;
+    const idsChanged = ids.size !== prevIds.size || [...ids].some((id) => !prevIds.has(id));
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      if (points.length === 1) map.setView(points[0].coords, zoom);
+      else map.fitBounds(L.latLngBounds(points.map((p) => p.coords)), { padding: [30, 30], maxZoom: zoom });
+    } else if (follow && points.length === 1) {
+      map.panTo(points[0].coords, { animate: true, duration: 1 });
+    } else if (idsChanged && points.length > 1) {
+      map.fitBounds(L.latLngBounds(points.map((p) => p.coords)), { padding: [30, 30], maxZoom: zoom });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(points?.map((p) => [p.coords, p.label]))]);
+  }, [points, follow, zoom]);
 
   return <div ref={elRef} className={`n1-map rounded-xl overflow-hidden ${className}`} style={{ height }} />;
 }

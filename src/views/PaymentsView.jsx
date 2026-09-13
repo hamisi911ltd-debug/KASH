@@ -26,6 +26,9 @@ export default function PaymentsView() {
   const { data, prefs, session } = useStore();
   const { openForm, deleteRecord, caps } = useActions();
   const mine = !caps.write; // a plain worker only sees and manages their own
+  // A division Manager's payments are already server-scoped to their own
+  // division - the "Service" picker would only ever offer empty choices.
+  const lockedDivision = session?.division && session.division !== "All" ? session.division : null;
 
   const [scope, setScope] = useState(mine ? "mine" : "all");
   const [q, setQ] = useState("");
@@ -146,7 +149,7 @@ export default function PaymentsView() {
             selects={[
               { key: "dir", label: "Type", value: dir, onChange: setDir, all: "All", options: [{ value: "All", label: "In & out" }, { value: "Money in", label: "Money in" }, { value: "Money out", label: "Money out" }] },
               selectFilter("method", "Method", PAYMENT_METHODS, method, setMethod),
-              selectFilter("division", "Service", DIVISIONS, division, setDivision, { labelFor: divisionLabel }),
+              ...(lockedDivision ? [] : [selectFilter("division", "Service", DIVISIONS, division, setDivision, { labelFor: divisionLabel })]),
               selectFilter("status", "Status", PAYMENT_RECORD_STATUSES, status, setStatus),
             ]}
             range={{ from, to, onFrom: setFrom, onTo: setTo }}

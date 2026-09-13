@@ -16,9 +16,13 @@ import { PageHeader, Page } from "../components/Page.jsx";
 const DIV_TONE = { Transport: "emerald", Food: "amber", Hospitality: "coral", General: "violet" };
 
 export default function ExpensesView() {
-  const { data, prefs } = useStore();
+  const { data, prefs, session } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
-  const [division, setDivision] = useState("All");
+  // A division Manager only ever has their own division's expenses to
+  // begin with (the server already scopes it) - no point offering a
+  // picker for divisions that will only ever show empty.
+  const lockedDivision = session?.division && session.division !== "All" ? session.division : null;
+  const [division, setDivision] = useState(lockedDivision || "All");
   const [scope, setScope] = useState("all"); // all | manual | auto
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("All");
@@ -43,7 +47,7 @@ export default function ExpensesView() {
     .filter((l) => !ql || `${l.category} ${l.desc} ${l.vendor || ""}`.toLowerCase().includes(ql));
   const dirty = ql || division !== "All" || category !== "All" || method !== "All" || from || to;
 
-  const totalsByDivision = DIVISIONS.map((d) => ({
+  const totalsByDivision = (lockedDivision ? [lockedDivision] : DIVISIONS).map((d) => ({
     division: d,
     total: expenseLines.filter((l) => l.division === d).reduce((s, l) => s + l.amount, 0),
   }));
@@ -76,7 +80,7 @@ export default function ExpensesView() {
         actions={caps.write && <Button size="sm" onClick={() => openForm("expense")}><Plus size={14} /> New expense</Button>}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+      <div className={`grid ${lockedDivision ? "grid-cols-1 max-w-xs" : "grid-cols-2 lg:grid-cols-4"} gap-2.5 sm:gap-3.5`}>
         {totalsByDivision.map((d) => (
           <StatCard
             key={d.division}
@@ -104,9 +108,11 @@ export default function ExpensesView() {
             onChange={setScope}
           />
         </div>
-        <div className="px-3 sm:px-5 pb-4">
-          <ChipRow options={divisionOptions(["All", ...DIVISIONS])} value={division} onChange={setDivision} />
-        </div>
+        {!lockedDivision && (
+          <div className="px-3 sm:px-5 pb-4">
+            <ChipRow options={divisionOptions(["All", ...DIVISIONS])} value={division} onChange={setDivision} />
+          </div>
+        )}
         <div className="px-3 sm:px-5 pb-5">
           <FilterBar
             search={{ value: q, onChange: setQ, placeholder: "Category, vendor, note..." }}

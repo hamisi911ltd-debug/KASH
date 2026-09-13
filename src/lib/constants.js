@@ -94,21 +94,26 @@ export const ROLES = [
   "Staff",
 ];
 
-/* Which views each role may open. The three "worker" roles (Driver,
-   Chicken Attendant, Hospitality Attendant) each open only their own
-   division's page - that page then scopes itself down further (see
-   `writeOwn` below) so a worker only ever sees their own records,
-   never the rest of the team's or the company's totals. Every role
-   gets "updates" (Messages) - workers raise things straight to their
-   manager there, it's not just an admin broadcast channel. */
+/* Which views each role may open. "overview" and "all" are company-wide
+   (every division's totals) - only Admin/Super Admin/Accountant get
+   them. A division Manager's own page (transport/food/hospitality) IS
+   their overview; they, their Expenses and their Reports all stay
+   scoped to that one division server-side (see scopeData in the
+   Worker) - a Transport Manager oversees Transport, full stop, never
+   Chicken or Hospitality's figures. The three "worker" roles (Driver,
+   Chicken Attendant, Hospitality Attendant) are scoped even further
+   (see `writeOwn` below) to just their own records within that
+   division. Every role gets "updates" (Messages) - workers raise
+   things straight to their manager/Admin there, it's not just an
+   admin broadcast channel. */
 export const ROLE_VIEWS = {
   "Super Admin": "*",
   Admin: "*",
-  "Transport Manager": ["overview", "transport", "payments", "expenses", "reports", "updates", "settings"],
+  "Transport Manager": ["transport", "maintenance", "payments", "expenses", "reports", "updates", "settings"],
   Driver: ["transport", "maintenance", "payments", "updates", "settings"],
-  "Food Manager": ["overview", "food", "payments", "expenses", "reports", "updates", "settings"],
+  "Food Manager": ["food", "payments", "expenses", "reports", "updates", "settings"],
   "Chicken Attendant": ["food", "payments", "updates", "settings"],
-  "Hospitality Manager": ["overview", "hospitality", "payments", "expenses", "reports", "updates", "settings"],
+  "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "updates", "settings"],
   "Hospitality Attendant": ["hospitality", "payments", "updates", "settings"],
   Accountant: ["overview", "all", "payments", "expenses", "reports", "updates", "settings"],
   Staff: ["overview", "payments", "updates", "settings"],

@@ -117,9 +117,29 @@ const COLLECTION_VIEW = {
 function scopeData(full, user) {
   const caps = capsForRole(user.role);
   const d = { ...full };
+  // A Manager (caps.write) tied to one division - not "All" - oversees
+  // only that division: their own Expenses/Reports/Payments never show
+  // another department's money, matching a division Worker who's scoped
+  // the same way by the blocks below.
+  const isDivisionManager = caps.write && user.division && user.division !== "All";
+  const siloed = isDivisionManager || (!caps.write && caps.writeOwn);
 
   if (!caps.write) {
     d.payments = full.payments.filter((p) => p.createdBy === user.name);
+  } else if (isDivisionManager) {
+    d.payments = full.payments.filter((p) => p.division === user.division);
+  }
+
+  if (isDivisionManager) {
+    d.expenses = full.expenses.filter((e) => e.division === user.division);
+  }
+
+  // The roster mirrors who canMessage() would actually let them reach:
+  // a siloed manager/worker only ever sees Admin/Super Admin in it, not
+  // their own department's colleagues and not any other department -
+  // there's no view where a Driver would need James Otieno's name.
+  if (siloed) {
+    d.users = full.users.filter((u) => u.role === "Super Admin" || u.role === "Admin");
   }
 
   if (user.role === "Driver" && user.driverId) {
@@ -147,7 +167,7 @@ function scopeData(full, user) {
   // an Admin only sees threads they're personally part of.
   d.messages = full.messages.filter((m) => m.from === user.name || m.to === user.name);
 
-  d.users = full.users.map(stripSecret);
+  d.users = d.users.map(stripSecret);
   return d;
 }
 
@@ -161,12 +181,17 @@ function ownsRecord(collection, record, user) {
 }
 
 /** Messaging isn't a division privilege - anyone signed in can send one,
-    same as reminders/notifications. The one real rule: a division worker
-    (writeOwn, not write) can only ever message an Admin - never sideways
-    to another worker, never up to a different department's manager. */
+    same as reminders/notifications. Who you can reach is the real rule,
+    and it's the same department wall everywhere else: only a
+    company-wide role (Admin/Super Admin/Accountant - division "All")
+    messages anyone. Everyone tied to one division - a Transport
+    Manager exactly as much as a Driver - can only ever reach Admin,
+    never sideways to another department and never even down to their
+    own workers over chat. Admin is the one hub every department raises
+    things to; departments don't message each other directly. */
 async function canMessage(env, user, toName) {
   const caps = capsForRole(user.role);
-  if (caps.write) return true;
+  if (caps.write && (!user.division || user.division === "All")) return true;
   const users = await getCollection(env, "users");
   const recipient = users.find((u) => u.name === toName);
   return !!recipient && (recipient.role === "Super Admin" || recipient.role === "Admin");

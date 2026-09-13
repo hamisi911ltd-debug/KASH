@@ -4,7 +4,7 @@
    logs trips Uber-style: Start trip (pickup only) -> the trip sits
    "In Transit" -> End trip (drop-off + what was paid) rolls straight
    into Initiate Payment. */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus, Truck, Users, ArrowDownRight, ArrowUpRight, Coins, Pencil, Trash2, MapPin, Route,
   Wrench, PlayCircle, StopCircle, Navigation,
@@ -18,7 +18,7 @@ import { TODAY } from "../lib/seed";
 import { coordsFor } from "../lib/geo";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
-import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
+import { Card, StatCard, SectionTitle, Badge, Button, Segmented, Spinner } from "../components/ui.jsx";
 import DataTable from "../components/DataTable.jsx";
 import MapView from "../components/MapView.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
@@ -33,13 +33,166 @@ function lastKnownLocation(vehicle, trips) {
   return coordsFor(at) ? { coords: coordsFor(at), place: at } : { coords: coordsFor("Nairobi"), place: "Nairobi (base)" };
 }
 
+/* There's no real GPS device feed wired up here, so a trip "In Transit"
+   is simulated moving off its pickup point at a fixed city-traffic
+   speed, along a bearing derived from the trip's own id - deterministic,
+   so it doesn't jump around on every re-render, just steadily drifts. */
+function bearingFor(id) {
+  let h = 0;
+  for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return h;
+}
+function livePosition(origin, tripId, elapsedSeconds) {
+  const speedKmh = 30;
+  const km = (speedKmh * Math.min(elapsedSeconds, 3600)) / 3600;
+  const rad = (bearingFor(tripId) * Math.PI) / 180;
+  const dLat = (km / 111) * Math.cos(rad);
+  const dLng = (km / (111 * Math.cos((origin[0] * Math.PI) / 180) || 1)) * Math.sin(rad);
+  return [origin[0] + dLat, origin[1] + dLng];
+}
+
+/* Unified Start/End trip control - a single card that swaps its own
+   contents once a trip is running, instead of two separate popups. */
+function TripControl({ activeTrip, myVehicle, session, addRecord, updateRecord, openForm, toast }) {
+  const [origin, setOrigin] = useState("Nairobi");
+  const [client, setClient] = useState("");
+  const [destination, setDestination] = useState("");
+  const [amount, setAmount] = useState("");
+  const [distanceKm, setDistanceKm] = useState("");
+  const [fuelCost, setFuelCost] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!activeTrip) { setDestination(""); setAmount(""); setDistanceKm(""); setFuelCost(""); }
+  }, [activeTrip?.id]);
+
+  const inputCls = "w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition-colors focus:border-transparent";
+  const inputStyle = { borderColor: C.line, background: C.surface };
+  const Field = ({ label, ...props }) => (
+    <div>
+      <label className="text-xs font-medium mb-1 block" style={{ color: C.muted }}>{label}</label>
+      <input className={inputCls} style={inputStyle} autoComplete="off" {...props} />
+    </div>
+  );
+
+  const start = async () => {
+    if (!origin.trim()) { toast("Pickup location is required", { tone: "warn" }); return; }
+    setBusy(true);
+    try {
+      await addRecord("trips", {
+        driverId: session?.driverId,
+        vehicleId: myVehicle?.id,
+        date: TODAY,
+        origin: origin.trim(),
+        client: client.trim(),
+        destination: "",
+        amount: 0,
+        fuelCost: 0,
+        otherCost: 0,
+        distanceKm: "",
+        status: "In Transit",
+      });
+      toast("Trip started");
+      setClient("");
+    } catch (e) {
+      toast(e.message || "Couldn't start the trip.", { tone: "error" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const end = async () => {
+    if (!destination.trim() || !amount) { toast("Drop-off and amount received are required", { tone: "warn" }); return; }
+    setBusy(true);
+    try {
+      await updateRecord("trips", activeTrip.id, {
+        destination: destination.trim(),
+        amount: Number(amount) || 0,
+        distanceKm: distanceKm === "" ? "" : Number(distanceKm),
+        fuelCost: Number(fuelCost) || 0,
+        status: "Completed",
+      });
+      toast("Trip ended");
+      const party = activeTrip.client || "Passenger";
+      const paidAmount = Number(amount) || 0;
+      setTimeout(() => {
+        openForm("payment", { direction: "in", division: "Transport", party, amount: paidAmount, method: "M-Pesa" });
+      }, 0);
+    } catch (e) {
+      toast(e.message || "Couldn't end the trip.", { tone: "error" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!activeTrip) {
+    return (
+      <Card>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: C.emeraldSoft }}>
+            <PlayCircle size={18} style={{ color: C.emerald }} />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: C.emerald }}>Ready to go</p>
+            <p className="text-sm font-bold" style={{ color: C.ink }}>Start a trip</p>
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-2.5">
+          <Field label="Pickup location" value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder="e.g. Nairobi CBD" />
+          <Field label="Client / passenger" value={client} onChange={(e) => setClient(e.target.value)} placeholder="Walk-in / Uber app" />
+        </div>
+        <div className="mt-3">
+          <Button onClick={start} disabled={busy}>{busy ? <Spinner size={14} color="#fff" /> : <PlayCircle size={14} />} Start trip</Button>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="relative overflow-hidden" style={{ borderColor: C.blue, background: C.blueSoft }}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: C.blue }}>
+          <Navigation size={18} style={{ color: "#fff" }} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: C.blue }}>Trip in progress</p>
+          <p className="text-sm font-bold truncate" style={{ color: C.ink }}>
+            {activeTrip.origin} → <span style={{ color: C.muted }}>drop-off pending</span>
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>
+            {activeTrip.client ? `${activeTrip.client} · ` : ""}Started {relativeTime(new Date(activeTrip.date).toISOString())}
+          </p>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <Field label="Drop-off location" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="e.g. Westlands" />
+        <Field label="Amount received (KSh)" type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Field label="Distance (km)" type="number" min={0} value={distanceKm} onChange={(e) => setDistanceKm(e.target.value)} />
+        <Field label="Fuel cost (KSh)" type="number" min={0} value={fuelCost} onChange={(e) => setFuelCost(e.target.value)} />
+      </div>
+      <div className="mt-3">
+        <Button onClick={end} disabled={busy}>{busy ? <Spinner size={14} color="#fff" /> : <StopCircle size={14} />} End trip</Button>
+      </div>
+    </Card>
+  );
+}
+
 export default function TransportView() {
-  const { data, prefs, session } = useStore();
+  const { data, prefs, session, addRecord, updateRecord, toast } = useStore();
   const { openForm, editRecord, deleteRecord, caps, activeView } = useActions();
   const restricted = !caps.write; // a Driver only sees and logs their own trips
   const myVehicle = restricted ? data.vehicles.find((v) => v.driverId === session?.driverId) : null;
   const myDriver = restricted ? data.drivers.find((d) => d.id === session?.driverId) : null;
   const activeTrip = restricted ? data.trips.find((t) => t.driverId === session?.driverId && t.status === "In Transit") : null;
+
+  // Ticks while any trip is in progress so the fleet map's simulated
+  // "live" position keeps drifting - see livePosition() above.
+  const [drift, setDrift] = useState(0);
+  const tripStartRef = useRef({});
+  useEffect(() => {
+    const iv = setInterval(() => setDrift((n) => n + 1), 2500);
+    return () => clearInterval(iv);
+  }, []);
 
   // The sidebar's "Maintenance" entry is this same page, opened straight
   // to that tab - keep the tab in sync whenever that nav route is chosen.
@@ -105,10 +258,24 @@ export default function TransportView() {
   const fleetPoints = useMemo(() => {
     const vehicles = restricted ? (myVehicle ? [myVehicle] : []) : data.vehicles.filter((v) => v.status !== "Inactive");
     return vehicles.map((v) => {
+      const liveTrip = data.trips.find((t) => t.vehicleId === v.id && t.status === "In Transit");
+      if (liveTrip) {
+        const origin = coordsFor(liveTrip.origin) || coordsFor("Nairobi");
+        if (!tripStartRef.current[liveTrip.id]) tripStartRef.current[liveTrip.id] = Date.now();
+        const elapsed = (Date.now() - tripStartRef.current[liveTrip.id]) / 1000;
+        return {
+          id: v.id,
+          coords: livePosition(origin, liveTrip.id, elapsed),
+          color: "#1E6CA8",
+          label: `${v.reg} · ${v.model}`,
+          sub: `On a trip from ${liveTrip.origin} · ${driverName(v.driverId)}`,
+        };
+      }
       const { coords, place } = lastKnownLocation(v, data.trips);
-      return { coords, color: v.status === "Maintenance" ? "#CE9114" : "#12958A", label: `${v.reg} · ${v.model}`, sub: `Last seen near ${place} · ${driverName(v.driverId)}` };
+      return { id: v.id, coords, color: v.status === "Maintenance" ? "#CE9114" : "#12958A", label: `${v.reg} · ${v.model}`, sub: `Last seen near ${place} · ${driverName(v.driverId)}` };
     });
-  }, [restricted, myVehicle, data.vehicles, data.trips]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restricted, myVehicle, data.vehicles, data.trips, drift]);
 
   const tripColumns = [
     { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
@@ -210,31 +377,20 @@ export default function TransportView() {
             {caps.write && <Button variant="outline" size="sm" onClick={() => openForm("vehicle")}><Plus size={14} /> Vehicle</Button>}
             {caps.write && <Button size="sm" onClick={() => openForm("trip")}><Plus size={14} /> New trip</Button>}
             {restricted && <Button variant="outline" size="sm" onClick={() => openForm("maintenance")}><Wrench size={14} /> Maintenance</Button>}
-            {restricted && !activeTrip && <Button size="sm" onClick={() => openForm("startTrip")}><PlayCircle size={14} /> Start trip</Button>}
           </>
         )}
       />
 
-      {restricted && activeTrip && (
-        <Card className="relative overflow-hidden" style={{ borderColor: C.blue, background: C.blueSoft }}>
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: C.blue }}>
-                <Navigation size={18} style={{ color: "#fff" }} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: C.blue }}>Trip in progress</p>
-                <p className="text-sm font-bold truncate" style={{ color: C.ink }}>
-                  {activeTrip.origin} → <span style={{ color: C.muted }}>drop-off pending</span>
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                  {activeTrip.client ? `${activeTrip.client} · ` : ""}Started {relativeTime(new Date(activeTrip.date).toISOString())}
-                </p>
-              </div>
-            </div>
-            <Button onClick={() => openForm("endTrip", activeTrip)}><StopCircle size={14} /> End trip</Button>
-          </div>
-        </Card>
+      {restricted && (
+        <TripControl
+          activeTrip={activeTrip}
+          myVehicle={myVehicle}
+          session={session}
+          addRecord={addRecord}
+          updateRecord={updateRecord}
+          openForm={openForm}
+          toast={toast}
+        />
       )}
 
       {restricted && (myVehicle || myDriver) && (
@@ -277,8 +433,11 @@ export default function TransportView() {
 
       {fleetPoints.length > 0 && (
         <Card>
-          <SectionTitle title={restricted ? "Your vehicle" : "Fleet map"} subtitle="Last known location, from each vehicle's most recent trip." />
-          <MapView points={fleetPoints} height={restricted ? 220 : 300} />
+          <SectionTitle
+            title={restricted ? "Your vehicle" : "Fleet map"}
+            subtitle={activeTrip || !restricted ? "Vehicles on a trip are tracked live; the rest show their last known stop." : "Last known location, from your most recent trip."}
+          />
+          <MapView points={fleetPoints} height={restricted ? 220 : 300} follow={restricted} />
         </Card>
       )}
 
