@@ -1,6 +1,6 @@
 /* Navigation model, shared by the sidebar, top tabs, mobile nav and command palette. */
 import {
-  LayoutDashboard, LayoutGrid, Truck, Drumstick, BedDouble,
+  LayoutDashboard, LayoutGrid, Truck, Drumstick, BedDouble, Wrench,
   Users, BarChart3, Wallet, Bell, Settings, ArrowLeftRight, MessagesSquare,
 } from "lucide-react";
 import { C } from "../lib/constants";
@@ -11,6 +11,7 @@ export const NAV = [
   { key: "transport", label: "Transport", icon: Truck, group: "divisions" },
   { key: "food", label: "Chicken", icon: Drumstick, group: "divisions" },
   { key: "hospitality", label: "Hospitality", icon: BedDouble, group: "divisions" },
+  { key: "maintenance", label: "Maintenance", icon: Wrench, group: "operations" },
   { key: "payments", label: "Payments", icon: ArrowLeftRight, group: "finance" },
   { key: "expenses", label: "Expenses", icon: Wallet, group: "finance" },
   { key: "reports", label: "Reports", icon: BarChart3, group: "finance" },
@@ -21,6 +22,7 @@ export const NAV = [
 
 export const NAV_GROUPS = [
   { key: "main", label: "" },
+  { key: "operations", label: "" },
   { key: "finance", label: "Finance" },
   { key: "admin", label: "Administration" },
 ];

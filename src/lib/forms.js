@@ -25,12 +25,14 @@ export function buildForms(data, session) {
   const roomOpts = () => data.rooms.map((r) => ({ value: r.id, label: `Room ${r.number} - ${r.type} (KSh ${r.price.toLocaleString()})` }));
   const menuOpts = () => data.menu.filter((m) => m.active).map((m) => ({ value: m.id, label: `${m.name} - KSh ${m.price.toLocaleString()}` }));
 
-  /* A worker (Driver / Chicken Attendant / Hospitality Attendant) messages
-     up to their manager/admin, not sideways to every other worker. */
+  /* A worker (Driver / Chicken Attendant / Hospitality Attendant) can only
+     message Admin - never sideways to other workers, and never a manager
+     in a different department. Departments stay siloed from each other;
+     only Admin/Super Admin sees across all of them. */
   const myCaps = capsForRole(session?.role);
   const userOpts = () => {
     const pool = data.users.filter((u) => u.name !== session?.name);
-    const scoped = myCaps?.writeOwn ? pool.filter((u) => /Manager|Admin/i.test(u.role)) : pool;
+    const scoped = myCaps?.writeOwn && !myCaps?.write ? pool.filter((u) => u.role === "Super Admin" || u.role === "Admin") : pool;
     return scoped.map((u) => ({ value: u.name, label: `${u.name} - ${u.role}` }));
   };
 
@@ -44,6 +46,7 @@ export function buildForms(data, session) {
     message: {
       key: "message",
       collection: "messages",
+      alwaysAllowed: true,
       label: "New Message",
       icon: MessagesSquare,
       title: "New message",

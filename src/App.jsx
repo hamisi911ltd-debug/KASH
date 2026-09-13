@@ -35,6 +35,7 @@ const VIEWS = {
   overview: OverviewView,
   all: AllServicesView,
   transport: TransportView,
+  maintenance: TransportView, // same page, opened straight to its Maintenance tab
   food: FoodView,
   hospitality: HospitalityView,
   payments: PaymentsView,
@@ -92,14 +93,21 @@ export default function App() {
       // never offers "New order", and a Transport Manager's never offers
       // "New booking". Quick actions mirror the navigation, not a superset.
       if (form.view && !canOpenView(role, form.view)) return false;
+      if (form.alwaysAllowed) return true; // e.g. messaging - not a write privilege, just needs the page
       if (form.key === "payment") return caps.payments;
       return caps.write || (form.ownAllowed && caps.writeOwn);
     },
     [role, caps.write, caps.writeOwn, caps.payments]
   );
+  /* A full manager/admin gets the fast top-right "+New" menu across every
+     collection they touch. A division worker (writeOwn, not write) already
+     has Start trip / Log maintenance / Collect payment right on their own
+     page, plus dedicated nav entries (see NAV) - a second, wider "+New"
+     menu on top of that would just be a place the same actions duplicate,
+     so it's hidden entirely for them rather than re-filtered down. */
   const quickActions = useMemo(
-    () => QUICK_ACTION_KEYS.map((k) => forms[k]).filter(Boolean).filter(canUseForm),
-    [forms, canUseForm]
+    () => (caps.write ? QUICK_ACTION_KEYS.map((k) => forms[k]).filter(Boolean).filter(canUseForm) : []),
+    [forms, canUseForm, caps.write]
   );
 
   /* --- navigation guard: bounce to a permitted view if the role loses access --- */
@@ -306,6 +314,7 @@ export default function App() {
     patchRoom,
     caps,
     role,
+    activeView,
   };
 
   return (

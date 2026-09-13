@@ -4,7 +4,7 @@
    logs trips Uber-style: Start trip (pickup only) -> the trip sits
    "In Transit" -> End trip (drop-off + what was paid) rolls straight
    into Initiate Payment. */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Plus, Truck, Users, ArrowDownRight, ArrowUpRight, Coins, Pencil, Trash2, MapPin, Route,
   Wrench, PlayCircle, StopCircle, Navigation,
@@ -35,13 +35,20 @@ function lastKnownLocation(vehicle, trips) {
 
 export default function TransportView() {
   const { data, prefs, session } = useStore();
-  const { openForm, editRecord, deleteRecord, caps } = useActions();
+  const { openForm, editRecord, deleteRecord, caps, activeView } = useActions();
   const restricted = !caps.write; // a Driver only sees and logs their own trips
   const myVehicle = restricted ? data.vehicles.find((v) => v.driverId === session?.driverId) : null;
   const myDriver = restricted ? data.drivers.find((d) => d.id === session?.driverId) : null;
   const activeTrip = restricted ? data.trips.find((t) => t.driverId === session?.driverId && t.status === "In Transit") : null;
 
-  const [tab, setTab] = useState("trips");
+  // The sidebar's "Maintenance" entry is this same page, opened straight
+  // to that tab - keep the tab in sync whenever that nav route is chosen.
+  const [tab, setTab] = useState(activeView === "maintenance" ? "maintenance" : "trips");
+  useEffect(() => {
+    if (activeView === "maintenance" || activeView === "transport") {
+      setTab(activeView === "maintenance" ? "maintenance" : "trips");
+    }
+  }, [activeView]);
   const [q, setQ] = useState("");
   const [tStatus, setTStatus] = useState("All");
   const [tVehicle, setTVehicle] = useState("All");
@@ -195,7 +202,7 @@ export default function TransportView() {
   return (
     <Page>
       <PageHeader
-        title={restricted ? "My Transport" : "Transport"}
+        title={activeView === "maintenance" ? "Maintenance" : restricted ? "My Transport" : "Transport"}
         subtitle={restricted ? "Your trips, vehicle and maintenance log." : "Fleet, drivers and trip performance."}
         actions={(caps.write || caps.writeOwn) && (
           <>

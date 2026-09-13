@@ -105,7 +105,7 @@ export const ROLE_VIEWS = {
   "Super Admin": "*",
   Admin: "*",
   "Transport Manager": ["overview", "transport", "payments", "expenses", "reports", "updates", "settings"],
-  Driver: ["transport", "payments", "updates", "settings"],
+  Driver: ["transport", "maintenance", "payments", "updates", "settings"],
   "Food Manager": ["overview", "food", "payments", "expenses", "reports", "updates", "settings"],
   "Chicken Attendant": ["food", "payments", "updates", "settings"],
   "Hospitality Manager": ["overview", "hospitality", "payments", "expenses", "reports", "updates", "settings"],

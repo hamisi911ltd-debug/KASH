@@ -19,15 +19,22 @@ const PRIORITY_TONE = { High: "coral", Normal: "blue", Low: "slate" };
 /* ---------------------------------------------------------- Messages ---------- */
 
 function Messages() {
-  const { data, session, addRecord, patchRecord, notifyIfEnabled } = useStore();
+  const { data, session, addRecord, patchRecord, notifyIfEnabled, toast } = useStore();
+  const { caps } = useActions();
   const me = session?.name;
   const [q, setQ] = useState("");
   const [activeName, setActiveName] = useState(null);
   const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
   const endRef = useRef(null);
 
   const contacts = useMemo(() => {
-    const others = data.users.filter((u) => u.name !== me);
+    // A division worker (writeOwn, not write) can only message Admin -
+    // departments stay siloed; only Admin sees across all of them.
+    const pool = data.users.filter((u) => u.name !== me);
+    const others = caps.writeOwn && !caps.write
+      ? pool.filter((u) => u.role === "Super Admin" || u.role === "Admin")
+      : pool;
     return others
       .map((u) => {
         const thread = data.messages
@@ -55,7 +62,7 @@ function Messages() {
   useEffect(() => {
     if (!active) return;
     active.thread.forEach((m) => {
-      if (m.to === me && !m.read) patchRecord("messages", m.id, { read: true });
+      if (m.to === me && !m.read) patchRecord("messages", m.id, { read: true }).catch(() => {});
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.user.name, data.messages.length]);
@@ -64,13 +71,20 @@ function Messages() {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [active?.thread.length]);
 
-  const send = (e) => {
+  const send = async (e) => {
     e?.preventDefault?.();
     const text = draft.trim();
-    if (!text || !active) return;
-    addRecord("messages", { from: me, to: active.user.name, text, ts: new Date().toISOString(), read: false });
-    notifyIfEnabled("alerts", `New message from ${me}`, { type: "message", division: "General" });
-    setDraft("");
+    if (!text || !active || sending) return;
+    setSending(true);
+    try {
+      await addRecord("messages", { from: me, to: active.user.name, text, ts: new Date().toISOString(), read: false });
+      notifyIfEnabled("alerts", `New message from ${me}`, { type: "message", division: "General" });
+      setDraft("");
+    } catch (err) {
+      toast(err.message || "Could not send that message.", { tone: "error" });
+    } finally {
+      setSending(false);
+    }
   };
 
   const totalUnread = contacts.reduce((s, c) => s + c.unread, 0);
@@ -180,7 +194,7 @@ function Messages() {
                   className="flex-1 rounded-xl border px-3 py-2.5 text-sm outline-none resize-none n1-scroll"
                   style={{ borderColor: C.line, background: C.surface, color: C.ink, maxHeight: 120 }}
                 />
-                <Button type="submit" onClick={send} disabled={!draft.trim()} className="shrink-0"><Send size={14} /> <span className="hidden sm:inline">Send</span></Button>
+                <Button type="submit" onClick={send} disabled={!draft.trim() || sending} className="shrink-0"><Send size={14} /> <span className="hidden sm:inline">Send</span></Button>
               </form>
             </>
           )}
@@ -269,7 +283,7 @@ export default function MessagesView() {
     <Page>
       <PageHeader
         title="Messages"
-        subtitle={caps.write ? "Message anyone on the platform, and track shared reminders." : "Message your manager directly, and track shared reminders."}
+        subtitle={caps.write ? "Message anyone on the platform, and track shared reminders." : "Message Admin directly, and track shared reminders."}
         actions={
           <>
             {tab === "reminders" ? (

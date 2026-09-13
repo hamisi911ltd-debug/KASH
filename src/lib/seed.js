@@ -221,7 +221,20 @@ function buildLocalTrips() {
 }
 
 function buildTrips() {
-  return [...buildLongHaulTrips(), ...buildLocalTrips()].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const all = [...buildLongHaulTrips(), ...buildLocalTrips()];
+  // A single vehicle can only really be on one trip at a time - the random
+  // per-trip status above can otherwise leave several "In Transit" at once
+  // for the same car, which reads as other vehicles' activity leaking in.
+  // Keep just the most recent "In Transit" trip per vehicle; complete the rest.
+  const latestOpen = {};
+  all.forEach((t) => {
+    if (t.status !== "In Transit") return;
+    if (!latestOpen[t.vehicleId] || t.date > latestOpen[t.vehicleId].date) latestOpen[t.vehicleId] = t;
+  });
+  all.forEach((t) => {
+    if (t.status === "In Transit" && latestOpen[t.vehicleId] !== t) t.status = "Completed";
+  });
+  return all.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
 /* ---------------------------------------------------------- food */

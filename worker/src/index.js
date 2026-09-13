@@ -156,7 +156,20 @@ function scopeData(full, user) {
 function ownsRecord(collection, record, user) {
   if (collection === "trips") return record.driverId === user.driverId;
   if (collection === "orders" || collection === "bookings" || collection === "maintenance") return record.createdBy === user.name;
+  if (collection === "messages") return record.from === user.name || record.to === user.name;
   return false;
+}
+
+/** Messaging isn't a division privilege - anyone signed in can send one,
+    same as reminders/notifications. The one real rule: a division worker
+    (writeOwn, not write) can only ever message an Admin - never sideways
+    to another worker, never up to a different department's manager. */
+async function canMessage(env, user, toName) {
+  const caps = capsForRole(user.role);
+  if (caps.write) return true;
+  const users = await getCollection(env, "users");
+  const recipient = users.find((u) => u.name === toName);
+  return !!recipient && (recipient.role === "Super Admin" || recipient.role === "Admin");
 }
 
 const FREE_PATCH_COLLECTIONS = new Set(["notifications", "reminders"]);
@@ -245,9 +258,16 @@ export default {
       if (request.method === "POST") {
         const canOwn = caps.writeOwn && ["trips", "orders", "bookings", "maintenance"].includes(collection);
         const canPay = collection === "payments" && caps.payments;
-        if (!caps.write && !canOwn && !canPay) return err("You don't have access to add that.", 403);
+        const canMsg = collection === "messages"; // anyone signed in - checked properly below
+        if (!caps.write && !canOwn && !canPay && !canMsg) return err("You don't have access to add that.", 403);
 
         const body = await request.json();
+        if (collection === "messages") {
+          if (!(await canMessage(env, user, body.to))) {
+            return err("You can only message an Admin.", 403);
+          }
+          body.from = user.name; // never trust a client-supplied sender
+        }
         let values = { ...body, createdBy: user.name };
         if ((collection === "trips" || collection === "maintenance") && user.role === "Driver" && user.driverId) {
           const vehicles = await getCollection(env, "vehicles");
@@ -279,10 +299,12 @@ export default {
 
       if (request.method === "PATCH") {
         const existing = rows.find((r) => r.id === id);
+        // Marking a message read is ownership-based for every role, not just
+        // writeOwn workers - anyone in the thread (either side) can do it.
         const allowed =
           caps.write ||
           FREE_PATCH_COLLECTIONS.has(collection) ||
-          (caps.writeOwn && existing && ownsRecord(collection, existing, user));
+          (existing && ownsRecord(collection, existing, user) && (collection === "messages" || caps.writeOwn));
         if (!allowed) return err("You don't have access to change that.", 403);
         const body = await request.json();
         const next = rows.map((r) => (r.id === id ? { ...r, ...body } : r));
