@@ -10,7 +10,7 @@ import {
   LayoutDashboard, ChevronLeft, User, Phone,
 } from "lucide-react";
 import { C } from "../lib/constants";
-import { DEMO_LOGINS, DEMO_PASSWORD, login, register } from "../lib/auth";
+import { DEMO_MODE, DEMO_LOGINS, DEMO_PASSWORD, login, register } from "../lib/auth";
 import { Button, Spinner } from "../components/ui.jsx";
 import { KashLogo } from "../components/Logo.jsx";
 
@@ -130,8 +130,8 @@ export default function LoginView({ onSignIn }) {
   const [step, setStep] = useState("choose"); // choose | auth
   const [chosen, setChosen] = useState(null); // the BUSINESSES entry, if any
   const [mode, setMode] = useState("signin"); // signin | register | reset
-  const [email, setEmail] = useState(DEMO_LOGINS[0].email);
-  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [email, setEmail] = useState(DEMO_MODE ? DEMO_LOGINS[0].email : "");
+  const [password, setPassword] = useState(DEMO_MODE ? DEMO_PASSWORD : "");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -147,9 +147,11 @@ export default function LoginView({ onSignIn }) {
 
   const pickBusiness = (biz) => {
     setChosen(biz);
-    const acct = DEMO_LOGINS.find((a) => a.role === biz.role) || DEMO_LOGINS[0];
-    setEmail(acct.email);
-    setPassword(DEMO_PASSWORD);
+    if (DEMO_MODE) {
+      const acct = DEMO_LOGINS.find((a) => a.role === biz.role) || DEMO_LOGINS[0];
+      setEmail(acct.email);
+      setPassword(DEMO_PASSWORD);
+    }
     setError("");
     setMode("signin");
     setStep("auth");
@@ -289,23 +291,25 @@ export default function LoginView({ onSignIn }) {
                     {!loading && <ArrowRight size={15} />}
                   </Button>
 
-                  <div className="pt-2">
-                    <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: C.faint }}>Demo accounts - click to fill</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {DEMO_LOGINS.map((a) => (
-                        <button
-                          key={a.email}
-                          type="button"
-                          onClick={() => { setEmail(a.email); setPassword(DEMO_PASSWORD); setError(""); }}
-                          className="text-left rounded-lg border px-2.5 py-1.5 transition-colors hover:opacity-80"
-                          style={{ borderColor: email === a.email ? C.blue : C.line, background: email === a.email ? C.blueSoft : C.surface }}
-                        >
-                          <span className="block text-xs font-semibold truncate" style={{ color: C.ink }}>{a.role}</span>
-                          <span className="block text-[10px] truncate" style={{ color: C.faint }}>{a.name}</span>
-                        </button>
-                      ))}
+                  {DEMO_MODE && (
+                    <div className="pt-2">
+                      <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: C.faint }}>Demo accounts - click to fill</p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {DEMO_LOGINS.map((a) => (
+                          <button
+                            key={a.email}
+                            type="button"
+                            onClick={() => { setEmail(a.email); setPassword(DEMO_PASSWORD); setError(""); }}
+                            className="text-left rounded-lg border px-2.5 py-1.5 transition-colors hover:opacity-80"
+                            style={{ borderColor: email === a.email ? C.blue : C.line, background: email === a.email ? C.blueSoft : C.surface }}
+                          >
+                            <span className="block text-xs font-semibold truncate" style={{ color: C.ink }}>{a.role}</span>
+                            <span className="block text-[10px] truncate" style={{ color: C.faint }}>{a.name}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </form>
               )}
 

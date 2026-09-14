@@ -4,7 +4,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useStore } from "./lib/store.jsx";
 import { ActionsContext } from "./lib/actions.jsx";
-import { canOpenView, capsForRole, viewsForRole, login, demoAccountForRole, DEMO_PASSWORD } from "./lib/auth";
+import { canOpenView, capsForRole, viewsForRole, login, demoAccountForRole, DEMO_PASSWORD, DEMO_MODE } from "./lib/auth";
 import { buildForms, QUICK_ACTION_KEYS } from "./lib/forms.js";
 import { SINGULAR } from "./lib/schema.js";
 import { useHotkey } from "./lib/hooks.js";
@@ -61,8 +61,9 @@ export default function App() {
   const [mpesa, setMpesa] = useState(null); // pending M-Pesa payment record
 
   /* Deep-link: ?role=Accountant&view=reports signs straight into a demo
-     role/view (handy for demos and screenshots). Runs once. */
+     role/view (handy for demos and screenshots). Demo-only - runs once. */
   React.useEffect(() => {
+    if (!DEMO_MODE) return;
     const q = new URLSearchParams(window.location.search);
     const wanted = q.get("role");
     const v = q.get("view");
@@ -325,7 +326,7 @@ export default function App() {
           activeView={activeView}
           onNavigate={navigate}
           onSignOut={() => setSession(null)}
-          onSwitchRole={switchRole}
+          onSwitchRole={DEMO_MODE ? switchRole : undefined}
           session={session}
         />
         <MobileDrawer
@@ -335,7 +336,7 @@ export default function App() {
           activeView={activeView}
           onNavigate={navigate}
           onSignOut={() => setSession(null)}
-          onSwitchRole={switchRole}
+          onSwitchRole={DEMO_MODE ? switchRole : undefined}
           session={session}
         />
 

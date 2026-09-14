@@ -23,8 +23,14 @@ export function capsForRole(role) {
   return ROLE_CAPS[role] || ROLE_CAPS.Staff;
 }
 
+/** Off by default; the demo deployment's build sets VITE_DEMO_MODE=true
+    to show the one-click demo-account picker below. A real/production
+    build (no env var set) gets a plain, empty sign-in form instead. */
+export const DEMO_MODE = import.meta.env?.VITE_DEMO_MODE === "true";
+
 /** Demo accounts a new visitor can try in one click - real accounts,
-    same shared password, seeded by worker/seed-kv.mjs. */
+    same shared password, seeded by worker/seed-kv.mjs. Only ever shown
+    when DEMO_MODE is on. */
 export const DEMO_LOGINS = [
   { email: "wanjiku@kash.co.ke", name: "Wanjiku Kamande", role: "Super Admin" },
   { email: "peter.m@kash.co.ke", name: "Peter Mwangi", role: "Transport Manager" },
