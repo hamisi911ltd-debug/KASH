@@ -5,3 +5,11 @@ compatibility_date = "2024-11-01"
 [[kv_namespaces]]
 binding = "KASH_KV"
 id = "2be14a2fc4ef46d6b6b91cde129bd461"
+
+# A second, separate deployment of the same Worker code - its own empty
+# KV store, no demo data. Deploy with `wrangler deploy --env live`.
+[env.live]
+name = "kash-api-live"
+[[env.live.kv_namespaces]]
+binding = "KASH_KV"
+id = "1cd697611f9142a0b8b49f1de345d027"

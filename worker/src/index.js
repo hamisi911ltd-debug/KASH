@@ -224,9 +224,14 @@ export default {
 
         const users = await getCollection(env, "users");
         const id = `u${Date.now().toString(36)}`;
+        // The very first account on a fresh instance has nobody to grant it
+        // access - it has to start as Super Admin, or nobody could ever add
+        // vehicles, rooms, staff, etc. Every account after that is Staff by
+        // default; an Admin promotes people from there.
+        const isFirstAccount = users.length === 0;
         const user = {
           id, name, email, phone,
-          role: "Staff", division: "All", status: "Active",
+          role: isFirstAccount ? "Super Admin" : "Staff", division: "All", status: "Active",
           lastActive: toISODate(new Date()), createdAt: new Date().toISOString(),
           passwordHash: await hashPassword(password),
         };

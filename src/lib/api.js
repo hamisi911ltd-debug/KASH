@@ -4,7 +4,11 @@
    the session is dead and the caller should sign out.
    ============================================================ */
 
-export const API_BASE = "https://kash-api.glotech.workers.dev";
+/* Overridable at build time (VITE_API_BASE) so the same codebase can be
+   built twice - once against the shared demo backend, once against a
+   separate, empty backend for a real/clean deployment - without
+   forking any code. */
+export const API_BASE = import.meta.env?.VITE_API_BASE || "https://kash-api.glotech.workers.dev";
 
 export class ApiError extends Error {
   constructor(message, status) {
