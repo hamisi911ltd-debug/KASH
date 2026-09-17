@@ -1,5 +1,5 @@
-/* Butchery division (chicken, eggs, goat and other meats): orders,
-   product list, sales mix and margin. A Butchery Attendant session
+/* Agro division (chicken, eggs, goat and other meats): orders,
+   product list, sales mix and margin. An Agro Attendant session
    sees this same page, self-scoped to just the orders they
    personally rang up - see `restricted` below. */
 import React, { useMemo, useState } from "react";
@@ -10,16 +10,113 @@ import { resolvePeriod, computeMetrics, inRange, CANCELLED } from "../lib/derive
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
 import { useActions } from "../lib/actions.jsx";
-import { Card, StatCard, SectionTitle, Badge, Button, Segmented } from "../components/ui.jsx";
+import { Card, StatCard, SectionTitle, Badge, Button, Segmented, Spinner } from "../components/ui.jsx";
 import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { statusTone, ORDER_STATUSES, PAYMENT_STATUSES } from "../lib/constants";
 
+/* An Attendant's one-card "log a sale" flow - same idea as the Driver's
+   trip control: log straight from an inline card instead of a modal
+   popup, so ringing up a sale doesn't interrupt the page. */
+function SaleControl({ menu, addRecord, toast }) {
+  const activeMenu = useMemo(() => menu.filter((m) => m.active), [menu]);
+  const [menuItemId, setMenuItemId] = useState("");
+  const [qty, setQty] = useState("1");
+  const [customer, setCustomer] = useState("");
+  const [channel, setChannel] = useState("Walk-in");
+  const [amount, setAmount] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("Paid");
+  const [busy, setBusy] = useState(false);
+
+  const selected = activeMenu.find((m) => m.id === menuItemId);
+  const suggestedTotal = selected ? selected.price * (Number(qty) || 1) : 0;
+
+  const inputCls = "w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition-colors focus:border-transparent";
+  const inputStyle = { borderColor: C.line, background: C.surface };
+  const Field = ({ label, type, options, ...props }) => (
+    <div>
+      <label className="text-xs font-medium mb-1 block" style={{ color: C.muted }}>{label}</label>
+      {type === "select" ? (
+        <select className={inputCls} style={inputStyle} {...props}>
+          {options}
+        </select>
+      ) : (
+        <input type={type} className={inputCls} style={inputStyle} autoComplete="off" {...props} />
+      )}
+    </div>
+  );
+
+  const logSale = async () => {
+    if (!menuItemId) { toast("Pick a product", { tone: "warn" }); return; }
+    setBusy(true);
+    try {
+      await addRecord("orders", {
+        date: TODAY,
+        customer: customer.trim(),
+        channel,
+        menuItemId,
+        qty: Number(qty) || 1,
+        amount: amount === "" ? undefined : Number(amount),
+        paymentStatus,
+        orderStatus: "Preparing",
+      });
+      toast("Sale logged");
+      setMenuItemId(""); setQty("1"); setCustomer(""); setChannel("Walk-in"); setAmount(""); setPaymentStatus("Paid");
+    } catch (e) {
+      toast(e.message || "Couldn't log that sale.", { tone: "error" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: C.amberSoft }}>
+          <ShoppingBag size={18} style={{ color: C.amber }} />
+        </div>
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: C.amber }}>Ring up a sale</p>
+          <p className="text-sm font-bold" style={{ color: C.ink }}>Log a sale</p>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <Field
+          label="Product" type="select" value={menuItemId} onChange={(e) => setMenuItemId(e.target.value)}
+          options={
+            <>
+              <option value="" disabled>Pick a product...</option>
+              {activeMenu.map((m) => <option key={m.id} value={m.id}>{m.name} - {formatKES(m.price)}</option>)}
+            </>
+          }
+        />
+        <Field label="Quantity" type="number" min={1} value={qty} onChange={(e) => setQty(e.target.value)} />
+        <Field label="Customer" placeholder="Walk-in / cash sale" value={customer} onChange={(e) => setCustomer(e.target.value)} />
+        <Field
+          label="Channel" type="select" value={channel} onChange={(e) => setChannel(e.target.value)}
+          options={["Walk-in", "Phone", "WhatsApp", "Online", "Wholesale"].map((c) => <option key={c} value={c}>{c}</option>)}
+        />
+        <Field
+          label={`Amount (KSh)${selected ? ` · suggested ${formatKES(suggestedTotal)}` : ""}`}
+          type="number" min={0} placeholder={selected ? String(suggestedTotal) : ""} value={amount} onChange={(e) => setAmount(e.target.value)}
+        />
+        <Field
+          label="Payment" type="select" value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)}
+          options={PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+        />
+      </div>
+      <div className="mt-3">
+        <Button onClick={logSale} disabled={busy}>{busy ? <Spinner size={14} color="#fff" /> : <Plus size={14} />} Log sale</Button>
+      </div>
+    </Card>
+  );
+}
+
 export default function FoodView() {
-  const { data, prefs, session } = useStore();
+  const { data, prefs, session, addRecord, toast } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
-  const restricted = !caps.write; // a Butchery Attendant only sees orders they rang up
+  const restricted = !caps.write; // an Agro Attendant only sees orders they rang up
   const [tab, setTab] = useState("orders");
   const [q, setQ] = useState("");
   const [oStatus, setOStatus] = useState("All");
@@ -95,15 +192,17 @@ export default function FoodView() {
   return (
     <Page>
       <PageHeader
-        title={restricted ? "My Sales" : "Butchery"}
+        title={restricted ? "My Sales" : "Agro"}
         subtitle={restricted ? "Orders you've rung up." : "Chicken, eggs, goat and other meats - orders, stock and margin."}
         actions={(caps.write || caps.writeOwn) && (
           <>
             {caps.write && <Button variant="outline" size="sm" onClick={() => openForm("menuItem")}><Plus size={14} /> Product</Button>}
-            <Button size="sm" onClick={() => openForm("order")}><Plus size={14} /> New order</Button>
+            {caps.write && <Button size="sm" onClick={() => openForm("order")}><Plus size={14} /> New order</Button>}
           </>
         )}
       />
+
+      {restricted && <SaleControl menu={data.menu} addRecord={addRecord} toast={toast} />}
 
       <div className={`grid grid-cols-2 ${restricted ? "sm:grid-cols-3" : "lg:grid-cols-4"} gap-2.5 sm:gap-3.5`}>
         {restricted ? (

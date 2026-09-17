@@ -9,7 +9,7 @@ export const NAV = [
   { key: "overview", label: "Overview", icon: LayoutDashboard, group: "main" },
   { key: "all", label: "All Services", icon: LayoutGrid, group: "main" },
   { key: "transport", label: "Transport", icon: Truck, group: "divisions" },
-  { key: "food", label: "Butchery", icon: Beef, group: "divisions" },
+  { key: "food", label: "Agro", icon: Beef, group: "divisions" },
   { key: "hospitality", label: "Hospitality", icon: BedDouble, group: "divisions" },
   { key: "maintenance", label: "Maintenance", icon: Wrench, group: "operations" },
   { key: "payments", label: "Payments", icon: ArrowLeftRight, group: "finance" },
@@ -32,7 +32,7 @@ export const NAV_GROUPS = [
 export const PRIMARY_TABS = [
   { key: "overview", label: "Home", icon: LayoutDashboard, color: C.blue },
   { key: "transport", label: "Transport", icon: Truck, color: C.emerald },
-  { key: "food", label: "Butchery", icon: Beef, color: C.amber },
+  { key: "food", label: "Agro", icon: Beef, color: C.amber },
   { key: "hospitality", label: "Hospitality", icon: BedDouble, color: C.coral },
 ];
 

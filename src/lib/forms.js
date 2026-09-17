@@ -25,14 +25,14 @@ export function buildForms(data, session) {
   const roomOpts = () => data.rooms.map((r) => ({ value: r.id, label: `Room ${r.number} - ${r.type} (KSh ${r.price.toLocaleString()})` }));
   const menuOpts = () => data.menu.filter((m) => m.active).map((m) => ({ value: m.id, label: `${m.name} - KSh ${m.price.toLocaleString()}` }));
 
-  /* A worker (Driver / Butchery Attendant / Hospitality Attendant) can only
+  /* A worker (Driver / Agro Attendant / Hospitality Attendant) can only
      message Admin - never sideways to other workers, and never a manager
      in a different department. Departments stay siloed from each other;
-     only Admin/Super Admin sees across all of them. */
+     only Admin/Super Admin/Director sees across all of them. */
   const myCaps = capsForRole(session?.role);
   const userOpts = () => {
     const pool = data.users.filter((u) => u.name !== session?.name);
-    const scoped = myCaps?.writeOwn && !myCaps?.write ? pool.filter((u) => u.role === "Super Admin" || u.role === "Admin") : pool;
+    const scoped = myCaps?.writeOwn && !myCaps?.write ? pool.filter((u) => u.role === "Super Admin" || u.role === "Admin" || u.role === "Director") : pool;
     return scoped.map((u) => ({ value: u.name, label: `${u.name} - ${u.role}` }));
   };
 
@@ -198,7 +198,7 @@ export function buildForms(data, session) {
       ],
     },
 
-    /* ---------------- Butchery (chicken, eggs, goat & other meats) ---------------- */
+    /* ---------------- Agro (chicken, eggs, goat & other meats) ---------------- */
     order: {
       key: "order",
       collection: "orders",

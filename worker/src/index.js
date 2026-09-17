@@ -93,7 +93,7 @@ async function requireUser(request, env) {
 
 /** Whether a role can reach a given division's page at all - the same
     question the sidebar/top-tabs ask client-side, re-asked server-side
-    so a Driver can't reach Butchery/Hospitality data (or write to it)
+    so a Driver can't reach Agro/Hospitality data (or write to it)
     just by calling the API directly instead of clicking through the UI. */
 function sees(role, view) {
   return canOpenView(role, view) || canOpenView(role, "overview") || canOpenView(role, "all");
@@ -111,7 +111,7 @@ const COLLECTION_VIEW = {
 /** What a restricted role may see over the wire - never trust the client's
     idea of its own role; this is the real, server-side enforcement. Two
     layers: which DIVISIONS a role has no view into at all get zeroed out
-    entirely (a Driver's session never even receives Butchery/Hospitality
+    entirely (a Driver's session never even receives Agro/Hospitality
     data), then within a division a "writeOwn" worker is narrowed further
     to just their own rows. */
 function scopeData(full, user) {
@@ -135,11 +135,12 @@ function scopeData(full, user) {
   }
 
   // The roster mirrors who canMessage() would actually let them reach:
-  // a siloed manager/worker only ever sees Admin/Super Admin in it, not
-  // their own department's colleagues and not any other department -
-  // there's no view where a Driver would need James Otieno's name.
+  // a siloed manager/worker only ever sees Admin/Super Admin/Director in
+  // it, not their own department's colleagues and not any other
+  // department - there's no view where a Driver would need James
+  // Otieno's name.
   if (siloed) {
-    d.users = full.users.filter((u) => u.role === "Super Admin" || u.role === "Admin");
+    d.users = full.users.filter((u) => u.role === "Super Admin" || u.role === "Admin" || u.role === "Director");
   }
 
   if (user.role === "Driver" && user.driverId) {
@@ -151,7 +152,7 @@ function scopeData(full, user) {
     d.trips = []; d.vehicles = []; d.drivers = []; d.maintenance = [];
   }
 
-  if (user.role === "Butchery Attendant") {
+  if (user.role === "Agro Attendant") {
     d.orders = full.orders.filter((o) => o.createdBy === user.name);
   } else if (!sees(user.role, "food")) {
     d.orders = [];
@@ -183,18 +184,19 @@ function ownsRecord(collection, record, user) {
 /** Messaging isn't a division privilege - anyone signed in can send one,
     same as reminders/notifications. Who you can reach is the real rule,
     and it's the same department wall everywhere else: only a
-    company-wide role (Admin/Super Admin/Accountant - division "All")
-    messages anyone. Everyone tied to one division - a Transport
+    company-wide role (Admin/Super Admin/Director/Accountant - division
+    "All") messages anyone. Everyone tied to one division - a Transport
     Manager exactly as much as a Driver - can only ever reach Admin,
-    never sideways to another department and never even down to their
-    own workers over chat. Admin is the one hub every department raises
-    things to; departments don't message each other directly. */
+    Super Admin or a Director, never sideways to another department and
+    never even down to their own workers over chat. Admin/Director are
+    the hub every department raises things to; departments don't
+    message each other directly. */
 async function canMessage(env, user, toName) {
   const caps = capsForRole(user.role);
   if (caps.write && (!user.division || user.division === "All")) return true;
   const users = await getCollection(env, "users");
   const recipient = users.find((u) => u.name === toName);
-  return !!recipient && (recipient.role === "Super Admin" || recipient.role === "Admin");
+  return !!recipient && (recipient.role === "Super Admin" || recipient.role === "Admin" || recipient.role === "Director");
 }
 
 const FREE_PATCH_COLLECTIONS = new Set(["notifications", "reminders"]);

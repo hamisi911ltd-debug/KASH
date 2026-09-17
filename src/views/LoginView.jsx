@@ -1,6 +1,6 @@
 /* ============================================================
    Sign-in flow: first pick which part of the business you're
-   entering (Admin / Transport / Butchery / Hospitality), then sign in -
+   entering (Admin / Transport / Agro / Hospitality), then sign in -
    real accounts now, backed by the KASH API. Picking a tile lands
    you straight in that division once you're in.
    ============================================================ */
@@ -17,13 +17,13 @@ import { KashLogo } from "../components/Logo.jsx";
 const BUSINESSES = [
   { key: "overview", label: "Admin", sub: "Whole business overview", icon: LayoutDashboard, color: C.blue, soft: C.blueSoft, role: "Super Admin" },
   { key: "transport", label: "Transport", sub: "Fleet, trips & drivers", icon: Truck, color: C.emerald, soft: C.emeraldSoft, role: "Transport Manager" },
-  { key: "food", label: "Butchery", sub: "Chicken, eggs, goat & meat", icon: Beef, color: C.amber, soft: C.amberSoft, role: "Butchery Manager" },
+  { key: "food", label: "Agro", sub: "Chicken, eggs, goat & meat", icon: Beef, color: C.amber, soft: C.amberSoft, role: "Agro Manager" },
   { key: "hospitality", label: "Hospitality", sub: "Rooms & bookings", icon: BedDouble, color: C.coral, soft: C.coralSoft, role: "Hospitality Manager" },
 ];
 
 const VALUE_PROPS = [
   { icon: Truck, label: "Transport", value: "Fleet, drivers & trips" },
-  { icon: Beef, label: "Butchery", value: "Chicken, eggs, goat & meat" },
+  { icon: Beef, label: "Agro", value: "Chicken, eggs, goat & meat" },
   { icon: BedDouble, label: "Hospitality", value: "Rooms & bookings" },
 ];
 

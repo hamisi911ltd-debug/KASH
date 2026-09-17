@@ -1,4 +1,4 @@
-/* Users & roles. Only Super Admin / Admin can reach this view. */
+/* Users & roles. Only Super Admin / Admin / Director can reach this view. */
 import React, { useMemo, useState } from "react";
 import { Plus, Pencil, Trash2, ShieldCheck, Users as UsersIcon, Mail } from "lucide-react";
 import { C, ROLE_VIEWS, ROLES, DIVISIONS, divisionLabel } from "../lib/constants";
@@ -14,10 +14,11 @@ import { statusTone } from "../lib/constants";
 const ACCESS_SUMMARY = {
   "Super Admin": "Everything, including users & settings",
   Admin: "Everything, including users & settings",
+  Director: "Everything, including users & settings",
   "Transport Manager": "Transport, Expenses, Reports, Messages",
   Driver: "Only their own trips & vehicle, Payments",
-  "Butchery Manager": "Butchery, Expenses, Reports, Messages",
-  "Butchery Attendant": "Only orders they rang up, Payments",
+  "Agro Manager": "Agro, Expenses, Reports, Messages",
+  "Agro Attendant": "Only orders they rang up, Payments",
   "Hospitality Manager": "Hospitality, Expenses, Reports, Messages",
   "Hospitality Attendant": "Rooms & bookings (no money figures), Payments",
   Accountant: "All divisions read-only, Expenses & Reports",

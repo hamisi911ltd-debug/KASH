@@ -30,10 +30,10 @@ function Messages() {
 
   const contacts = useMemo(() => {
     // A division worker (writeOwn, not write) can only message Admin -
-    // departments stay siloed; only Admin sees across all of them.
+    // departments stay siloed; only Admin/Super Admin/Director sees across all of them.
     const pool = data.users.filter((u) => u.name !== me);
     const others = caps.writeOwn && !caps.write
-      ? pool.filter((u) => u.role === "Super Admin" || u.role === "Admin")
+      ? pool.filter((u) => u.role === "Super Admin" || u.role === "Admin" || u.role === "Director")
       : pool;
     return others
       .map((u) => {

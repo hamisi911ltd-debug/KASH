@@ -67,11 +67,11 @@ export const CHART_PALETTE = {
 
 export const DIVISIONS = ["Transport", "Food", "Hospitality", "General"];
 
-/* The "Food" division is configured here as a butchery business -
+/* The "Food" division is configured here as an agro business -
    chicken, eggs, goat and other meats - the internal value stays
    "Food" (it's the key everything else joins on), but everywhere the
-   user reads it, it should say "Butchery". */
-export const DIVISION_LABEL = { Transport: "Transport", Food: "Butchery", Hospitality: "Hospitality", General: "General" };
+   user reads it, it should say "Agro". */
+export const DIVISION_LABEL = { Transport: "Transport", Food: "Agro", Hospitality: "Hospitality", General: "General" };
 export const divisionLabel = (d) => DIVISION_LABEL[d] || d;
 export const divisionOptions = (arr = DIVISIONS) => arr.map((d) => ({ value: d, label: divisionLabel(d) }));
 
@@ -85,10 +85,11 @@ export const DIVISION_META = {
 export const ROLES = [
   "Super Admin",
   "Admin",
+  "Director",
   "Transport Manager",
   "Driver",
-  "Butchery Manager",
-  "Butchery Attendant",
+  "Agro Manager",
+  "Agro Attendant",
   "Hospitality Manager",
   "Hospitality Attendant",
   "Accountant",
@@ -96,24 +97,27 @@ export const ROLES = [
 ];
 
 /* Which views each role may open. "overview" and "all" are company-wide
-   (every division's totals) - only Admin/Super Admin/Accountant get
-   them. A division Manager's own page (transport/food/hospitality) IS
-   their overview; they, their Expenses and their Reports all stay
-   scoped to that one division server-side (see scopeData in the
-   Worker) - a Transport Manager oversees Transport, full stop, never
-   Butchery or Hospitality's figures. The three "worker" roles (Driver,
-   Butchery Attendant, Hospitality Attendant) are scoped even further
-   (see `writeOwn` below) to just their own records within that
-   division. Every role gets "updates" (Messages) - workers raise
-   things straight to their manager/Admin there, it's not just an
+   (every division's totals) - only Admin/Super Admin/Director/Accountant
+   get them (Director is a third full-access, company-wide seat - same
+   shape as Admin - for company leadership, kept as its own role purely
+   for identity/org-chart clarity). A division Manager's own page
+   (transport/food/hospitality) IS their overview; they, their Expenses
+   and their Reports all stay scoped to that one division server-side
+   (see scopeData in the Worker) - a Transport Manager oversees
+   Transport, full stop, never Agro or Hospitality's figures. The three
+   "worker" roles (Driver, Agro Attendant, Hospitality Attendant) are
+   scoped even further (see `writeOwn` below) to just their own records
+   within that division. Every role gets "updates" (Messages) - workers
+   raise things straight to their manager/Admin there, it's not just an
    admin broadcast channel. */
 export const ROLE_VIEWS = {
   "Super Admin": "*",
   Admin: "*",
+  Director: "*",
   "Transport Manager": ["transport", "maintenance", "payments", "expenses", "reports", "updates", "settings"],
   Driver: ["transport", "maintenance", "payments", "updates", "settings"],
-  "Butchery Manager": ["food", "payments", "expenses", "reports", "updates", "settings"],
-  "Butchery Attendant": ["food", "payments", "updates", "settings"],
+  "Agro Manager": ["food", "payments", "expenses", "reports", "updates", "settings"],
+  "Agro Attendant": ["food", "payments", "updates", "settings"],
   "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "updates", "settings"],
   "Hospitality Attendant": ["hospitality", "payments", "updates", "settings"],
   Accountant: ["overview", "all", "payments", "expenses", "reports", "updates", "settings"],
@@ -129,10 +133,11 @@ export const ROLE_VIEWS = {
 export const ROLE_CAPS = {
   "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
   Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
+  Director: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
   "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
   Driver: { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
-  "Butchery Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
-  "Butchery Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
+  "Agro Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
+  "Agro Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
   "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
   "Hospitality Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
   Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true },

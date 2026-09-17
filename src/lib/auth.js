@@ -33,10 +33,11 @@ export const DEMO_MODE = import.meta.env?.VITE_DEMO_MODE === "true";
     when DEMO_MODE is on. */
 export const DEMO_LOGINS = [
   { email: "wanjiku@kash.co.ke", name: "Wanjiku Kamande", role: "Super Admin" },
+  { email: "james.n@kash.co.ke", name: "James Njoroge", role: "Director" },
   { email: "peter.m@kash.co.ke", name: "Peter Mwangi", role: "Transport Manager" },
   { email: "kevin.mutua@gmail.com", name: "Kevin Mutua", role: "Driver" },
-  { email: "aisha.n@kash.co.ke", name: "Aisha Noor", role: "Butchery Manager" },
-  { email: "brian.o@kash.co.ke", name: "Brian Oduya", role: "Butchery Attendant" },
+  { email: "aisha.n@kash.co.ke", name: "Aisha Noor", role: "Agro Manager" },
+  { email: "brian.o@kash.co.ke", name: "Brian Oduya", role: "Agro Attendant" },
   { email: "daniel.k@kash.co.ke", name: "Daniel Kiprop", role: "Hospitality Manager" },
   { email: "linet.m@kash.co.ke", name: "Linet Moraa", role: "Hospitality Attendant" },
   { email: "victor.k@kash.co.ke", name: "Victor Kimani", role: "Accountant" },

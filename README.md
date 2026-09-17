@@ -33,9 +33,10 @@ use password `kash` (or any non-empty text). Each account maps to a role:
 | Account | Role | Sees |
 | --- | --- | --- |
 | Wanjiku Kamande | Super Admin | everything |
+| James Njoroge | Director | everything |
 | Victor Kimani | Accountant | all divisions (read-only), Expenses, Reports |
 | Peter Mwangi | Transport Manager | Transport + finance |
-| Aisha Noor | Butchery Manager | Butchery + finance |
+| Aisha Noor | Agro Manager | Agro + finance |
 | Daniel Kiprop | Hospitality Manager | Hospitality + finance |
 | Mercy Adhiambo | Staff | Overview, Updates, Settings |
 
@@ -48,15 +49,15 @@ You can also deep-link a role for demos/screenshots:
   week-over-week change, a card per service (tap to open), one live 12-week
   *money in vs money out* bar chart, latest activity in plain words, and a short
   "needs a look" list.
-- **Filters** — every list (Transport, Butchery, Hospitality, Payments, Expenses, Reports,
+- **Filters** — every list (Transport, Agro, Hospitality, Payments, Expenses, Reports,
   Users) has a filter row: search, status / method / category / division dropdowns and a
   date range, with one-tap Clear.
-- **Top tabs** — Home / Transport / Butchery / Hospitality sit as big buttons above every
+- **Top tabs** — Home / Transport / Agro / Hospitality sit as big buttons above every
   page (and as the mobile bottom bar); the sidebar keeps the rest.
 - **All Services** — the three divisions side by side.
 - **Transport** — trips, fleet, drivers. Trip fare is income; trip fuel/tolls
   post to the ledger automatically. Service-interval and insurance alerts.
-- **Butchery** — chicken, eggs, goat and other meats: orders, product list with
+- **Agro** — chicken, eggs, goat and other meats: orders, product list with
   per-item margin. Order value is income; product cost posts automatically as COGS.
 - **Hospitality** — bookings and rooms. A room's *occupied* state is derived from
   live bookings, never set by hand. Daily occupancy chart.

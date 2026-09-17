@@ -237,7 +237,7 @@ function buildTrips() {
   return all.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
-/* ---------------------------------------------------------- butchery (chicken, eggs, goat & other meats) */
+/* ---------------------------------------------------------- agro (chicken, eggs, goat & other meats) */
 
 export const SEED_MENU = [
   { id: "m1", name: "Whole chicken (broiler)", category: "Whole birds", price: 750, cost: 560, active: true },
@@ -479,11 +479,12 @@ function buildPayments() {
 
 export const SEED_USERS = [
   { id: "u1", name: "Wanjiku Kamande", email: "wanjiku@kash.co.ke", phone: "+254 722 001 001", role: "Super Admin", division: "All", status: "Active", lastActive: TODAY },
+  { id: "u11", name: "James Njoroge", email: "james.n@kash.co.ke", phone: "+254 722 001 011", role: "Director", division: "All", status: "Active", lastActive: TODAY },
   { id: "u2", name: "Peter Mwangi", email: "peter.m@kash.co.ke", phone: "+254 722 001 002", role: "Transport Manager", division: "Transport", status: "Active", lastActive: TODAY },
   { id: "u7", name: "Kevin Mutua", email: "kevin.mutua@gmail.com", phone: "+254 701 887 001", role: "Driver", division: "Transport", driverId: "d7", status: "Active", lastActive: TODAY },
   { id: "u8", name: "Fatuma Ali", email: "fatuma.ali@gmail.com", phone: "+254 708 664 002", role: "Driver", division: "Transport", driverId: "d8", status: "Active", lastActive: dayOf(1) },
-  { id: "u3", name: "Aisha Noor", email: "aisha.n@kash.co.ke", phone: "+254 722 001 003", role: "Butchery Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
-  { id: "u9", name: "Brian Oduya", email: "brian.o@kash.co.ke", phone: "+254 722 001 009", role: "Butchery Attendant", division: "Food", status: "Active", lastActive: dayOf(1) },
+  { id: "u3", name: "Aisha Noor", email: "aisha.n@kash.co.ke", phone: "+254 722 001 003", role: "Agro Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
+  { id: "u9", name: "Brian Oduya", email: "brian.o@kash.co.ke", phone: "+254 722 001 009", role: "Agro Attendant", division: "Food", status: "Active", lastActive: dayOf(1) },
   { id: "u4", name: "Daniel Kiprop", email: "daniel.k@kash.co.ke", phone: "+254 722 001 004", role: "Hospitality Manager", division: "Hospitality", status: "Active", lastActive: dayOf(2) },
   { id: "u10", name: "Linet Moraa", email: "linet.m@kash.co.ke", phone: "+254 722 001 010", role: "Hospitality Attendant", division: "Hospitality", status: "Active", lastActive: dayOf(1) },
   { id: "u6", name: "Victor Kimani", email: "victor.k@kash.co.ke", phone: "+254 722 001 006", role: "Accountant", division: "All", status: "Active", lastActive: dayOf(1) },
@@ -533,7 +534,7 @@ function buildMessages() {
     { id: genId("msg"), from: D, to: A, text: "Room 302 deep clean is done, marking it available.", ts: min(90), read: false },
     { id: genId("msg"), from: V, to: A, text: "VAT return is drafted, I'll file it before the 20th.", ts: min(1500), read: true },
     { id: genId("msg"), from: A, to: V, text: "Thanks Victor.", ts: min(1480), read: true },
-    { id: genId("msg"), from: M, to: A, text: "Butchery paid - KSh 8,500 cash. Receipt with me.", ts: min(45), read: false },
+    { id: genId("msg"), from: M, to: A, text: "Greenspan Butchery paid - KSh 8,500 cash. Receipt with me.", ts: min(45), read: false },
   ];
 }
 

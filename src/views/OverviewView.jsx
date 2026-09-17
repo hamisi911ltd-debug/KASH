@@ -20,7 +20,7 @@ import { Page } from "../components/Page.jsx";
 const SEV_VAR = { high: "var(--coral)", warn: "var(--amber)", info: "var(--blue)" };
 const SERVICES = [
   { name: "Transport", label: "Transport", key: "transport", icon: Truck, color: C.emerald },
-  { name: "Food", label: "Butchery", key: "food", icon: Beef, color: C.amber },
+  { name: "Food", label: "Agro", key: "food", icon: Beef, color: C.amber },
   { name: "Hospitality", label: "Hospitality", key: "hospitality", icon: BedDouble, color: C.coral },
 ];
 
