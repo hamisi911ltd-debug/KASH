@@ -1,8 +1,9 @@
-/* Food division: orders, menu, sales mix and kitchen margin.
-   A Chicken Attendant session sees this same page, self-scoped to
-   just the orders they personally rang up - see `restricted` below. */
+/* Butchery division (chicken, eggs, goat and other meats): orders,
+   product list, sales mix and margin. A Butchery Attendant session
+   sees this same page, self-scoped to just the orders they
+   personally rang up - see `restricted` below. */
 import React, { useMemo, useState } from "react";
-import { Plus, Drumstick, ArrowDownRight, ArrowUpRight, Clock, Pencil, Trash2, ShoppingBag, BookMarked, Smartphone } from "lucide-react";
+import { Plus, ArrowDownRight, ArrowUpRight, Clock, Pencil, Trash2, ShoppingBag, BookMarked, Smartphone } from "lucide-react";
 import { C } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import { resolvePeriod, computeMetrics, inRange, CANCELLED } from "../lib/derive";
@@ -18,7 +19,7 @@ import { statusTone, ORDER_STATUSES, PAYMENT_STATUSES } from "../lib/constants";
 export default function FoodView() {
   const { data, prefs, session } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
-  const restricted = !caps.write; // a Chicken Attendant only sees orders they rang up
+  const restricted = !caps.write; // a Butchery Attendant only sees orders they rang up
   const [tab, setTab] = useState("orders");
   const [q, setQ] = useState("");
   const [oStatus, setOStatus] = useState("All");
@@ -94,8 +95,8 @@ export default function FoodView() {
   return (
     <Page>
       <PageHeader
-        title={restricted ? "My Sales" : "Chicken"}
-        subtitle={restricted ? "Orders you've rung up." : "Orders, stock and margin."}
+        title={restricted ? "My Sales" : "Butchery"}
+        subtitle={restricted ? "Orders you've rung up." : "Chicken, eggs, goat and other meats - orders, stock and margin."}
         actions={(caps.write || caps.writeOwn) && (
           <>
             {caps.write && <Button variant="outline" size="sm" onClick={() => openForm("menuItem")}><Plus size={14} /> Product</Button>}

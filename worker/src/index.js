@@ -93,7 +93,7 @@ async function requireUser(request, env) {
 
 /** Whether a role can reach a given division's page at all - the same
     question the sidebar/top-tabs ask client-side, re-asked server-side
-    so a Driver can't reach Chicken/Hospitality data (or write to it)
+    so a Driver can't reach Butchery/Hospitality data (or write to it)
     just by calling the API directly instead of clicking through the UI. */
 function sees(role, view) {
   return canOpenView(role, view) || canOpenView(role, "overview") || canOpenView(role, "all");
@@ -111,7 +111,7 @@ const COLLECTION_VIEW = {
 /** What a restricted role may see over the wire - never trust the client's
     idea of its own role; this is the real, server-side enforcement. Two
     layers: which DIVISIONS a role has no view into at all get zeroed out
-    entirely (a Driver's session never even receives Chicken/Hospitality
+    entirely (a Driver's session never even receives Butchery/Hospitality
     data), then within a division a "writeOwn" worker is narrowed further
     to just their own rows. */
 function scopeData(full, user) {
@@ -151,7 +151,7 @@ function scopeData(full, user) {
     d.trips = []; d.vehicles = []; d.drivers = []; d.maintenance = [];
   }
 
-  if (user.role === "Chicken Attendant") {
+  if (user.role === "Butchery Attendant") {
     d.orders = full.orders.filter((o) => o.createdBy === user.name);
   } else if (!sees(user.role, "food")) {
     d.orders = [];

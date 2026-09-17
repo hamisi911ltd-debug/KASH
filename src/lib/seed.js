@@ -237,7 +237,7 @@ function buildTrips() {
   return all.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
-/* ---------------------------------------------------------- food */
+/* ---------------------------------------------------------- butchery (chicken, eggs, goat & other meats) */
 
 export const SEED_MENU = [
   { id: "m1", name: "Whole chicken (broiler)", category: "Whole birds", price: 750, cost: 560, active: true },
@@ -248,6 +248,10 @@ export const SEED_MENU = [
   { id: "m6", name: "Gizzards (kg)", category: "Cuts", price: 400, cost: 260, active: true },
   { id: "m7", name: "Eggs (tray of 30)", category: "Eggs", price: 480, cost: 380, active: true },
   { id: "m8", name: "Bulk broilers (per bird)", category: "Wholesale", price: 700, cost: 520, active: true },
+  { id: "m9", name: "Goat meat (kg)", category: "Goat meat", price: 750, cost: 560, active: true },
+  { id: "m10", name: "Goat ribs (kg)", category: "Goat meat", price: 700, cost: 520, active: true },
+  { id: "m11", name: "Whole goat (dressed)", category: "Whole animals", price: 16000, cost: 12500, active: true },
+  { id: "m12", name: "Beef (kg)", category: "Beef", price: 650, cost: 480, active: true },
 ];
 
 const CUSTOMERS = [
@@ -380,6 +384,7 @@ const OVERHEADS = [
 const ADHOC = [
   { division: "Food", category: "Supplies", vendor: "Kenchic Ltd", range: [6000, 22000] },
   { division: "Food", category: "Supplies", vendor: "Local poultry farm", range: [4000, 14000] },
+  { division: "Food", category: "Supplies", vendor: "Kiserian Livestock Market", range: [8000, 35000] },
   { division: "Transport", category: "Maintenance", vendor: "Autoworks Garage", range: [8000, 48000] },
   { division: "Hospitality", category: "Supplies", vendor: "Linen & Co.", range: [3000, 18000] },
   { division: "General", category: "Marketing", vendor: "Digital Hub Agency", range: [5000, 30000] },
@@ -424,6 +429,7 @@ function buildExpenses() {
 const PAY_OUT = [
   { party: "Kenchic Ltd", division: "Food", category: "Supplies" },
   { party: "Local poultry farm", division: "Food", category: "Supplies" },
+  { party: "Kiserian Livestock Market", division: "Food", category: "Supplies" },
   { party: "Autoworks Garage", division: "Transport", category: "Maintenance" },
   { party: "Shell Kilimani", division: "Transport", category: "Fuel" },
   { party: "Linen & Co.", division: "Hospitality", category: "Supplies" },
@@ -476,8 +482,8 @@ export const SEED_USERS = [
   { id: "u2", name: "Peter Mwangi", email: "peter.m@kash.co.ke", phone: "+254 722 001 002", role: "Transport Manager", division: "Transport", status: "Active", lastActive: TODAY },
   { id: "u7", name: "Kevin Mutua", email: "kevin.mutua@gmail.com", phone: "+254 701 887 001", role: "Driver", division: "Transport", driverId: "d7", status: "Active", lastActive: TODAY },
   { id: "u8", name: "Fatuma Ali", email: "fatuma.ali@gmail.com", phone: "+254 708 664 002", role: "Driver", division: "Transport", driverId: "d8", status: "Active", lastActive: dayOf(1) },
-  { id: "u3", name: "Aisha Noor", email: "aisha.n@kash.co.ke", phone: "+254 722 001 003", role: "Food Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
-  { id: "u9", name: "Brian Oduya", email: "brian.o@kash.co.ke", phone: "+254 722 001 009", role: "Chicken Attendant", division: "Food", status: "Active", lastActive: dayOf(1) },
+  { id: "u3", name: "Aisha Noor", email: "aisha.n@kash.co.ke", phone: "+254 722 001 003", role: "Butchery Manager", division: "Food", status: "Active", lastActive: dayOf(1) },
+  { id: "u9", name: "Brian Oduya", email: "brian.o@kash.co.ke", phone: "+254 722 001 009", role: "Butchery Attendant", division: "Food", status: "Active", lastActive: dayOf(1) },
   { id: "u4", name: "Daniel Kiprop", email: "daniel.k@kash.co.ke", phone: "+254 722 001 004", role: "Hospitality Manager", division: "Hospitality", status: "Active", lastActive: dayOf(2) },
   { id: "u10", name: "Linet Moraa", email: "linet.m@kash.co.ke", phone: "+254 722 001 010", role: "Hospitality Attendant", division: "Hospitality", status: "Active", lastActive: dayOf(1) },
   { id: "u6", name: "Victor Kimani", email: "victor.k@kash.co.ke", phone: "+254 722 001 006", role: "Accountant", division: "All", status: "Active", lastActive: dayOf(1) },

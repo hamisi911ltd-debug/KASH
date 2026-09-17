@@ -4,7 +4,7 @@
    Consumed by <FormModal>; keyed by action id.
    ============================================================ */
 import {
-  Truck, Wallet, Drumstick, BedDouble, Users, Bell, Car, DoorOpen, UserPlus, BookMarked,
+  Truck, Wallet, Beef, BedDouble, Users, Bell, Car, DoorOpen, UserPlus, BookMarked,
   ArrowLeftRight, MessagesSquare, Wrench, PlayCircle, StopCircle,
 } from "lucide-react";
 import { TODAY } from "./seed";
@@ -25,7 +25,7 @@ export function buildForms(data, session) {
   const roomOpts = () => data.rooms.map((r) => ({ value: r.id, label: `Room ${r.number} - ${r.type} (KSh ${r.price.toLocaleString()})` }));
   const menuOpts = () => data.menu.filter((m) => m.active).map((m) => ({ value: m.id, label: `${m.name} - KSh ${m.price.toLocaleString()}` }));
 
-  /* A worker (Driver / Chicken Attendant / Hospitality Attendant) can only
+  /* A worker (Driver / Butchery Attendant / Hospitality Attendant) can only
      message Admin - never sideways to other workers, and never a manager
      in a different department. Departments stay siloed from each other;
      only Admin/Super Admin sees across all of them. */
@@ -198,13 +198,13 @@ export function buildForms(data, session) {
       ],
     },
 
-    /* ---------------- Food ---------------- */
+    /* ---------------- Butchery (chicken, eggs, goat & other meats) ---------------- */
     order: {
       key: "order",
       collection: "orders",
       view: "food",
       label: "New Order",
-      icon: Drumstick,
+      icon: Beef,
       title: "Take an order",
       subtitle: "Pick a product and quantity - the total fills in.",
       submitLabel: "Add order",
@@ -239,7 +239,7 @@ export function buildForms(data, session) {
       submitLabel: "Add product",
       fields: [
         { key: "name", label: "Name", type: "text", placeholder: "e.g. Whole chicken (broiler)", required: true },
-        { key: "category", label: "Category", type: "select", options: opt(["Whole birds", "Cuts", "Eggs", "Wholesale", "Live birds"]) },
+        { key: "category", label: "Category", type: "select", options: opt(["Whole birds", "Cuts", "Eggs", "Goat meat", "Beef", "Whole animals", "Wholesale", "Live birds"]) },
         { key: "price", label: "Selling price (KSh)", type: "number", min: 0, required: true },
         {
           key: "cost", label: "Cost price (KSh)", type: "number", min: 0,

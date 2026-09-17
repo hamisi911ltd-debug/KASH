@@ -110,7 +110,7 @@ export default function FilterBar({ search, selects = [], range, onClear, dirty,
 
 /* Small helper: builds a select config with an "all" sentinel.
    Pass labelFor(v) if the raw value shouldn't be shown verbatim
-   (e.g. mapping the "Food" division to its "Chicken" display name). */
+   (e.g. mapping the "Food" division to its "Butchery" display name). */
 export function selectFilter(key, label, values, state, setState, { allLabel, labelFor } = {}) {
   return {
     key,

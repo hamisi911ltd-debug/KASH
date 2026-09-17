@@ -6,7 +6,7 @@
 import React, { useMemo } from "react";
 import {
   TrendingUp, ChevronRight, AlertTriangle, Activity, ArrowUpRight, ArrowDownRight,
-  Truck, Drumstick, BedDouble,
+  Truck, Beef, BedDouble,
 } from "lucide-react";
 import { C, divisionLabel } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
@@ -20,7 +20,7 @@ import { Page } from "../components/Page.jsx";
 const SEV_VAR = { high: "var(--coral)", warn: "var(--amber)", info: "var(--blue)" };
 const SERVICES = [
   { name: "Transport", label: "Transport", key: "transport", icon: Truck, color: C.emerald },
-  { name: "Food", label: "Chicken", key: "food", icon: Drumstick, color: C.amber },
+  { name: "Food", label: "Butchery", key: "food", icon: Beef, color: C.amber },
   { name: "Hospitality", label: "Hospitality", key: "hospitality", icon: BedDouble, color: C.coral },
 ];
 

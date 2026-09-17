@@ -1,6 +1,6 @@
 /* Side-by-side comparison of all three divisions. */
 import React, { useMemo } from "react";
-import { Truck, Drumstick, BedDouble, ArrowRight } from "lucide-react";
+import { Truck, Beef, BedDouble, ArrowRight } from "lucide-react";
 import { C, divisionLabel } from "../lib/constants";
 import { formatKES } from "../lib/format";
 import { resolvePeriod, computeMetrics } from "../lib/derive";
@@ -12,7 +12,7 @@ import { PageHeader, Page } from "../components/Page.jsx";
 
 const META = {
   Transport: { icon: Truck, color: C.emerald, view: "transport", unit: "trips" },
-  Food: { icon: Drumstick, color: C.amber, view: "food", unit: "orders" },
+  Food: { icon: Beef, color: C.amber, view: "food", unit: "orders" },
   Hospitality: { icon: BedDouble, color: C.coral, view: "hospitality", unit: "bookings" },
 };
 
