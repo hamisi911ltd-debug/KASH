@@ -5,7 +5,7 @@
    ============================================================ */
 import {
   Truck, Wallet, Beef, BedDouble, Users, Bell, Car, DoorOpen, UserPlus, BookMarked,
-  ArrowLeftRight, MessagesSquare, Wrench, PlayCircle, StopCircle,
+  ArrowLeftRight, MessagesSquare, Wrench, PlayCircle, StopCircle, Globe,
 } from "lucide-react";
 import { TODAY } from "./seed";
 import {
@@ -407,6 +407,33 @@ export function buildForms(data, session) {
         { key: "status", label: "Status", type: "select", options: opt(["Invited", "Active", "Suspended"]), default: "Invited", hint: "A new invite always starts as Invited; they become Active when they set a password." },
       ],
     },
+    /* ---------------- Website (a division Manager's own listings on the
+       public marketing site) ---------------- */
+    listing: {
+      key: "listing",
+      collection: "listings",
+      view: "website",
+      label: "Add Listing",
+      icon: Globe,
+      title: "Publish a listing",
+      subtitle: "Shows up on the public website once Active is on.",
+      submitLabel: "Publish",
+      // A division Manager's listing is always their own division - no
+      // picker needed. A company-wide role (Super Admin/Admin/Director)
+      // picks which division it's for.
+      autofillFor: session?.division && session.division !== "All" ? () => ({ division: session.division }) : undefined,
+      fields: [
+        ...(session?.division && session.division !== "All" ? [] : [
+          { key: "division", label: "Division", type: "select", options: divisionOptions(["Transport", "Food", "Hospitality"]), default: "Transport" },
+        ]),
+        { key: "title", label: "Title", type: "text", placeholder: "e.g. Modern 2 Bedroom Apartment", required: true },
+        { key: "description", label: "Description", type: "textarea", placeholder: "What a visitor sees on the website" },
+        { key: "price", label: "Price (KSh)", type: "number", min: 0 },
+        { key: "meta", label: "Extra details", type: "text", placeholder: "e.g. 2 Beds · 2 Baths · Wi-Fi, or 450/kg" },
+        { key: "imageUrl", label: "Photo URL", type: "text", placeholder: "https://...", hint: "A link to a photo. Uploading photos directly isn't supported yet." },
+        { key: "active", label: "Active (visible on the website)", type: "toggle", default: true },
+      ],
+    },
     reminder: {
       key: "reminder",
       collection: "reminders",
@@ -425,4 +452,4 @@ export function buildForms(data, session) {
 }
 
 /** The subset shown in the top bar's quick-create menu and command palette. */
-export const QUICK_ACTION_KEYS = ["payment", "message", "trip", "startTrip", "maintenance", "order", "booking", "expense", "reminder", "vehicle", "room", "user"];
+export const QUICK_ACTION_KEYS = ["payment", "message", "trip", "startTrip", "maintenance", "order", "booking", "expense", "reminder", "vehicle", "room", "user", "listing"];

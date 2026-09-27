@@ -114,13 +114,13 @@ export const ROLE_VIEWS = {
   "Super Admin": "*",
   Admin: "*",
   Director: "*",
-  "Transport Manager": ["transport", "maintenance", "payments", "expenses", "reports", "updates", "settings"],
+  "Transport Manager": ["transport", "maintenance", "payments", "expenses", "reports", "website", "updates", "settings"],
   Driver: ["transport", "maintenance", "payments", "updates", "settings"],
-  "Agro Manager": ["food", "payments", "expenses", "reports", "updates", "settings"],
+  "Agro Manager": ["food", "payments", "expenses", "reports", "website", "updates", "settings"],
   "Agro Attendant": ["food", "payments", "updates", "settings"],
-  "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "updates", "settings"],
+  "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "website", "updates", "settings"],
   "Hospitality Attendant": ["hospitality", "payments", "updates", "settings"],
-  Accountant: ["overview", "all", "payments", "expenses", "reports", "updates", "settings"],
+  Accountant: ["overview", "all", "payments", "expenses", "reports", "approvals", "updates", "settings"],
   Staff: ["overview", "payments", "updates", "settings"],
 };
 
@@ -131,25 +131,38 @@ export const ROLE_VIEWS = {
    record (their own included) or manage the fleet/menu/rooms - only
    an Admin/Manager corrects the books. */
 /* `approve` = may give (or refuse) the formal sign-off on a big expense or
-   order - the head of that department, or company leadership. It is
-   deliberately its own flag, separate from `write`: the Accountant can
-   write/edit records company-wide but is not a department head and does
-   not approve anything, and an approver can never sign off their own
-   entry (enforced server-side in worker/src/index.js - see
-   assertMayApprove) so "who gave the go-ahead" is always a second person. */
+   order: the head of that department, company leadership, or the
+   Accountant (company-wide financial oversight - sees and can act on the
+   same approvals log as Super Admin/Admin/Director). Deliberately its own
+   flag, separate from `write`, since a worker role or a division Manager
+   outside their own division still can't approve anything. An approver
+   can never sign off their own entry either way (enforced server-side in
+   worker/src/index.js - see assertMayApprove) so "who gave the go-ahead"
+   is always a second person. */
+/* `manageListings` = may publish/edit/remove what appears about their own
+   division on the public marketing site (see WebsiteView.jsx). Company-wide
+   roles may manage any division's listings; a division Manager only their
+   own. Deliberately excludes the Accountant (financial oversight, not a
+   marketing one) and every worker/writeOwn role. */
 export const ROLE_CAPS = {
-  "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true },
-  Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true },
-  Director: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true },
-  "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true },
-  Driver: { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
-  "Agro Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true },
-  "Agro Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
-  "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true },
-  "Hospitality Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
-  Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
-  Staff: { write: false, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
+  "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: true },
+  Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: true },
+  Director: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: true },
+  "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: true },
+  Driver: { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
+  "Agro Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: true },
+  "Agro Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
+  "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: true },
+  "Hospitality Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
+  Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: true, manageListings: false },
+  Staff: { write: false, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
 };
+
+/* Which marketing-site page a division's listings show up on - used by
+   WebsiteView's "View live site" link and by the marketing site itself
+   when it asks the API for a division's listings. */
+export const DIVISION_SITE_PAGE = { Transport: "transport", Food: "agro", Hospitality: "hospitality" };
+export const MARKETING_SITE_URL = "https://kash-suppliers.pages.dev";
 
 /* Records at or above these amounts (KSh) are created "Pending" and need an
    approver's explicit decision. This is a governance record only - it does

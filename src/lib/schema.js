@@ -16,6 +16,10 @@ export const COLLECTIONS = [
   // Append-only: written only by the /approve endpoint (worker/src/index.js),
   // never through the generic collection routes. See docs/APPROVALS.md.
   "approvals",
+  // What a division Manager publishes about their department on the public
+  // marketing site (kash-suppliers...) - see WebsiteView.jsx and the
+  // worker's GET /api/public/listings.
+  "listings",
 ];
 
 const num = (v) => (v === "" || v == null ? 0 : Number(v) || 0);
@@ -175,16 +179,31 @@ export const normalisers = {
     priority: v.priority || "Normal",
     done: !!v.done,
   }),
+  listings: (v) => ({
+    division: v.division || "Transport",
+    title: (v.title || "").trim(),
+    description: (v.description || "").trim(),
+    price: num(v.price),
+    // Free-form, so it fits whatever the division needs to say (beds/baths
+    // for a property, kg/piece for a product, capacity for a vehicle)
+    // without a different rigid schema per division.
+    meta: (v.meta || "").trim(),
+    // Only ever an http(s) link - never trust this as HTML, and never
+    // resolve a bare/relative path someone pasted in by mistake.
+    imageUrl: /^https?:\/\//.test(String(v.imageUrl || "").trim()) ? v.imageUrl.trim() : "",
+    active: v.active === false || v.active === "false" ? false : true,
+  }),
 };
 
 export const ID_PREFIX = {
   trips: "t", vehicles: "v", drivers: "d", maintenance: "mx", orders: "o", menu: "m",
   rooms: "r", bookings: "b", expenses: "e", payments: "pay", users: "u", reminders: "rem", messages: "msg", notifications: "n",
-  approvals: "ap",
+  approvals: "ap", listings: "li",
 };
 
 /* Human labels used in toasts and confirmation copy. */
 export const SINGULAR = {
   trips: "Trip", vehicles: "Vehicle", drivers: "Driver", maintenance: "Maintenance record", orders: "Order", menu: "Menu item",
   rooms: "Room", bookings: "Booking", expenses: "Expense", payments: "Payment", users: "User", reminders: "Reminder", messages: "Message",
+  listings: "Website listing",
 };

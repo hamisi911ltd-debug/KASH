@@ -31,6 +31,12 @@ import { hashPassword, verifyPassword, passwordNeedsUpgrade, clampIterations, si
    Unset = any origin, which is how it behaved before - fine for the demo,
    NOT for a real deployment. Sessions travel in an Authorization header (not
    cookies), so a wrong origin can't ride on someone's login either way. */
+// Genuinely public, read-only, non-sensitive data - meant to be fetched
+// from a different origin (the marketing site) even once ALLOWED_ORIGINS
+// is locked to the app's own domain for everything else.
+const PUBLIC_PATHS = ["/api/public/"];
+const isPublicPath = (pathname) => PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+
 function corsHeaders(request, env) {
   const headers = {
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -38,6 +44,10 @@ function corsHeaders(request, env) {
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
+  if (isPublicPath(new URL(request.url).pathname)) {
+    headers["Access-Control-Allow-Origin"] = "*";
+    return headers;
+  }
   const allowed = String(env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
   const origin = request.headers.get("Origin") || "";
   if (!allowed.length) headers["Access-Control-Allow-Origin"] = "*";
@@ -50,7 +60,9 @@ function decorate(response, request, env) {
   const res = new Response(response.body, response);
   for (const [k, v] of Object.entries(corsHeaders(request, env))) res.headers.set(k, v);
   res.headers.set("X-Content-Type-Options", "nosniff");
-  res.headers.set("Cache-Control", "no-store");
+  // A public listing is fine to cache briefly at the edge/browser; every
+  // authenticated response stays no-store, same as before.
+  if (!res.headers.has("Cache-Control")) res.headers.set("Cache-Control", "no-store");
   res.headers.set("Referrer-Policy", "no-referrer");
   res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   return res;
@@ -490,6 +502,21 @@ const app = {
         return json({ ok: true }, 202);
       }
 
+      // The marketing site (a different, unauthenticated origin) reads a
+      // division's published listings here - no sign-in, and only ever the
+      // handful of fields that are meant to be public. This is the ONE
+      // place the API answers a request with no session at all beyond
+      // register/login, so it never touches anything but this one
+      // read-only, already-public collection.
+      if (url.pathname === "/api/public/listings" && request.method === "GET") {
+        const division = url.searchParams.get("division") || "";
+        const all = await getCollection(env, "listings");
+        const pub = all
+          .filter((l) => l.active && (!division || l.division === division))
+          .map((l) => ({ id: l.id, division: l.division, title: l.title, description: l.description, price: l.price, meta: l.meta, imageUrl: l.imageUrl }));
+        return json(pub, 200, { "Cache-Control": "public, max-age=60" });
+      }
+
       if (url.pathname === "/api/auth/register" && request.method === "POST") {
         const body = await readJson(request);
         await assertHuman(env, request, body.turnstileToken);
@@ -671,6 +698,11 @@ const app = {
       // them is its own permission - `write` (which every division Manager
       // and the Accountant hold) is deliberately not enough.
       if (collection === "users" && !caps.manageUsers) return err("You don't have access to manage users.", 403);
+      // Same idea for the public website's listings: `write` isn't enough on
+      // its own (it would let the Accountant publish to the site), and a
+      // division Manager may only ever touch their own division's listings.
+      if (collection === "listings" && !caps.manageListings) return err("You don't have access to manage the website's listings.", 403);
+      const listingDivisionOk = (division) => !user.division || user.division === "All" || user.division === division;
       const rows = await getCollection(env, collection);
 
       if (request.method === "POST") {
@@ -695,6 +727,13 @@ const app = {
           body = { ...stripServerFields(body, SERVER_ONLY_USER_FIELDS), status: "Invited" };
           audit("user.invited", { by: user.id, email, role: body.role || "Staff" });
         }
+        if (collection === "listings") {
+          // A division-locked manager's own request may not even send a
+          // division (it's implied); default to their own before checking,
+          // rather than treating "not specified" as "not allowed".
+          body.division = body.division || user.division || "Transport";
+          if (!listingDivisionOk(body.division)) return err("You can only publish listings for your own division.", 403);
+        }
         let values = { ...body, createdBy: user.name };
         if ((collection === "trips" || collection === "maintenance") && user.role === "Driver" && user.driverId) {
           const vehicles = await getCollection(env, "vehicles");
@@ -718,6 +757,9 @@ const app = {
         if (!existing) return err("Not found.", 404);
         const allowed = caps.write || (caps.writeOwn && ownsRecord(collection, existing, user));
         if (!allowed) return err("You don't have access to edit that.", 403);
+        if (collection === "listings" && !listingDivisionOk(existing.division)) {
+          return err("You can only edit listings for your own division.", 403);
+        }
         const body = stripServerFields(await readJson(request), collection === "users" ? SERVER_ONLY_USER_FIELDS : ["id"]);
         const shaped = normalisers[collection] ? normalisers[collection]({ ...existing, ...body }, {}) : body;
         if (collection === "users") {
@@ -739,6 +781,9 @@ const app = {
           (existing && ownsRecord(collection, existing, user) && (collection === "messages" || caps.writeOwn));
         if (!allowed) return err("You don't have access to change that.", 403);
         if (!existing) return err("Not found.", 404);
+        if (collection === "listings" && !listingDivisionOk(existing.division)) {
+          return err("You can only edit listings for your own division.", 403);
+        }
         // A patch can never rewrite who a record is, who made it, or (for
         // people) anything only the server sets - that includes passwordHash.
         const body = stripServerFields(await readJson(request), [...(collection === "users" ? SERVER_ONLY_USER_FIELDS : ["id"]), "createdBy"]);
@@ -752,7 +797,14 @@ const app = {
       }
 
       if (request.method === "DELETE") {
-        if (!caps.deleteAny) return err("You don't have access to delete that.", 403);
+        if (collection === "listings") {
+          if (!caps.manageListings) return err("You don't have access to delete that.", 403);
+          const existing = rows.find((r) => r.id === id);
+          if (!existing) return err("Not found.", 404);
+          if (!listingDivisionOk(existing.division)) return err("You can only remove listings for your own division.", 403);
+        } else if (!caps.deleteAny) {
+          return err("You don't have access to delete that.", 403);
+        }
         if (collection === "users") {
           const target = rows.find((r) => r.id === id);
           if (!target) return err("Not found.", 404);

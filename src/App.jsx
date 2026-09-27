@@ -22,6 +22,7 @@ import MessagesView from "./views/MessagesView.jsx";
 import SettingsView from "./views/SettingsView.jsx";
 import PaymentsView from "./views/PaymentsView.jsx";
 import ApprovalsView from "./views/ApprovalsView.jsx";
+import WebsiteView from "./views/WebsiteView.jsx";
 
 import { Sidebar, MobileDrawer, MobileBottomNav, Topbar } from "./components/Layout.jsx";
 import { FormModal, ConfirmDialog, MpesaPrompt } from "./components/Modal.jsx";
@@ -43,6 +44,7 @@ const VIEWS = {
   expenses: ExpensesView,
   reports: ReportsView,
   approvals: ApprovalsView,
+  website: WebsiteView,
   users: UsersView,
   updates: MessagesView,
   settings: SettingsView,
@@ -98,9 +100,10 @@ export default function App() {
       if (form.view && !canOpenView(role, form.view)) return false;
       if (form.alwaysAllowed) return true; // e.g. messaging - not a write privilege, just needs the page
       if (form.key === "payment") return caps.payments;
+      if (form.key === "listing") return caps.manageListings;
       return caps.write || (form.ownAllowed && caps.writeOwn);
     },
-    [role, caps.write, caps.writeOwn, caps.payments]
+    [role, caps.write, caps.writeOwn, caps.payments, caps.manageListings]
   );
   /* A full manager/admin gets the fast top-right "+New" menu across every
      collection they touch. A division worker (writeOwn, not write) already

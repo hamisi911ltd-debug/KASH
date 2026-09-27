@@ -102,11 +102,20 @@ describe("giving the go-ahead", () => {
     expect(res.status).toBe(200);
   });
 
-  it("the Accountant cannot approve, even though they can write everywhere", async () => {
+  it("the Accountant can approve too - company-wide financial oversight, same as Super Admin/Director", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
     const expense = await makeExpense(env, t.agroMgr.token);
     const res = await call(env, "POST", `/api/expenses/${expense.id}/approve`, { token: t.acct.token, body: { decision: "approve" } });
+    expect(res.status).toBe(200);
+    expect(res.body.approval).toMatchObject({ status: "Approved", by: t.acct.user.name, role: "Accountant" });
+  });
+
+  it("a Transport Manager still can't approve outside their own division, even though the Accountant can", async () => {
+    const env = makeEnv();
+    const t = await bootstrap(env, staff);
+    const order = await makeOrder(env, t.agroMgr.token); // Agro/Food order
+    const res = await call(env, "POST", `/api/orders/${order.id}/approve`, { token: t.transMgr.token, body: { decision: "approve" } });
     expect(res.status).toBe(403);
   });
 
@@ -137,6 +146,15 @@ describe("the company-wide trail (Super Admin / Admin / Director only)", () => {
     await call(env, "POST", `/api/expenses/${expense.id}/approve`, { token: t.director.token, body: { decision: "approve" } });
     const sync = await call(env, "GET", "/api/sync", { token: t.agroMgr.token });
     expect(sync.body.data.approvals).toEqual([]);
+  });
+
+  it("the Accountant sees the same company-wide log, same as Super Admin/Director", async () => {
+    const env = makeEnv();
+    const t = await bootstrap(env, staff);
+    const expense = await makeExpense(env, t.agroMgr.token);
+    await call(env, "POST", `/api/expenses/${expense.id}/approve`, { token: t.director.token, body: { decision: "approve" } });
+    const sync = await call(env, "GET", "/api/sync", { token: t.acct.token });
+    expect(sync.body.data.approvals).toHaveLength(1);
   });
 
   it("Director's sync shows who approved what, their role, and when", async () => {

@@ -1,7 +1,7 @@
 /* Navigation model, shared by the sidebar, top tabs, mobile nav and command palette. */
 import {
   LayoutDashboard, LayoutGrid, Truck, Beef, BedDouble, Wrench,
-  Users, BarChart3, Wallet, Bell, Settings, ArrowLeftRight, MessagesSquare, ClipboardCheck,
+  Users, BarChart3, Wallet, Bell, Settings, ArrowLeftRight, MessagesSquare, ClipboardCheck, Globe,
 } from "lucide-react";
 import { C } from "../lib/constants";
 
@@ -15,9 +15,12 @@ export const NAV = [
   { key: "payments", label: "Payments", icon: ArrowLeftRight, group: "finance" },
   { key: "expenses", label: "Expenses", icon: Wallet, group: "finance" },
   { key: "reports", label: "Reports", icon: BarChart3, group: "finance" },
-  // Super Admin/Admin/Director only (see ROLE_VIEWS) - a department head
-  // sees a decision on the record itself, not this cross-division log.
+  // Super Admin/Admin/Director/Accountant (see ROLE_VIEWS) - a department
+  // head sees a decision on the record itself, not this cross-division log.
   { key: "approvals", label: "Approvals", icon: ClipboardCheck, group: "admin" },
+  // Division Managers + company-wide roles (see ROLE_VIEWS/manageListings) -
+  // publish what shows up about their department on the public website.
+  { key: "website", label: "Website", icon: Globe, group: "operations" },
   { key: "users", label: "Users & Roles", icon: Users, group: "admin" },
   { key: "updates", label: "Messages", icon: MessagesSquare, group: "admin" },
   { key: "settings", label: "Settings", icon: Settings, group: "admin" },
