@@ -430,7 +430,7 @@ export function buildForms(data, session) {
         { key: "description", label: "Description", type: "textarea", placeholder: "What a visitor sees on the website" },
         { key: "price", label: "Price (KSh)", type: "number", min: 0 },
         { key: "meta", label: "Extra details", type: "text", placeholder: "e.g. 2 Beds · 2 Baths · Wi-Fi, or 450/kg" },
-        { key: "imageUrl", label: "Photo URL", type: "text", placeholder: "https://...", hint: "A link to a photo. Uploading photos directly isn't supported yet." },
+        { key: "imageUrl", label: "Photo", type: "image" },
         { key: "active", label: "Active (visible on the website)", type: "toggle", default: true },
       ],
     },

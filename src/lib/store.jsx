@@ -198,6 +198,12 @@ export function StoreProvider({ children }) {
     [token, session?.division]
   );
 
+  /** A division Manager's photo for one of their website listings -
+      uploaded straight to the server (see FormModal's "image" field type),
+      never held as a data: URL in app state. */
+  const uploadImage = useCallback((file, division) => api.uploadImage(token, file, division), [token]);
+  const deleteImage = useCallback((key) => api.deleteImage(token, key), [token]);
+
   /** Delete, then hand back an async restore closure so the toast can
       offer Undo (the restored record gets a new id - the delete already
       really happened server-side, so undo re-creates rather than un-deletes). */
@@ -265,13 +271,13 @@ export function StoreProvider({ children }) {
       session, setSession,
       toasts, toast, dismissToast,
       notify, notifyIfEnabled,
-      addRecord, updateRecord, patchRecord, removeRecord, approveRecord,
+      addRecord, updateRecord, patchRecord, removeRecord, approveRecord, uploadImage, deleteImage,
       markNotificationRead, markAllNotificationsRead, clearNotifications,
       toggleReminder, patchRoom, updateCompany, exportBackup,
     }),
     [
       data, dataLoading, dataError, resync, prefs, theme, session, toasts, toast, dismissToast, notify, notifyIfEnabled,
-      addRecord, updateRecord, patchRecord, removeRecord, approveRecord, markNotificationRead,
+      addRecord, updateRecord, patchRecord, removeRecord, approveRecord, uploadImage, deleteImage, markNotificationRead,
       markAllNotificationsRead, clearNotifications, toggleReminder, patchRoom, updateCompany, exportBackup,
     ]
   );

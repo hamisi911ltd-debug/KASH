@@ -36,6 +36,25 @@ async function request(path, { method = "GET", token, body } = {}) {
   return payload;
 }
 
+/** A raw binary upload - unlike `request()`, the body is the file itself,
+    not JSON, so this can't go through the same helper. */
+async function uploadImage(token, file, division) {
+  const qs = division ? `?division=${encodeURIComponent(division)}` : "";
+  const res = await fetch(`${API_BASE}/api/uploads${qs}`, {
+    method: "POST",
+    headers: { "Content-Type": file.type, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: file,
+  });
+  let payload = null;
+  try {
+    payload = await res.json();
+  } catch {
+    /* empty body */
+  }
+  if (!res.ok) throw new ApiError(payload?.error || `Upload failed (${res.status})`, res.status);
+  return payload; // { url, key }
+}
+
 export const api = {
   register: (body) => request("/api/auth/register", { method: "POST", body }),
   login: (body) => request("/api/auth/login", { method: "POST", body }),
@@ -48,4 +67,6 @@ export const api = {
   approve: (token, collection, id, decision, note) =>
     request(`/api/${collection}/${id}/approve`, { method: "POST", token, body: { decision, note } }),
   updateCompany: (token, body) => request("/api/company", { method: "PATCH", token, body }),
+  uploadImage,
+  deleteImage: (token, key) => request(`/api/uploads/${key}`, { method: "DELETE", token }),
 };

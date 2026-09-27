@@ -87,6 +87,30 @@ function err(message, status = 400, headers) {
 
 const MAX_BODY_BYTES = 200_000;
 
+/* ---------------------------------------------------------- uploaded images */
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+const IMAGE_EXT_FOR_TYPE = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+const SITE_DIVISIONS = ["Transport", "Food", "Hospitality"];
+
+/** GET /uploads/<key> - public, no auth, so an image can show on the public
+    marketing site as well as inside the app. Everything else about images
+    (uploading, deleting) needs a session; only serving them is open. */
+async function serveUpload(env, pathname) {
+  const key = decodeURIComponent(pathname.slice("/uploads/".length));
+  if (!key) return err("Not found.", 404);
+  const obj = await env.IMAGES.get(key);
+  if (!obj) return err("Not found.", 404);
+  return new Response(obj.body, {
+    headers: {
+      "Content-Type": obj.httpMetadata?.contentType || "application/octet-stream",
+      // The key is random and never reused, so a cached copy never goes stale.
+      "Cache-Control": "public, max-age=31536000, immutable",
+      ETag: obj.httpEtag,
+    },
+  });
+}
+
 async function readJson(request) {
   const declared = Number(request.headers.get("Content-Length") || 0);
   if (declared > MAX_BODY_BYTES) throw new HttpError("That request is too large.", 413);
@@ -486,6 +510,9 @@ const app = {
   async fetch(request, env) {
     if (request.method === "OPTIONS") return new Response(null, { status: 204 });
     if (request.method === "GET" && new URL(request.url).pathname === "/api/health") return health(env);
+    if (request.method === "GET" && new URL(request.url).pathname.startsWith("/uploads/")) {
+      return serveUpload(env, new URL(request.url).pathname);
+    }
     if (!env.JWT_SECRET) {
       console.error("JWT_SECRET is not set - refusing to serve requests.");
       return err("The server isn't configured yet.", 500);
@@ -637,6 +664,48 @@ const app = {
         const full = { company: await getCompany(env) };
         for (const name of COLLECTIONS) full[name] = await getCollection(env, name);
         return json({ user: stripSecret(user), data: scopeData(full, user) });
+      }
+
+      // /api/uploads - a division Manager's photo for one of their website
+      // listings. The file itself lives in R2 (see wrangler.toml); this just
+      // hands back the URL that goes straight into a listing's imageUrl.
+      if (url.pathname === "/api/uploads" && request.method === "POST") {
+        if (!caps.manageListings) return err("You don't have access to upload images.", 403);
+        const contentType = (request.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase();
+        const ext = IMAGE_EXT_FOR_TYPE[contentType];
+        if (!ext) return err("Only JPEG, PNG, WEBP or GIF images are accepted.", 400);
+        const declared = Number(request.headers.get("Content-Length") || 0);
+        if (declared > MAX_IMAGE_BYTES) return err("That image is too large (max 5MB).", 413);
+        const bytes = await request.arrayBuffer();
+        if (bytes.byteLength > MAX_IMAGE_BYTES) return err("That image is too large (max 5MB).", 413);
+        if (bytes.byteLength === 0) return err("The image was empty.", 400);
+
+        const requestedDivision = url.searchParams.get("division") || user.division || "Transport";
+        if (!SITE_DIVISIONS.includes(requestedDivision)) return err("Unknown division.", 400);
+        if (user.division && user.division !== "All" && user.division !== requestedDivision) {
+          return err("You can only upload images for your own division.", 403);
+        }
+
+        const key = `listings/${requestedDivision}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        await env.IMAGES.put(key, bytes, { httpMetadata: { contentType } });
+        audit("image.uploaded", { by: user.id, division: requestedDivision, key, bytes: bytes.byteLength });
+        return json({ url: `${url.origin}/uploads/${key}`, key }, 201);
+      }
+
+      // DELETE /api/uploads/<key> - <key> itself contains slashes
+      // (listings/<Division>/<file>), so this can't go through the generic
+      // /api/:collection/:id router below.
+      if (parts[0] === "uploads" && request.method === "DELETE") {
+        if (!caps.manageListings) return err("You don't have access to delete images.", 403);
+        const key = parts.slice(1).join("/");
+        if (!key) return err("Missing image.", 400);
+        const [, keyDivision] = key.split("/");
+        if (user.division && user.division !== "All" && user.division !== keyDivision) {
+          return err("You can only remove images for your own division.", 403);
+        }
+        await env.IMAGES.delete(key);
+        audit("image.deleted", { by: user.id, key });
+        return json({ ok: true });
       }
 
       // /api/:collection/:id/approve - checked before the generic routes

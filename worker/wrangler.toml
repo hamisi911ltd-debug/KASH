@@ -11,6 +11,13 @@ enabled = true
 binding = "KASH_KV"
 id = "2be14a2fc4ef46d6b6b91cde129bd461"
 
+# Photos a division Manager uploads for their website listings. Served back
+# out at GET /uploads/<key> by the Worker itself (see worker/src/index.js) -
+# no separate domain or public-bucket setup needed.
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "kash-listing-images"
+
 # Settings below are NOT inherited by [env.live] - each deployment states its
 # own. Secrets (JWT_SECRET) are set with `npx wrangler secret put JWT_SECRET`
 # and never live in this file.
@@ -38,3 +45,6 @@ enabled = true
 [[env.live.kv_namespaces]]
 binding = "KASH_KV"
 id = "1cd697611f9142a0b8b49f1de345d027"
+[[env.live.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "kash-listing-images-live"

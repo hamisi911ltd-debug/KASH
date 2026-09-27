@@ -12,24 +12,43 @@ export function fakeKV() {
   };
 }
 
+/** A minimal stand-in for an R2 bucket - just enough of .get/.put/.delete
+    for the image-upload routes, with the same shape a real R2Object's
+    .get() reply has (body, httpMetadata, httpEtag). */
+export function fakeR2() {
+  const store = new Map();
+  return {
+    store,
+    async put(key, value, opts = {}) { store.set(key, { value, httpMetadata: opts.httpMetadata || {} }); },
+    async get(key) {
+      const entry = store.get(key);
+      if (!entry) return null;
+      return { body: entry.value, httpMetadata: entry.httpMetadata, httpEtag: `"${key}"` };
+    },
+    async delete(key) { store.delete(key); },
+  };
+}
+
 export const STRONG = "Sup3rSecret99";
 export const TERMS = { acceptedTerms: true };
 
 export function makeEnv(overrides = {}) {
-  return { KASH_KV: fakeKV(), JWT_SECRET: "test-secret-".repeat(4), ...overrides };
+  return { KASH_KV: fakeKV(), IMAGES: fakeR2(), JWT_SECRET: "test-secret-".repeat(4), ...overrides };
 }
 
-/** Call the API. Returns { status, body, headers }. */
-export async function call(env, method, path, { token, body, ip = "203.0.113.7", origin, raw } = {}) {
+/** Call the API. Returns { status, body, headers }. Pass `bytes` (+ optional
+    `contentType`) instead of `body`/`raw` to send a binary upload. */
+export async function call(env, method, path, { token, body, ip = "203.0.113.7", origin, raw, bytes, contentType } = {}) {
   const headers = { "CF-Connecting-IP": ip };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (origin) headers.Origin = origin;
-  if (body !== undefined || raw !== undefined) headers["Content-Type"] = "application/json";
+  if (bytes !== undefined) headers["Content-Type"] = contentType || "application/octet-stream";
+  else if (body !== undefined || raw !== undefined) headers["Content-Type"] = "application/json";
   const res = await worker.fetch(
     new Request(`https://api.test${path}`, {
       method,
       headers,
-      body: raw !== undefined ? raw : body !== undefined ? JSON.stringify(body) : undefined,
+      body: bytes !== undefined ? bytes : raw !== undefined ? raw : body !== undefined ? JSON.stringify(body) : undefined,
     }),
     env
   );

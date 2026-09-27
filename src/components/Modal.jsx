@@ -4,10 +4,14 @@
    treatment so the app feels like a single coherent product.
    ============================================================ */
 import React, { useEffect, useRef, useState } from "react";
-import { X, AlertTriangle, Smartphone, CheckCircle2, ShieldCheck, ShieldX } from "lucide-react";
+import { X, AlertTriangle, Smartphone, CheckCircle2, ShieldCheck, ShieldX, Upload } from "lucide-react";
 import { C } from "../lib/constants";
 import { Button, Spinner } from "./ui.jsx";
 import { formatKES } from "../lib/format";
+import { API_BASE } from "../lib/api.js";
+
+const MAX_IMAGE_MB = 5;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 function Overlay({ onClose, children, align = "center" }) {
   useEffect(() => {
@@ -33,10 +37,97 @@ function Overlay({ onClose, children, align = "center" }) {
 
 /* ---------------------------------------------------------- field renderer */
 
-function Field({ field, value, onChange, error }) {
+/** Upload/replace/remove one photo. `onUploadImage(file, division)` and
+    `onDeleteImage(key)` are supplied by whoever opened the form (see
+    App.jsx) - this component just drives the picker, the preview and the
+    error state, so it stays reusable for any collection with a photo. */
+function ImageField({ field, value, onChange, error, onUploadImage, onDeleteImage, division }) {
+  const [busy, setBusy] = useState(false);
+  const [localError, setLocalError] = useState("");
+  const inputRef = useRef(null);
+
+  const pick = () => inputRef.current?.click();
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    setLocalError("");
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setLocalError("Please choose a JPEG, PNG, WEBP or GIF image.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setLocalError(`That photo is too large - please keep it under ${MAX_IMAGE_MB}MB.`);
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await onUploadImage(file, division);
+      onChange(field.key, res.url);
+    } catch (e) {
+      setLocalError(e.message || "Couldn't upload that photo.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removeImage = async () => {
+    const prefix = `${API_BASE}/uploads/`;
+    if (value && value.startsWith(prefix) && onDeleteImage) {
+      try {
+        await onDeleteImage(value.slice(prefix.length));
+      } catch {
+        /* best-effort - the field still clears either way */
+      }
+    }
+    onChange(field.key, "");
+  };
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+        className="hidden"
+        onChange={(e) => handleFile(e.target.files?.[0])}
+      />
+      {value ? (
+        <div className="flex items-center gap-3">
+          <img src={value} alt="" className="h-16 w-16 rounded-lg object-cover border" style={{ borderColor: C.line }} />
+          <div className="flex flex-col gap-1.5">
+            <Button type="button" variant="outline" size="xs" onClick={pick} disabled={busy}>
+              {busy ? <Spinner size={12} /> : <Upload size={12} />} Replace
+            </Button>
+            <button type="button" onClick={removeImage} disabled={busy} className="text-xs font-semibold text-left" style={{ color: C.coral }}>
+              Remove photo
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={pick}
+          disabled={busy}
+          className="w-full rounded-lg border border-dashed flex flex-col items-center justify-center gap-1.5 py-5 text-sm transition-colors"
+          style={{ borderColor: error || localError ? C.coral : C.line, background: C.surface, color: C.muted }}
+        >
+          {busy ? <Spinner size={16} color={C.blue} /> : <Upload size={16} />}
+          <span>{busy ? "Uploading..." : "Click to upload a photo"}</span>
+          <span className="text-xs" style={{ color: C.faint }}>JPEG, PNG, WEBP or GIF - up to {MAX_IMAGE_MB}MB</span>
+        </button>
+      )}
+      {localError && <p className="text-xs mt-1.5 font-medium" style={{ color: C.coral }}>{localError}</p>}
+    </div>
+  );
+}
+
+function Field({ field, value, onChange, error, onUploadImage, onDeleteImage, division }) {
   const base = "w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition-colors focus:border-transparent";
   const style = { borderColor: error ? C.coral : C.line, background: C.surface };
 
+  if (field.type === "image") {
+    return <ImageField field={field} value={value} onChange={onChange} error={error} onUploadImage={onUploadImage} onDeleteImage={onDeleteImage} division={division} />;
+  }
   if (field.type === "select") {
     const opts = typeof field.options === "function" ? field.options() : field.options;
     return (
@@ -95,7 +186,7 @@ function Field({ field, value, onChange, error }) {
  * A field may set `computed(values)` to derive a live read-only preview line,
  * and `visibleIf(values)` to conditionally show/hide itself.
  */
-export function FormModal({ config, initial, onClose, onSubmit }) {
+export function FormModal({ config, initial, onClose, onSubmit, onUploadImage, onDeleteImage }) {
   const isEdit = !!(initial && initial.id);
   const [values, setValues] = useState(() => {
     const base = {};
@@ -178,7 +269,10 @@ export function FormModal({ config, initial, onClose, onSubmit }) {
                   )}
                 </div>
                 <div ref={i === 0 ? firstRef : undefined} tabIndex={i === 0 ? -1 : undefined}>
-                  <Field field={f} value={values[f.key]} onChange={handleChange} error={errors[f.key]} />
+                  <Field
+                    field={f} value={values[f.key]} onChange={handleChange} error={errors[f.key]}
+                    onUploadImage={onUploadImage} onDeleteImage={onDeleteImage} division={values.division}
+                  />
                 </div>
                 {errors[f.key] && <p className="text-xs mt-1 font-medium" style={{ color: C.coral }}>{errors[f.key]}</p>}
                 {f.hint && !errors[f.key] && <p className="text-xs mt-1" style={{ color: C.faint }}>{f.hint}</p>}

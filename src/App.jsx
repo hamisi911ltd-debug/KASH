@@ -54,7 +54,7 @@ export default function App() {
   const store = useStore();
   const {
     data, dataLoading, dataError, session, setSession, prefs, setPrefs,
-    addRecord, updateRecord, patchRecord, removeRecord, patchRoom, toast, notifyIfEnabled,
+    addRecord, updateRecord, patchRecord, removeRecord, patchRoom, toast, notifyIfEnabled, uploadImage, deleteImage,
   } = store;
 
   const [activeView, setActiveView] = useState("overview");
@@ -372,6 +372,8 @@ export default function App() {
             initial={modal.initial}
             onClose={() => setModal(null)}
             onSubmit={handleFormSubmit}
+            onUploadImage={uploadImage}
+            onDeleteImage={deleteImage}
           />
         )}
 
