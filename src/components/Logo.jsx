@@ -1,36 +1,21 @@
-/* KASH wordmark - four brand-coloured letter tiles. */
+/* KASH wordmark - the official logo artwork (public/logo.png), background
+   removed so it drops cleanly onto any surface (light sidebar, dark mode,
+   the login screen's gradient panel). `size` sets its height; width follows
+   the artwork's own aspect ratio automatically. */
 import React from "react";
 
-export const KASH_TILES = [
-  { ch: "K", bg: "#1E6CA8" },
-  { ch: "A", bg: "#159C8C" },
-  { ch: "S", bg: "#DFA21C" },
-  { ch: "H", bg: "#C82E58" },
-];
+const ASPECT = 1120 / 561; // logo.png's own width/height
 
-export function KashLogo({ size = 24, gap = 3, tagline = false, onDark = false }) {
-  const radius = Math.max(3, Math.round(size * 0.18));
+export function KashLogo({ size = 24, tagline = false, onDark = false }) {
+  const height = Math.round(size * 1.7); // the artwork has padding baked in; this keeps the "KASH" glyphs visually matched to the old tile size
   return (
     <div className="inline-flex flex-col">
-      <div className="flex" style={{ gap }}>
-        {KASH_TILES.map((t) => (
-          <span
-            key={t.ch}
-            className="inline-flex items-center justify-center font-display font-extrabold select-none"
-            style={{
-              width: size,
-              height: size,
-              borderRadius: radius,
-              background: t.bg,
-              color: "#fff",
-              fontSize: Math.round(size * 0.58),
-              lineHeight: 1,
-            }}
-          >
-            {t.ch}
-          </span>
-        ))}
-      </div>
+      <img
+        src="/logo.png"
+        alt="KASH"
+        draggable={false}
+        style={{ height, width: Math.round(height * ASPECT), objectFit: "contain" }}
+      />
       {tagline && (
         <span
           className="mt-1.5 font-medium tracking-wide"

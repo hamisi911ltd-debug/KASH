@@ -38,26 +38,13 @@
       }
       html.dark #kash-splash { background: #08202e; }
       #kash-splash.hide { opacity: 0; pointer-events: none; }
-      #kash-splash .tiles { display: flex; gap: 7px; }
-      #kash-splash .t {
-        width: 46px;
-        height: 46px;
-        border-radius: 13px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-weight: 800;
-        font-size: 27px;
-        line-height: 1;
+      #kash-splash .mark {
+        height: 64px;
+        width: auto;
         opacity: 0;
-        transform: translateY(16px) scale(0.8);
-        animation: kashTileIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards, kashTileFloat 2.4s ease-in-out infinite;
+        transform: translateY(14px) scale(0.92);
+        animation: kashMarkIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards, kashMarkFloat 2.4s ease-in-out 0.6s infinite;
       }
-      #kash-splash .t:nth-child(1) { background: #1e6ca8; animation-delay: 0.04s, 0.7s; }
-      #kash-splash .t:nth-child(2) { background: #159c8c; animation-delay: 0.14s, 0.8s; }
-      #kash-splash .t:nth-child(3) { background: #dfa21c; animation-delay: 0.24s, 0.9s; }
-      #kash-splash .t:nth-child(4) { background: #c82e58; animation-delay: 0.34s, 1s; }
       #kash-splash .bar {
         width: 128px;
         height: 3px;
@@ -84,8 +71,8 @@
         animation: kashFadeIn 0.5s ease 0.5s forwards;
       }
       html.dark #kash-splash .cap { color: #8fa7b4; }
-      @keyframes kashTileIn { to { opacity: 1; transform: none; } }
-      @keyframes kashTileFloat {
+      @keyframes kashMarkIn { to { opacity: 1; transform: none; } }
+      @keyframes kashMarkFloat {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-5px); }
       }
@@ -95,7 +82,7 @@
       }
       @keyframes kashFadeIn { to { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) {
-        #kash-splash .t, #kash-splash .cap, #kash-splash .bar::after { animation: kashFadeIn 0.2s ease forwards; }
+        #kash-splash .mark, #kash-splash .cap, #kash-splash .bar::after { animation: kashFadeIn 0.2s ease forwards; }
       }
       /* app fades up once it takes over */
       #root { animation: kashAppIn 0.5s ease 0.15s both; }
@@ -104,9 +91,7 @@
   </head>
   <body>
     <div id="kash-splash" aria-hidden="true">
-      <div class="tiles">
-        <span class="t">K</span><span class="t">A</span><span class="t">S</span><span class="t">H</span>
-      </div>
+      <img class="mark" src="/logo.png" alt="" />
       <div class="bar"></div>
       <div class="cap">One Platform. Many Solutions.</div>
     </div>
