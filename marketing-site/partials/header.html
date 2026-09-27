@@ -1,0 +1,52 @@
+<header>
+  <div class="wrap header-row">
+    <a class="logo" href="index.html">
+      <img class="logo-mark" src="logo.png" alt="KASH">
+      <span class="word"><small>GENERAL SUPPLIERS</small></span>
+    </a>
+    <nav class="primary" aria-label="Primary">
+      <a href="index.html" data-nav="home">Home</a>
+      <div class="nav-item" id="servicesNavItem">
+        <button type="button" class="nav-drop-toggle" id="servicesToggle" aria-haspopup="true" aria-expanded="false">
+          Services <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="nav-drop-menu" role="menu" aria-label="Services">
+          <a href="transport.html" data-nav="transport" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
+            Transport &amp; Logistics
+          </a>
+          <a href="agro.html" data-nav="agro" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8"><path d="M12 3c0 8-4 9-4 14a4 4 0 0 0 8 0c0-5-4-6-4-14Z"/><path d="M12 12c3-1 5-3 5-7-4 0-6 2-7 5"/></svg>
+            Agro &amp; Food Supply
+          </a>
+          <a href="hospitality.html" data-nav="hospitality" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+            Properties &amp; Hospitality
+          </a>
+        </div>
+      </div>
+      <a href="about.html" data-nav="about">About</a>
+      <a href="contact.html" data-nav="contact">Contact</a>
+    </nav>
+    <a class="btn btn-navy btn-sm" href="contact.html" id="headerCta">Get in Touch <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <button class="menu-btn" id="menuOpen" aria-label="Open menu" aria-expanded="false" aria-controls="mobileNav">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-panel" role="dialog" aria-modal="true" aria-label="Menu">
+    <button class="mobile-nav-close" id="menuClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+    <a href="index.html" data-nav="home">Home</a>
+    <span class="mnav-label">Services</span>
+    <a href="transport.html" data-nav="transport">Transport &amp; Logistics</a>
+    <a href="agro.html" data-nav="agro">Agro &amp; Food Supply</a>
+    <a href="hospitality.html" data-nav="hospitality">Properties &amp; Hospitality</a>
+    <a href="about.html" data-nav="about">About</a>
+    <a href="contact.html" data-nav="contact">Contact</a>
+    <a class="btn btn-navy" href="contact.html">Get in Touch <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </div>
+</div>

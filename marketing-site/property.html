@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6EFE1">
+<meta name="description" content="Property details - KASH General Suppliers.">
+<title>Property Details - KASH General Suppliers</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="hospitality">
+
+<div id="site-header"></div>
+
+<main>
+  <div class="wrap" style="padding-top:22px;">
+    <nav class="crumb" aria-label="Breadcrumb">
+      <a href="index.html">Home</a>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+      <a href="hospitality.html">Hospitality</a>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+      <span id="crumbTitle" style="color:var(--navy); font-weight:700;">Property</span>
+    </nav>
+  </div>
+
+  <!-- shown only if the ?id= in the link doesn't match a real listing -->
+  <div id="notFound" class="wrap prop-not-found" style="display:none;">
+    <h1 style="font-size:1.6rem;">We couldn't find that property</h1>
+    <p style="margin-top:10px; color:var(--ink-2);">It may have been taken down, or the link might be out of date.</p>
+    <div style="margin-top:20px;">
+      <a class="btn btn-navy" href="hospitality.html">Back to Properties</a>
+    </div>
+  </div>
+
+  <div id="propertyRoot">
+    <section class="section-tight" style="padding-top:14px;">
+      <div class="wrap">
+        <a class="back-link" href="hospitality.html" style="margin-bottom:16px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+          Back to all properties
+        </a>
+
+        <div class="prop-detail" style="margin-top:16px;">
+          <div>
+            <div class="prop-detail-photo">
+              <img id="propPhoto" src="" alt="">
+            </div>
+
+            <div style="margin-top:22px;">
+              <span class="eyebrow" id="propType" style="color:var(--coral);"></span>
+              <h1 id="propTitle" style="font-size:clamp(1.5rem,3vw,2rem); margin-top:6px;"></h1>
+              <div class="prop-loc" style="margin-top:8px; font-size:.9rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>
+                <span id="propLoc"></span>
+              </div>
+              <p id="propDesc" style="margin-top:16px; color:var(--ink-2); line-height:1.7;"></p>
+
+              <ul class="prop-detail-amenities">
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M5 10V7a1 1 0 0 1 1-1h4v4"/></svg><span id="propBeds"></span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16v4a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z"/><path d="M6 12V6a2 2 0 0 1 4 0"/></svg><span id="propBaths"></span></li>
+                <li id="wifiItem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg><span>Free Wi-Fi</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 4v5c0 5-3 7.5-7 9-4-1.5-7-4-7-9V7l7-4Z"/></svg><span>Safe &amp; Secure</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="prop-detail-card">
+            <p class="price"><span id="propPrice"></span> <span>/ night</span></p>
+            <a class="btn btn-navy" id="bookBtn" href="#" target="_blank" rel="noopener">
+              Book via WhatsApp
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <p class="note">Message us to check availability and confirm your dates.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------------- location / map ---------------------------------------------------------- -->
+    <section class="section-tight">
+      <div class="wrap">
+        <div class="grid-head">
+          <div>
+            <span class="eyebrow" style="color:var(--teal);">Location</span>
+            <h2>Find This Property</h2>
+            <p style="margin-top:6px; color:var(--ink-2); font-size:.9rem;">Around <span id="mapAreaLabel" style="font-weight:700; color:var(--navy);"></span>. Use the map below or tap Get Directions to open it in Google Maps.</p>
+          </div>
+          <a class="btn btn-line-navy btn-sm" id="directionsBtn" href="#" target="_blank" rel="noopener">
+            Get Directions
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+        <div style="border-radius:20px; overflow:hidden; box-shadow:var(--shadow-md); border:1px solid var(--line);">
+          <iframe id="mapFrame" title="Map showing the property's approximate location" src="" width="100%" height="360" style="display:block; border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <p style="margin-top:10px; font-size:.76rem; color:var(--muted);">Pin shows the general area, not the exact building - message us on WhatsApp for the precise address before you head over.</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<script src="properties-data.js"></script>
+<script src="shared.js"></script>
+<script>
+  (function () {
+    function qs(name) { return new URLSearchParams(location.search).get(name); }
+    var id = qs("id");
+    var p = (typeof PROPERTIES !== "undefined" ? PROPERTIES : []).find(function (x) { return x.slug === id; });
+    var root = document.getElementById("propertyRoot");
+    var notFound = document.getElementById("notFound");
+
+    if (!p) {
+      root.style.display = "none";
+      notFound.style.display = "block";
+      document.title = "Property Not Found - KASH General Suppliers";
+      return;
+    }
+
+    document.title = p.title + " - KASH General Suppliers";
+    document.getElementById("crumbTitle").textContent = p.title;
+    document.getElementById("propTitle").textContent = p.title;
+    document.getElementById("propType").textContent = p.type;
+    document.getElementById("propLoc").textContent = p.location;
+    document.getElementById("propDesc").textContent = p.description;
+    var photo = document.getElementById("propPhoto");
+    photo.src = p.image;
+    photo.alt = p.title;
+    document.getElementById("propPrice").textContent = "KES " + p.price.toLocaleString();
+    document.getElementById("propBeds").textContent = p.beds + (p.beds === 1 ? " Bed" : " Beds");
+    document.getElementById("propBaths").textContent = p.baths + (p.baths === 1 ? " Bath" : " Baths");
+    document.getElementById("wifiItem").style.display = p.wifi ? "" : "none";
+    document.getElementById("bookBtn").href = p.whatsapp;
+
+    // Key-less Google Maps embed - no API key or billing account needed,
+    // works for a place name/area. Swap mapQuery in properties-data.js for
+    // a real address (or "lat,lng") once you have one for this property.
+    var query = encodeURIComponent(p.mapQuery || p.location);
+    document.getElementById("mapFrame").src = "https://www.google.com/maps?q=" + query + "&output=embed";
+    document.getElementById("directionsBtn").href = "https://www.google.com/maps/search/?api=1&query=" + query;
+    document.getElementById("mapAreaLabel").textContent = p.mapQuery || p.location;
+  })();
+</script>
+</body>
+</html>
