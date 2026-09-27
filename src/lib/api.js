@@ -45,5 +45,7 @@ export const api = {
   update: (token, collection, id, body) => request(`/api/${collection}/${id}`, { method: "PUT", token, body }),
   patch: (token, collection, id, body) => request(`/api/${collection}/${id}`, { method: "PATCH", token, body }),
   remove: (token, collection, id) => request(`/api/${collection}/${id}`, { method: "DELETE", token }),
+  approve: (token, collection, id, decision, note) =>
+    request(`/api/${collection}/${id}/approve`, { method: "POST", token, body: { decision, note } }),
   updateCompany: (token, body) => request("/api/company", { method: "PATCH", token, body }),
 };

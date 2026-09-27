@@ -19,23 +19,202 @@
    of "what can this role do", not two that can drift apart.
    ============================================================ */
 import { COLLECTIONS, ID_PREFIX, normalisers } from "../../src/lib/schema.js";
+import { APPROVABLE_COLLECTIONS } from "../../src/lib/constants.js";
 import { capsForRole, canOpenView } from "../../src/lib/auth.js";
 import { setToday } from "../../src/lib/seed.js";
 import { toISODate } from "../../src/lib/format.js";
-import { hashPassword, verifyPassword, signToken, verifyToken } from "./crypto.js";
+import { passwordProblem, TERMS_VERSION } from "../../src/lib/policy.js";
+import { hashPassword, verifyPassword, passwordNeedsUpgrade, clampIterations, signToken, verifyToken } from "./crypto.js";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-};
+/* Which websites may call this API from a browser. Set ALLOWED_ORIGINS to a
+   comma-separated list (e.g. "https://app.kash.co.ke") in wrangler.toml.
+   Unset = any origin, which is how it behaved before - fine for the demo,
+   NOT for a real deployment. Sessions travel in an Authorization header (not
+   cookies), so a wrong origin can't ride on someone's login either way. */
+function corsHeaders(request, env) {
+  const headers = {
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "Access-Control-Max-Age": "86400",
+    Vary: "Origin",
+  };
+  const allowed = String(env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const origin = request.headers.get("Origin") || "";
+  if (!allowed.length) headers["Access-Control-Allow-Origin"] = "*";
+  else if (allowed.includes(origin)) headers["Access-Control-Allow-Origin"] = origin;
+  return headers;
+}
 
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...CORS } });
+/** Applied to every response on the way out. */
+function decorate(response, request, env) {
+  const res = new Response(response.body, response);
+  for (const [k, v] of Object.entries(corsHeaders(request, env))) res.headers.set(k, v);
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  res.headers.set("Cache-Control", "no-store");
+  res.headers.set("Referrer-Policy", "no-referrer");
+  res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  return res;
 }
-function err(message, status = 400) {
-  return json({ error: message }, status);
+
+/** An error whose message is safe to show the person. Anything else that
+    gets thrown is logged and answered with a generic 500. */
+class HttpError extends Error {
+  constructor(message, status = 400, headers) {
+    super(message);
+    this.status = status;
+    this.headers = headers;
+  }
 }
+
+function json(body, status = 200, headers = {}) {
+  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...headers } });
+}
+function err(message, status = 400, headers) {
+  return json({ error: message }, status, headers);
+}
+
+const MAX_BODY_BYTES = 200_000;
+
+async function readJson(request) {
+  const declared = Number(request.headers.get("Content-Length") || 0);
+  if (declared > MAX_BODY_BYTES) throw new HttpError("That request is too large.", 413);
+  const text = await request.text();
+  if (text.length > MAX_BODY_BYTES) throw new HttpError("That request is too large.", 413);
+  try {
+    const body = JSON.parse(text || "{}");
+    if (body === null || typeof body !== "object" || Array.isArray(body)) throw new Error("not an object");
+    return body;
+  } catch {
+    throw new HttpError("That request wasn't valid JSON.", 400);
+  }
+}
+
+/** One structured line per security-relevant event. Read them with
+    `wrangler tail` or the Workers logs dashboard (observability is on in
+    wrangler.toml). Never log passwords, tokens or hashes. */
+function audit(event, details = {}) {
+  console.log(JSON.stringify({ audit: event, at: new Date().toISOString(), ...details }));
+}
+
+/* ---------------------------------------------------------- login throttling */
+
+/* Failed sign-ins are counted per email and per IP in KV, with a sliding
+   window. KV is eventually consistent and this is deliberately lightweight,
+   so treat it as a brake on password-guessing bots, not a hard guarantee;
+   Cloudflare's own rate-limiting rules (dashboard) are the second layer. */
+const RL_WINDOW_SECONDS = 15 * 60;
+const RL_MAX_PER_EMAIL = 5;
+const RL_MAX_PER_IP = 25;
+
+const clientIp = (request) => request.headers.get("CF-Connecting-IP") || "unknown";
+
+async function readCount(env, key) {
+  return Number((await env.KASH_KV.get(key)) || 0);
+}
+async function bump(env, key) {
+  const next = (await readCount(env, key)) + 1;
+  try {
+    await env.KASH_KV.put(key, String(next), { expirationTtl: RL_WINDOW_SECONDS });
+  } catch (e) {
+    // The free KV plan caps daily writes. If the brake itself can't be
+    // written, sign-in must keep working rather than fail for everyone.
+    console.error("rate-limit write failed", e?.message);
+  }
+  return next;
+}
+
+/* ---------------------------------------------------------- human check (Cloudflare Turnstile) */
+
+/* When TURNSTILE_SECRET is set, sign-in and sign-up need a token proving a
+   real browser passed Cloudflare's "are you human" check. Not set = skipped,
+   so local development and the demo keep working. The check runs BEFORE any
+   database write, so a bot that can't pass it costs us nothing. */
+async function assertHuman(env, request, token) {
+  if (!env.TURNSTILE_SECRET) return;
+  if (typeof token !== "string" || !token || token.length > 2048) {
+    throw new HttpError("Please complete the human check and try again.", 400);
+  }
+  const form = new URLSearchParams({ secret: env.TURNSTILE_SECRET, response: token });
+  const ip = clientIp(request);
+  if (ip !== "unknown") form.set("remoteip", ip);
+  let passed = false;
+  try {
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form });
+    passed = (await res.json()).success === true;
+  } catch (e) {
+    console.error("turnstile unreachable", e?.message);
+    throw new HttpError("We couldn't run the human check just now. Please try again in a moment.", 503);
+  }
+  if (!passed) {
+    audit("auth.bot_check_failed", { ip });
+    throw new HttpError("The human check failed. Please try again.", 400);
+  }
+}
+
+/* ---------------------------------------------------------- crash reports from the website */
+
+/* The browser reports its own crashes here so they show up in the Worker
+   logs next to server errors. Nothing is stored (no KV writes); anything in
+   a report is untrusted text, so it's length-capped, rate-limited per
+   Worker instance, and only ever written to the log. */
+const clientErrorHits = new Map();
+function allowClientError(ip, now = Date.now()) {
+  const hit = clientErrorHits.get(ip);
+  if (!hit || hit.resetAt < now) {
+    if (clientErrorHits.size > 500) clientErrorHits.clear();
+    clientErrorHits.set(ip, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  return ++hit.count <= 20;
+}
+
+function logClientError(request, body) {
+  const cap = (v, n) => String(v ?? "").slice(0, n);
+  console.error(JSON.stringify({
+    clientError: {
+      message: cap(body.message, 500),
+      stack: cap(body.stack, 4000),
+      componentStack: cap(body.componentStack, 2000),
+      page: cap(body.page, 300),
+      release: cap(body.release, 60),
+      ref: cap(body.ref, 20),
+      userId: cap(body.userId, 40),
+      role: cap(body.role, 40),
+      userAgent: cap(request.headers.get("User-Agent"), 200),
+    },
+  }));
+}
+
+/** For an uptime monitor. Reveals nothing secret. */
+async function health(env) {
+  const configured = !!env.JWT_SECRET;
+  let storage = true;
+  try {
+    await env.KASH_KV.get("data:seeded");
+  } catch {
+    storage = false;
+  }
+  const ok = configured && storage;
+  return json({ ok, configured, storage, time: new Date().toISOString() }, ok ? 200 : 503);
+}
+
+async function assertNotThrottled(env, request, email) {
+  const [byEmail, byIp] = await Promise.all([
+    readCount(env, `rl:email:${email}`),
+    readCount(env, `rl:ip:${clientIp(request)}`),
+  ]);
+  if (byEmail >= RL_MAX_PER_EMAIL || byIp >= RL_MAX_PER_IP) {
+    audit("auth.throttled", { email, ip: clientIp(request) });
+    throw new HttpError("Too many failed attempts. Please wait 15 minutes and try again.", 429, {
+      "Retry-After": String(RL_WINDOW_SECONDS),
+    });
+  }
+}
+
+async function recordFailure(env, request, email) {
+  await Promise.all([bump(env, `rl:email:${email}`), bump(env, `rl:ip:${clientIp(request)}`)]);
+}
+
 
 /* ---------------------------------------------------------- KV data access */
 
@@ -88,7 +267,86 @@ async function requireUser(request, env) {
   if (!payload?.sub) return null;
   const users = await getCollection(env, "users");
   const user = users.find((u) => u.id === payload.sub);
-  return user || null;
+  // A suspended person's existing token must stop working straight away,
+  // not linger until it expires.
+  if (!user || user.status === "Suspended") return null;
+  return user;
+}
+
+const iterationsFor = (env) => clampIterations(env.PBKDF2_ITERATIONS);
+
+/** Something to verify against when the email is unknown, so "no such
+    account" takes about as long as "wrong password" and can't be told apart
+    by timing. Built once per Worker instance. */
+let dummyHash;
+async function burnPasswordTime(env, password) {
+  dummyHash ||= await hashPassword("not-a-real-password", iterationsFor(env));
+  await verifyPassword(password, dummyHash);
+}
+
+const INVITE_ONLY =
+  "Sign-up is by invitation. Ask your administrator to invite your email, or sign in if you already have an account.";
+
+/** Only an existing, still-unclaimed invitation lets a new person in. */
+const findInvite = (users, email) => users.find((u) => u.email === email && u.status === "Invited" && !u.passwordHash);
+
+/* ---------------------------------------------------------- user management rules */
+
+const activeSuperAdmins = (users) => users.filter((u) => u.role === "Super Admin" && u.status !== "Suspended" && u.status !== "Invited");
+
+/** Fields on a user that only the server may ever set. */
+const SERVER_ONLY_USER_FIELDS = ["id", "passwordHash", "createdAt", "termsAcceptedAt", "termsVersion"];
+
+function stripServerFields(body, fields) {
+  const clean = { ...body };
+  for (const f of fields) delete clean[f];
+  return clean;
+}
+
+/** A record's division, for the checks below. Orders don't carry a
+    `division` field of their own (the whole collection is Agro); everything
+    approvable does have one either directly or implicitly. */
+const RECORD_DIVISION = { orders: "Food" };
+const recordDivision = (collection, record) => record.division || RECORD_DIVISION[collection] || "General";
+
+/** Throws unless `actor` may give the formal sign-off on `record`. A
+    company-wide role (division "All": Super Admin/Admin/Director) may
+    approve anything; a department head may only approve their own
+    division's records. Nobody - department head or Super Admin alike - may
+    approve something they themselves entered: "who gave the go-ahead" has
+    to name a second person, every time. */
+function assertMayApprove({ actor, record, collection }) {
+  const division = recordDivision(collection, record);
+  if (actor.division && actor.division !== "All" && actor.division !== division) {
+    throw new HttpError("You can only approve records in your own division.", 403);
+  }
+  if (record.createdBy && record.createdBy === actor.name) {
+    throw new HttpError("You can't approve your own entry - ask another approver to sign off on it.", 403);
+  }
+  if (record.approval && record.approval.status && record.approval.status !== "Pending") {
+    throw new HttpError("This has already been decided.", 409);
+  }
+}
+
+/** Throws unless `actor` may change `target` into `incoming` (or delete it
+    when `incoming` is null). This is the wall that stops a division Manager
+    from promoting themselves - manageUsers is checked separately, first. */
+function assertMayChangeUser({ actor, target, incoming, users }) {
+  const touchesSuperAdmin = target?.role === "Super Admin" || incoming?.role === "Super Admin";
+  if (touchesSuperAdmin && actor.role !== "Super Admin") {
+    throw new HttpError("Only a Super Admin can change a Super Admin.", 403);
+  }
+  if (target && target.id === actor.id && incoming === null) {
+    throw new HttpError("You can't delete your own account.", 400);
+  }
+  if (target?.role === "Super Admin") {
+    const losing = incoming === null || incoming.role !== "Super Admin" || incoming.status === "Suspended";
+    const others = activeSuperAdmins(users).filter((u) => u.id !== target.id);
+    if (losing && !others.length) throw new HttpError("There must always be at least one active Super Admin.", 400);
+  }
+  if (target?.passwordHash && incoming && incoming.email && incoming.email !== target.email) {
+    throw new HttpError("An active account's email can't be changed.", 400);
+  }
 }
 
 /** Whether a role can reach a given division's page at all - the same
@@ -143,11 +401,14 @@ function scopeData(full, user) {
     d.users = full.users.filter((u) => u.role === "Super Admin" || u.role === "Admin" || u.role === "Director");
   }
 
-  if (user.role === "Driver" && user.driverId) {
-    d.trips = full.trips.filter((t) => t.driverId === user.driverId);
-    d.vehicles = full.vehicles.filter((v) => v.driverId === user.driverId);
-    d.drivers = full.drivers.filter((dr) => dr.id === user.driverId);
-    d.maintenance = full.maintenance.filter((m) => m.vehicleId === (d.vehicles[0]?.id));
+  if (user.role === "Driver") {
+    // A Driver account not yet linked to a driver record sees nothing,
+    // rather than falling through to the whole fleet's trips.
+    const own = user.driverId || null;
+    d.trips = full.trips.filter((t) => own && t.driverId === own);
+    d.vehicles = full.vehicles.filter((v) => own && v.driverId === own);
+    d.drivers = full.drivers.filter((dr) => own && dr.id === own);
+    d.maintenance = full.maintenance.filter((m) => d.vehicles[0] && m.vehicleId === d.vehicles[0].id);
   } else if (!sees(user.role, "transport")) {
     d.trips = []; d.vehicles = []; d.drivers = []; d.maintenance = [];
   }
@@ -167,6 +428,12 @@ function scopeData(full, user) {
   // Messages are private to the two people in the thread, always - even
   // an Admin only sees threads they're personally part of.
   d.messages = full.messages.filter((m) => m.from === user.name || m.to === user.name);
+
+  // The company-wide "who approved what" trail is for company-wide eyes
+  // only (Super Admin/Admin/Director - division "All"). A department head
+  // already sees a decision on the specific expense/order it belongs to;
+  // they don't get the cross-division log.
+  if (user.division && user.division !== "All") d.approvals = [];
 
   d.users = d.users.map(stripSecret);
   return d;
@@ -203,9 +470,14 @@ const FREE_PATCH_COLLECTIONS = new Set(["notifications", "reminders"]);
 
 /* ---------------------------------------------------------- router */
 
-export default {
+const app = {
   async fetch(request, env) {
-    if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
+    if (request.method === "OPTIONS") return new Response(null, { status: 204 });
+    if (request.method === "GET" && new URL(request.url).pathname === "/api/health") return health(env);
+    if (!env.JWT_SECRET) {
+      console.error("JWT_SECRET is not set - refusing to serve requests.");
+      return err("The server isn't configured yet.", 500);
+    }
 
     try {
       setToday(toISODate(new Date())); // real time is only available inside a request
@@ -213,44 +485,106 @@ export default {
       const url = new URL(request.url);
       const parts = url.pathname.replace(/^\/api\//, "").split("/").filter(Boolean);
 
+      if (url.pathname === "/api/client-error" && request.method === "POST") {
+        if (allowClientError(clientIp(request))) logClientError(request, await readJson(request));
+        return json({ ok: true }, 202);
+      }
+
       if (url.pathname === "/api/auth/register" && request.method === "POST") {
-        const body = await request.json();
+        const body = await readJson(request);
+        await assertHuman(env, request, body.turnstileToken);
+        // Every attempt counts against the caller's IP, so sign-up can't be
+        // used to spam accounts or to probe which emails are invited.
+        if ((await bump(env, `rl:reg:${clientIp(request)}`)) > 10) {
+          throw new HttpError("Too many sign-up attempts. Please wait 15 minutes and try again.", 429, {
+            "Retry-After": String(RL_WINDOW_SECONDS),
+          });
+        }
         const name = String(body.name || "").trim();
         const email = String(body.email || "").trim().toLowerCase();
         const phone = String(body.phone || "").trim();
         const password = String(body.password || "");
         if (!name || !email || !phone || !password) return err("Name, email, contact and password are all required.");
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err("Enter a valid email address.");
-        if (password.length < 6) return err("Password must be at least 6 characters.");
-        if (await findUserByEmail(env, email)) return err("An account with that email already exists.", 409);
+        const weak = passwordProblem(password, email);
+        if (weak) return err(weak);
+        if (body.acceptedTerms !== true) {
+          return err("Please confirm you are 18 or older and accept the Terms and Privacy Policy.");
+        }
 
         const users = await getCollection(env, "users");
-        const id = `u${Date.now().toString(36)}`;
+        const openSignup = String(env.OPEN_SIGNUP) === "true"; // the public demo only
         // The very first account on a fresh instance has nobody to grant it
         // access - it has to start as Super Admin, or nobody could ever add
-        // vehicles, rooms, staff, etc. Every account after that is Staff by
-        // default; an Admin promotes people from there.
+        // vehicles, rooms, staff, etc.
         const isFirstAccount = users.length === 0;
-        const user = {
-          id, name, email, phone,
-          role: isFirstAccount ? "Super Admin" : "Staff", division: "All", status: "Active",
-          lastActive: toISODate(new Date()), createdAt: new Date().toISOString(),
-          passwordHash: await hashPassword(password),
-        };
-        await putCollection(env, "users", [user, ...users]);
-        await env.KASH_KV.put(`email:${email}`, id);
+        const invite = isFirstAccount ? null : findInvite(users, email);
 
-        const token = await signToken({ sub: id }, env.JWT_SECRET);
+        if (await findUserByEmail(env, email)) {
+          return openSignup ? err("An account with that email already exists.", 409) : err(INVITE_ONLY, 403);
+        }
+        if (!isFirstAccount && !openSignup && !invite) {
+          audit("auth.signup_refused", { email, ip: clientIp(request) });
+          return err(INVITE_ONLY, 403);
+        }
+
+        const now = new Date();
+        const accepted = { termsAcceptedAt: now.toISOString(), termsVersion: TERMS_VERSION };
+        const passwordHash = await hashPassword(password, iterationsFor(env));
+        let user;
+        let nextUsers;
+        if (invite) {
+          // Claiming an invitation keeps the role/division the admin chose.
+          user = {
+            ...invite, phone: invite.phone || phone, status: "Active", lastActive: toISODate(now), passwordHash, ...accepted,
+          };
+          nextUsers = users.map((u) => (u.id === invite.id ? user : u));
+        } else {
+          user = {
+            id: `u${Date.now().toString(36)}`, name, email, phone,
+            // Everyone after the first is Staff; an Admin promotes from there.
+            role: isFirstAccount ? "Super Admin" : "Staff", division: "All", status: "Active",
+            lastActive: toISODate(now), createdAt: now.toISOString(), passwordHash, ...accepted,
+          };
+          nextUsers = [user, ...users];
+        }
+        await putCollection(env, "users", nextUsers);
+        await env.KASH_KV.put(`email:${email}`, user.id);
+        audit("auth.registered", { userId: user.id, role: user.role, viaInvite: !!invite, first: isFirstAccount });
+
+        const token = await signToken({ sub: user.id }, env.JWT_SECRET);
         return json({ token, user: stripSecret(user) }, 201);
       }
 
       if (url.pathname === "/api/auth/login" && request.method === "POST") {
-        const body = await request.json();
+        const body = await readJson(request);
         const email = String(body.email || "").trim().toLowerCase();
         const password = String(body.password || "");
+        await assertNotThrottled(env, request, email);
+        await assertHuman(env, request, body.turnstileToken);
+
         const user = await findUserByEmail(env, email);
-        if (!user || user.status === "Suspended") return err("No account for that email, or it's suspended.", 401);
-        if (!(await verifyPassword(password, user.passwordHash))) return err("Wrong password.", 401);
+        let passwordOk = false;
+        if (user?.passwordHash) passwordOk = await verifyPassword(password, user.passwordHash);
+        else await burnPasswordTime(env, password);
+
+        if (!passwordOk) {
+          await recordFailure(env, request, email);
+          audit("auth.failed", { email, ip: clientIp(request) });
+          return err("Incorrect email or password.", 401);
+        }
+        if (user.status === "Suspended") {
+          audit("auth.suspended_login", { userId: user.id });
+          return err("This account is suspended. Please contact your administrator.", 403);
+        }
+
+        await env.KASH_KV.delete(`rl:email:${email}`);
+        if (passwordNeedsUpgrade(user.passwordHash, iterationsFor(env))) {
+          const upgraded = { ...user, passwordHash: await hashPassword(password, iterationsFor(env)) };
+          const users = await getCollection(env, "users");
+          await putCollection(env, "users", users.map((u) => (u.id === user.id ? upgraded : u)));
+        }
+        audit("auth.login", { userId: user.id, role: user.role });
         const token = await signToken({ sub: user.id }, env.JWT_SECRET);
         return json({ token, user: stripSecret(user) });
       }
@@ -266,7 +600,7 @@ export default {
 
       if (url.pathname === "/api/company" && request.method === "PATCH") {
         if (!caps.settings) return err("You don't have access to change company settings.", 403);
-        const body = await request.json();
+        const body = await readJson(request);
         const next = { ...(await getCompany(env)), ...body };
         await env.KASH_KV.put("data:company", JSON.stringify(next));
         return json(next);
@@ -278,13 +612,65 @@ export default {
         return json({ user: stripSecret(user), data: scopeData(full, user) });
       }
 
+      // /api/:collection/:id/approve - checked before the generic routes
+      // below, which never touch "approvals" at all (see the guard further
+      // down): this is the one and only way that collection is written.
+      if (parts.length === 3 && parts[2] === "approve" && request.method === "POST") {
+        const [approveCollection, approveId] = parts;
+        if (!APPROVABLE_COLLECTIONS.includes(approveCollection)) return err("That can't be approved.", 400);
+        if (!caps.approve) return err("You don't have access to approve anything.", 403);
+        const approveRows = await getCollection(env, approveCollection);
+        const existing = approveRows.find((r) => r.id === approveId);
+        if (!existing) return err("Not found.", 404);
+        assertMayApprove({ actor: user, record: existing, collection: approveCollection });
+
+        const body = await readJson(request);
+        if (!["approve", "reject"].includes(body.decision)) return err("Say whether you approve or reject it.", 400);
+        const approval = {
+          status: body.decision === "approve" ? "Approved" : "Rejected",
+          by: user.name,
+          role: user.role,
+          at: new Date().toISOString(),
+          note: String(body.note || "").trim().slice(0, 500),
+        };
+        await putCollection(env, approveCollection, approveRows.map((r) => (r.id === approveId ? { ...r, approval } : r)));
+
+        // One company-wide, append-only trail - so "who approved what, and
+        // when" is a single list Super Admin/Admin/Director can read, not
+        // something scattered across every division's own records.
+        const division = recordDivision(approveCollection, existing);
+        const summary =
+          approveCollection === "expenses"
+            ? `${existing.category}${existing.vendor ? ` - ${existing.vendor}` : ""}`
+            : `${existing.item || "Order"}${existing.customer ? ` - ${existing.customer}` : ""}`;
+        const entry = {
+          id: `${ID_PREFIX.approvals}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+          collection: approveCollection, recordId: approveId, division, summary,
+          amount: Number(existing.amount) || 0, requestedBy: existing.createdBy || "",
+          ...approval,
+        };
+        const approvalsLog = await getCollection(env, "approvals");
+        await putCollection(env, "approvals", [entry, ...approvalsLog]);
+        audit("record.approved", { by: user.id, role: user.role, collection: approveCollection, recordId: approveId, decision: approval.status });
+
+        return json({ ...existing, approval });
+      }
+
       // /api/:collection[/:id]
       const [collection, id] = parts;
       if (!COLLECTIONS.includes(collection)) return err("Unknown collection.", 404);
+      // The approval trail is written only through /approve above, by the
+      // server, never through these generic routes - so nobody can create,
+      // edit or erase an entry in it, including the person it's about.
+      if (collection === "approvals" && request.method !== "GET") return err("This is a read-only record.", 405);
       const requiredView = COLLECTION_VIEW[collection];
       if (requiredView && !sees(user.role, requiredView)) {
         return err("You don't have access to that.", 403);
       }
+      // People and their roles are the keys to everything else, so managing
+      // them is its own permission - `write` (which every division Manager
+      // and the Accountant hold) is deliberately not enough.
+      if (collection === "users" && !caps.manageUsers) return err("You don't have access to manage users.", 403);
       const rows = await getCollection(env, collection);
 
       if (request.method === "POST") {
@@ -293,12 +679,21 @@ export default {
         const canMsg = collection === "messages"; // anyone signed in - checked properly below
         if (!caps.write && !canOwn && !canPay && !canMsg) return err("You don't have access to add that.", 403);
 
-        const body = await request.json();
+        let body = await readJson(request);
         if (collection === "messages") {
           if (!(await canMessage(env, user, body.to))) {
             return err("You can only message an Admin.", 403);
           }
           body.from = user.name; // never trust a client-supplied sender
+        }
+        if (collection === "users") {
+          const email = String(body.email || "").trim().toLowerCase();
+          if (!email) return err("An email is required to invite someone.");
+          if (rows.some((u) => u.email === email)) return err("Someone with that email is already on the team.", 409);
+          assertMayChangeUser({ actor: user, target: null, incoming: { role: body.role }, users: rows });
+          // An invitation can only ever be an unclaimed, passwordless placeholder.
+          body = { ...stripServerFields(body, SERVER_ONLY_USER_FIELDS), status: "Invited" };
+          audit("user.invited", { by: user.id, email, role: body.role || "Staff" });
         }
         let values = { ...body, createdBy: user.name };
         if ((collection === "trips" || collection === "maintenance") && user.role === "Driver" && user.driverId) {
@@ -323,8 +718,13 @@ export default {
         if (!existing) return err("Not found.", 404);
         const allowed = caps.write || (caps.writeOwn && ownsRecord(collection, existing, user));
         if (!allowed) return err("You don't have access to edit that.", 403);
-        const body = await request.json();
-        const next = rows.map((r) => (r.id === id ? { ...r, ...(normalisers[collection] ? normalisers[collection]({ ...r, ...body }, {}) : body) } : r));
+        const body = stripServerFields(await readJson(request), collection === "users" ? SERVER_ONLY_USER_FIELDS : ["id"]);
+        const shaped = normalisers[collection] ? normalisers[collection]({ ...existing, ...body }, {}) : body;
+        if (collection === "users") {
+          assertMayChangeUser({ actor: user, target: existing, incoming: shaped, users: rows });
+          audit("user.updated", { by: user.id, target: existing.id, role: shaped.role, status: shaped.status });
+        }
+        const next = rows.map((r) => (r.id === id ? { ...r, ...shaped } : r));
         await putCollection(env, collection, next);
         return json(next.find((r) => r.id === id));
       }
@@ -338,7 +738,14 @@ export default {
           FREE_PATCH_COLLECTIONS.has(collection) ||
           (existing && ownsRecord(collection, existing, user) && (collection === "messages" || caps.writeOwn));
         if (!allowed) return err("You don't have access to change that.", 403);
-        const body = await request.json();
+        if (!existing) return err("Not found.", 404);
+        // A patch can never rewrite who a record is, who made it, or (for
+        // people) anything only the server sets - that includes passwordHash.
+        const body = stripServerFields(await readJson(request), [...(collection === "users" ? SERVER_ONLY_USER_FIELDS : ["id"]), "createdBy"]);
+        if (collection === "users") {
+          assertMayChangeUser({ actor: user, target: existing, incoming: { ...existing, ...body }, users: rows });
+          audit("user.updated", { by: user.id, target: existing.id, role: body.role, status: body.status });
+        }
         const next = rows.map((r) => (r.id === id ? { ...r, ...body } : r));
         await putCollection(env, collection, next);
         return json(next.find((r) => r.id === id));
@@ -346,13 +753,34 @@ export default {
 
       if (request.method === "DELETE") {
         if (!caps.deleteAny) return err("You don't have access to delete that.", 403);
+        if (collection === "users") {
+          const target = rows.find((r) => r.id === id);
+          if (!target) return err("Not found.", 404);
+          assertMayChangeUser({ actor: user, target, incoming: null, users: rows });
+          await env.KASH_KV.delete(`email:${target.email}`); // free the address so it can be invited again
+          audit("user.deleted", { by: user.id, target: target.id });
+        }
         await putCollection(env, collection, rows.filter((r) => r.id !== id));
         return json({ ok: true });
       }
 
       return err("Not found.", 404);
     } catch (e) {
-      return err(e?.message || "Something went wrong.", 500);
+      if (e instanceof HttpError) return err(e.message, e.status, e.headers);
+      // Details go to the logs, never to the person - an error message can
+      // leak how the server is built. The short reference lets someone quote
+      // what they saw, and you find that exact failure in the logs.
+      const ref = crypto.randomUUID().slice(0, 8);
+      console.error(JSON.stringify({
+        unhandled: { ref, method: request.method, path: new URL(request.url).pathname, message: e?.message, stack: e?.stack },
+      }));
+      return err(`Something went wrong. Please try again. (Ref: ${ref})`, 500);
     }
+  },
+};
+
+export default {
+  async fetch(request, env) {
+    return decorate(await app.fetch(request, env), request, env);
   },
 };

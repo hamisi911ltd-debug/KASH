@@ -1,7 +1,7 @@
 /* Expenses ledger. Manual rows are editable; auto-posted rows
    (trip fuel, food cost) are shown read-only so the P&L reconciles. */
 import React, { useMemo, useState } from "react";
-import { Plus, Wallet, Pencil, Trash2, Lock, Receipt } from "lucide-react";
+import { Plus, Wallet, Pencil, Trash2, Lock, Receipt, ShieldCheck, ShieldX, Clock } from "lucide-react";
 import { C, DIVISIONS, EXPENSE_CATEGORIES, PAYMENT_METHODS, divisionLabel, divisionOptions } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import { resolvePeriod, buildLedger, inRange } from "../lib/derive";
@@ -12,12 +12,18 @@ import { Card, StatCard, SectionTitle, Badge, Button, ChipRow, Segmented } from 
 import DataTable from "../components/DataTable.jsx";
 import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
+import { ApprovalDialog } from "../components/Modal.jsx";
+
+const APPROVAL_TONE = { Pending: "amber", Approved: "emerald", Rejected: "coral" };
 
 const DIV_TONE = { Transport: "emerald", Food: "amber", Hospitality: "coral", General: "violet" };
 
 export default function ExpensesView() {
-  const { data, prefs, session } = useStore();
+  const { data, prefs, session, approveRecord, toast } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
+  const [approving, setApproving] = useState(null); // { refId, decision, summary, amount }
+  // Company-wide roles approve anything; a department head only their own division.
+  const canApproveDivision = (division) => caps.approve && (!session?.division || session.division === "All" || session.division === division);
   // A division Manager only ever has their own division's expenses to
   // begin with (the server already scopes it) - no point offering a
   // picker for divisions that will only ever show empty.
@@ -53,6 +59,7 @@ export default function ExpensesView() {
   }));
 
   const autoTotal = expenseLines.filter((l) => l.source !== "manual").reduce((s, l) => s + l.amount, 0);
+  const pendingApproval = expenseLines.filter((l) => l.approval?.status === "Pending");
 
   const columns = [
     { key: "date", header: "Date", sortValue: (r) => r.date, render: (r) => formatDateShort(r.date), muted: true },
@@ -65,12 +72,37 @@ export default function ExpensesView() {
         ? <Badge tone="slate" size="sm">{r.method || "Manual"}</Badge>
         : <span className="inline-flex items-center gap-1 text-xs" style={{ color: C.faint }}><Lock size={11} /> Auto</span>
     },
+    {
+      key: "approval", header: "Approval", sortValue: (r) => r.approval?.status || "",
+      render: (r) => r.approval ? (
+        <div className="min-w-0">
+          <Badge tone={APPROVAL_TONE[r.approval.status]} size="sm">{r.approval.status}</Badge>
+          {r.approval.status !== "Pending" && (
+            <p className="text-[11px] mt-0.5 truncate" style={{ color: C.faint }}>
+              {r.approval.by} - {formatDateShort(r.approval.at)}
+            </p>
+          )}
+        </div>
+      ) : <span style={{ color: C.faint }}>-</span>,
+    },
   ];
 
-  const actions = caps.write ? [
-    { label: "Edit", icon: Pencil, onClick: (r) => editRecord("expenses", r.refId), hidden: (r) => r.source !== "manual" },
-    { label: "Delete", icon: Trash2, tone: "danger", onClick: (r) => deleteRecord("expenses", r.refId), hidden: (r) => r.source !== "manual" },
-  ] : [];
+  const actions = [
+    ...(caps.write ? [
+      { label: "Edit", icon: Pencil, onClick: (r) => editRecord("expenses", r.refId), hidden: (r) => r.source !== "manual" },
+      { label: "Delete", icon: Trash2, tone: "danger", onClick: (r) => deleteRecord("expenses", r.refId), hidden: (r) => r.source !== "manual" },
+    ] : []),
+    {
+      label: "Approve", icon: ShieldCheck,
+      hidden: (r) => r.approval?.status !== "Pending" || !canApproveDivision(r.division) || r.createdBy === session?.name,
+      onClick: (r) => setApproving({ refId: r.refId, decision: "approve", summary: r.desc, amount: r.amount }),
+    },
+    {
+      label: "Reject", icon: ShieldX, tone: "danger",
+      hidden: (r) => r.approval?.status !== "Pending" || !canApproveDivision(r.division) || r.createdBy === session?.name,
+      onClick: (r) => setApproving({ refId: r.refId, decision: "reject", summary: r.desc, amount: r.amount }),
+    },
+  ];
 
   return (
     <Page>
@@ -94,6 +126,16 @@ export default function ExpensesView() {
       <p className="text-xs -mt-1" style={{ color: C.faint }}>
         {formatKES(autoTotal)} of this is auto-posted from trips and orders.
       </p>
+
+      {caps.approve && pendingApproval.length > 0 && (
+        <StatCard
+          icon={Clock}
+          label="Awaiting your approval"
+          value={pendingApproval.length}
+          sub={formatKES(pendingApproval.reduce((s, l) => s + l.amount, 0))}
+          tint={C.amber}
+        />
+      )}
 
       <Card padded={false}>
         <div className="p-4 sm:p-5 pb-3 flex items-center justify-between flex-wrap gap-3">
@@ -135,6 +177,24 @@ export default function ExpensesView() {
           />
         </div>
       </Card>
+
+      {approving && (
+        <ApprovalDialog
+          title={approving.decision === "approve" ? "Approve this expense?" : "Reject this expense?"}
+          summary={approving.summary}
+          amount={approving.amount}
+          decision={approving.decision}
+          onClose={() => setApproving(null)}
+          onConfirm={async (note) => {
+            try {
+              await approveRecord("expenses", approving.refId, approving.decision, note);
+              toast(approving.decision === "approve" ? "Expense approved" : "Expense rejected");
+            } catch (e) {
+              toast(e.message || "Couldn't record that decision.", { tone: "error" });
+            }
+          }}
+        />
+      )}
     </Page>
   );
 }

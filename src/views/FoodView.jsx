@@ -3,7 +3,7 @@
    sees this same page, self-scoped to just the orders they
    personally rang up - see `restricted` below. */
 import React, { useMemo, useState } from "react";
-import { Plus, ArrowDownRight, ArrowUpRight, Clock, Pencil, Trash2, ShoppingBag, BookMarked, Smartphone } from "lucide-react";
+import { Plus, ArrowDownRight, ArrowUpRight, Clock, Pencil, Trash2, ShoppingBag, BookMarked, Smartphone, ShieldCheck, ShieldX } from "lucide-react";
 import { C } from "../lib/constants";
 import { formatKES, formatDateShort } from "../lib/format";
 import { resolvePeriod, computeMetrics, inRange, CANCELLED } from "../lib/derive";
@@ -15,6 +15,9 @@ import DataTable from "../components/DataTable.jsx";
 import { PageHeader, Page } from "../components/Page.jsx";
 import FilterBar, { selectFilter } from "../components/FilterBar.jsx";
 import { statusTone, ORDER_STATUSES, PAYMENT_STATUSES } from "../lib/constants";
+import { ApprovalDialog } from "../components/Modal.jsx";
+
+const APPROVAL_TONE = { Pending: "amber", Approved: "emerald", Rejected: "coral" };
 
 /* An Attendant's one-card "log a sale" flow - same idea as the Driver's
    trip control: log straight from an inline card instead of a modal
@@ -114,9 +117,11 @@ function SaleControl({ menu, addRecord, toast }) {
 }
 
 export default function FoodView() {
-  const { data, prefs, session, addRecord, toast } = useStore();
+  const { data, prefs, session, addRecord, approveRecord, toast } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
   const restricted = !caps.write; // an Agro Attendant only sees orders they rang up
+  const canApprove = caps.approve && (!session?.division || session.division === "All" || session.division === "Food");
+  const [approving, setApproving] = useState(null); // { id, decision, summary, amount }
   const [tab, setTab] = useState("orders");
   const [q, setQ] = useState("");
   const [oStatus, setOStatus] = useState("All");
@@ -138,6 +143,7 @@ export default function FoodView() {
   const openOrders = ordersInRange.filter((o) => ["Preparing", "Out for Delivery"].includes(o.orderStatus)).length;
   const avgOrder = ordersInRange.length ? Math.round(ordersInRange.reduce((s, o) => s + o.amount, 0) / ordersInRange.length) : 0;
   const myIncome = ordersInRange.reduce((s, o) => s + (o.amount || 0), 0);
+  const pendingApproval = ordersInRange.filter((o) => o.approval?.status === "Pending");
 
   const ql = q.trim().toLowerCase();
   const shownOrders = useMemo(() => ordersInRange
@@ -161,6 +167,19 @@ export default function FoodView() {
     { key: "amount", header: "Amount", align: "right", sortValue: (r) => r.amount, render: (r) => <span className="font-semibold">{formatKES(r.amount)}</span> },
     { key: "paymentStatus", header: "Payment", sortValue: (r) => r.paymentStatus, render: (r) => <Badge tone={statusTone(r.paymentStatus)} size="sm">{r.paymentStatus}</Badge> },
     { key: "orderStatus", header: "Status", sortValue: (r) => r.orderStatus, render: (r) => <Badge tone={statusTone(r.orderStatus)} size="sm">{r.orderStatus}</Badge> },
+    {
+      key: "approval", header: "Approval", sortValue: (r) => r.approval?.status || "",
+      render: (r) => r.approval ? (
+        <div className="min-w-0">
+          <Badge tone={APPROVAL_TONE[r.approval.status]} size="sm">{r.approval.status}</Badge>
+          {r.approval.status !== "Pending" && (
+            <p className="text-[11px] mt-0.5 truncate" style={{ color: C.faint }}>
+              {r.approval.by} - {formatDateShort(r.approval.at)}
+            </p>
+          )}
+        </div>
+      ) : <span style={{ color: C.faint }}>-</span>,
+    },
   ];
 
   const menuColumns = [
@@ -180,14 +199,24 @@ export default function FoodView() {
     { label: "Delete", icon: Trash2, tone: "danger", onClick: (r) => deleteRecord(collection, r.id) },
   ] : [];
 
-  const orderActions = caps.payments ? [
-    {
+  const orderActions = [
+    ...(caps.payments ? [{
       label: "Collect payment", icon: Smartphone,
       hidden: (r) => r.paymentStatus === "Paid",
       onClick: (r) => openForm("payment", { direction: "in", division: "Food", party: r.customer || "Walk-in customer", amount: r.amount, method: "M-Pesa" }),
-    },
+    }] : []),
     ...rowActions("orders"),
-  ] : rowActions("orders");
+    {
+      label: "Approve", icon: ShieldCheck,
+      hidden: (r) => r.approval?.status !== "Pending" || !canApprove || r.createdBy === session?.name,
+      onClick: (r) => setApproving({ id: r.id, decision: "approve", summary: `${r.item} - ${r.customer || "Walk-in"}`, amount: r.amount }),
+    },
+    {
+      label: "Reject", icon: ShieldX, tone: "danger",
+      hidden: (r) => r.approval?.status !== "Pending" || !canApprove || r.createdBy === session?.name,
+      onClick: (r) => setApproving({ id: r.id, decision: "reject", summary: `${r.item} - ${r.customer || "Walk-in"}`, amount: r.amount }),
+    },
+  ];
 
   return (
     <Page>
@@ -203,6 +232,16 @@ export default function FoodView() {
       />
 
       {restricted && <SaleControl menu={data.menu} addRecord={addRecord} toast={toast} />}
+
+      {canApprove && pendingApproval.length > 0 && (
+        <StatCard
+          icon={Clock}
+          label="Big orders awaiting your approval"
+          value={pendingApproval.length}
+          sub={formatKES(pendingApproval.reduce((s, o) => s + o.amount, 0))}
+          tint={C.amber}
+        />
+      )}
 
       <div className={`grid grid-cols-2 ${restricted ? "sm:grid-cols-3" : "lg:grid-cols-4"} gap-2.5 sm:gap-3.5`}>
         {restricted ? (
@@ -271,6 +310,24 @@ export default function FoodView() {
           )}
         </div>
       </Card>
+
+      {approving && (
+        <ApprovalDialog
+          title={approving.decision === "approve" ? "Approve this order?" : "Reject this order?"}
+          summary={approving.summary}
+          amount={approving.amount}
+          decision={approving.decision}
+          onClose={() => setApproving(null)}
+          onConfirm={async (note) => {
+            try {
+              await approveRecord("orders", approving.id, approving.decision, note);
+              toast(approving.decision === "approve" ? "Order approved" : "Order rejected");
+            } catch (e) {
+              toast(e.message || "Couldn't record that decision.", { tone: "error" });
+            }
+          }}
+        />
+      )}
     </Page>
   );
 }

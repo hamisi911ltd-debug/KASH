@@ -8,10 +8,14 @@
    ============================================================ */
 import { TODAY } from "./seed.js";
 import { daysBetween, toISODate } from "./format.js";
+import { needsApproval } from "./constants.js";
 
 export const COLLECTIONS = [
   "drivers", "vehicles", "trips", "maintenance", "menu", "orders",
   "rooms", "bookings", "expenses", "payments", "users", "reminders", "messages", "notifications",
+  // Append-only: written only by the /approve endpoint (worker/src/index.js),
+  // never through the generic collection routes. See docs/APPROVALS.md.
+  "approvals",
 ];
 
 const num = (v) => (v === "" || v == null ? 0 : Number(v) || 0);
@@ -64,6 +68,7 @@ export const normalisers = {
     const menuItem = (data.menu || []).find((m) => m.id === v.menuItemId);
     const qty = num(v.qty) || 1;
     const unitPrice = num(v.unitPrice) || menuItem?.price || 0;
+    const amount = num(v.amount) || unitPrice * qty;
     return {
       date: v.date || TODAY,
       customer: (v.customer || "").trim(),
@@ -72,10 +77,14 @@ export const normalisers = {
       item: (v.item || menuItem?.name || "").trim(),
       qty,
       unitPrice,
-      amount: num(v.amount) || unitPrice * qty,
+      amount,
       cost: num(v.cost) || (menuItem ? menuItem.cost * qty : 0),
       paymentStatus: v.paymentStatus || "Pending",
       orderStatus: v.orderStatus || "Preparing",
+      // A "big" order (see APPROVAL_THRESHOLDS) starts life needing a
+      // Manager/Admin/Director/Super Admin's sign-off. Once decided,
+      // v.approval carries that decision forward untouched.
+      approval: v.approval || (needsApproval("orders", amount) ? { status: "Pending" } : null),
     };
   },
   menu: (v) => ({
@@ -139,6 +148,8 @@ export const normalisers = {
     method: v.method || "M-Pesa",
     notes: (v.notes || "").trim(),
     source: "manual",
+    // See the matching comment on the orders normaliser above.
+    approval: v.approval || (needsApproval("expenses", num(v.amount)) ? { status: "Pending" } : null),
   }),
   users: (v) => ({
     name: (v.name || "").trim(),
@@ -169,6 +180,7 @@ export const normalisers = {
 export const ID_PREFIX = {
   trips: "t", vehicles: "v", drivers: "d", maintenance: "mx", orders: "o", menu: "m",
   rooms: "r", bookings: "b", expenses: "e", payments: "pay", users: "u", reminders: "rem", messages: "msg", notifications: "n",
+  approvals: "ap",
 };
 
 /* Human labels used in toasts and confirmation copy. */

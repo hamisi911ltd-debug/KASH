@@ -21,6 +21,7 @@ import UsersView from "./views/UsersView.jsx";
 import MessagesView from "./views/MessagesView.jsx";
 import SettingsView from "./views/SettingsView.jsx";
 import PaymentsView from "./views/PaymentsView.jsx";
+import ApprovalsView from "./views/ApprovalsView.jsx";
 
 import { Sidebar, MobileDrawer, MobileBottomNav, Topbar } from "./components/Layout.jsx";
 import { FormModal, ConfirmDialog, MpesaPrompt } from "./components/Modal.jsx";
@@ -41,6 +42,7 @@ const VIEWS = {
   payments: PaymentsView,
   expenses: ExpensesView,
   reports: ReportsView,
+  approvals: ApprovalsView,
   users: UsersView,
   updates: MessagesView,
   settings: SettingsView,

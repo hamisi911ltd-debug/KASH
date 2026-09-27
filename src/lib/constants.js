@@ -130,19 +130,38 @@ export const ROLE_VIEWS = {
    trips/orders/bookings of their own, but can't edit or delete any
    record (their own included) or manage the fleet/menu/rooms - only
    an Admin/Manager corrects the books. */
+/* `approve` = may give (or refuse) the formal sign-off on a big expense or
+   order - the head of that department, or company leadership. It is
+   deliberately its own flag, separate from `write`: the Accountant can
+   write/edit records company-wide but is not a department head and does
+   not approve anything, and an approver can never sign off their own
+   entry (enforced server-side in worker/src/index.js - see
+   assertMayApprove) so "who gave the go-ahead" is always a second person. */
 export const ROLE_CAPS = {
-  "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
-  Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
-  Director: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true },
-  "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
-  Driver: { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
-  "Agro Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
-  "Agro Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
-  "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true },
-  "Hospitality Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
-  Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true },
-  Staff: { write: false, manageUsers: false, deleteAny: false, settings: false, payments: true },
+  "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true },
+  Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true },
+  Director: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true },
+  "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true },
+  Driver: { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
+  "Agro Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true },
+  "Agro Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
+  "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true },
+  "Hospitality Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
+  Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
+  Staff: { write: false, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false },
 };
+
+/* Records at or above these amounts (KSh) are created "Pending" and need an
+   approver's explicit decision. This is a governance record only - it does
+   not hold money out of the ledger or block anyone from working; tune the
+   numbers to the business (ask to have these moved into Settings if you
+   want them editable without a code change). */
+export const APPROVAL_THRESHOLDS = { expenses: 10000, orders: 20000 };
+export const APPROVABLE_COLLECTIONS = Object.keys(APPROVAL_THRESHOLDS);
+export function needsApproval(collection, amount) {
+  const threshold = APPROVAL_THRESHOLDS[collection];
+  return threshold != null && Number(amount) >= threshold;
+}
 
 export const PERIODS = ["Today", "Last 7 days", "This Month", "Last 90 days", "This Year", "All Time"];
 

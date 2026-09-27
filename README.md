@@ -25,10 +25,26 @@ npm run preview      # serve the last build
 
 Requires Node 18+.
 
+Tests (permissions, sign-in rules, password hashing, the money ledger, security headers):
+
+```bash
+npm test             # runs once
+npm run test:watch   # re-runs as you edit
+```
+
+Going live? Follow [docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md).
+
 ## Signing in
 
-Demo auth — pick any account on the sign-in screen (they're one click to fill) and
-use password `kash` (or any non-empty text). Each account maps to a role:
+Accounts are real (a Cloudflare Worker + KV backend in `worker/`). On a **fresh** deployment the
+first account to register becomes Super Admin; after that people join **by invitation**: an admin adds
+their email under *Users & roles*, and the invited person uses **Create account** with that email to
+choose a password (they keep the role the admin picked). Passwords need 8+ characters with a letter and
+a number, and sign-up requires confirming you are 18+ and accept the Terms and Privacy Policy
+(`public/terms.html`, `public/privacy.html` - drafts that need a lawyer's review).
+
+The public **demo** build (`VITE_DEMO_MODE=true`, Worker `OPEN_SIGNUP="true"`) instead shows one-click
+demo accounts, all with password `kash1234`. Each maps to a role:
 
 | Account | Role | Sees |
 | --- | --- | --- |

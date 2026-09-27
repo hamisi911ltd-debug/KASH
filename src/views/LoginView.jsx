@@ -11,8 +11,10 @@ import {
 } from "lucide-react";
 import { C } from "../lib/constants";
 import { DEMO_MODE, DEMO_LOGINS, DEMO_PASSWORD, login, register } from "../lib/auth";
+import { passwordProblem, MIN_AGE } from "../lib/policy";
 import { Button, Spinner } from "../components/ui.jsx";
 import { KashLogo } from "../components/Logo.jsx";
+import { Turnstile, TURNSTILE_SITEKEY } from "../components/Turnstile.jsx";
 
 const BUSINESSES = [
   { key: "overview", label: "Admin", sub: "Whole business overview", icon: LayoutDashboard, color: C.blue, soft: C.blueSoft, role: "Super Admin" },
@@ -143,7 +145,13 @@ export default function LoginView({ onSignIn }) {
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirm, setRegConfirm] = useState("");
+  const [regAccepted, setRegAccepted] = useState(false);
   const [regErrors, setRegErrors] = useState({});
+
+  // Human check: a token proves it, works once, and is renewed after each submit.
+  const [humanToken, setHumanToken] = useState("");
+  const [humanReset, setHumanReset] = useState(0);
+  const waitingForHuman = !!TURNSTILE_SITEKEY && !humanToken;
 
   const pickBusiness = (biz) => {
     setChosen(biz);
@@ -172,12 +180,13 @@ export default function LoginView({ onSignIn }) {
     }
     setLoading(true);
     try {
-      const res = await login(email, password);
+      const res = await login(email, password, humanToken);
       onSignIn({ token: res.token, ...res.user }, chosen?.key);
     } catch (err) {
       setError(err.message || "Could not sign in. Try again.");
     } finally {
       setLoading(false);
+      setHumanReset((n) => n + 1);
     }
   };
 
@@ -187,20 +196,23 @@ export default function LoginView({ onSignIn }) {
     if (!regName.trim()) errs.name = "Enter your full name.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regEmail)) errs.email = "Enter a valid email.";
     if (!regPhone.trim()) errs.phone = "Enter a contact number.";
-    if (regPassword.length < 6) errs.password = "At least 6 characters.";
+    const weak = passwordProblem(regPassword, regEmail);
+    if (weak) errs.password = weak;
     if (regConfirm !== regPassword) errs.confirm = "Passwords don't match.";
+    if (!regAccepted) errs.accepted = `Please confirm you are ${MIN_AGE}+ and accept the Terms and Privacy Policy.`;
     setRegErrors(errs);
     if (Object.keys(errs).length) return;
 
     setLoading(true);
     setError("");
     try {
-      const res = await register(regName.trim(), regEmail.trim(), regPhone.trim(), regPassword);
+      const res = await register(regName.trim(), regEmail.trim(), regPhone.trim(), regPassword, regAccepted, humanToken);
       onSignIn({ token: res.token, ...res.user }, chosen?.key);
     } catch (err) {
       setError(err.message || "Could not create your account.");
     } finally {
       setLoading(false);
+      setHumanReset((n) => n + 1);
     }
   };
 
@@ -285,7 +297,9 @@ export default function LoginView({ onSignIn }) {
                     </button>
                   </div>
 
-                  <Button type="submit" size="lg" className="w-full" disabled={loading} style={chosen ? { background: chosen.color, color: "#fff" } : undefined}>
+                  <Turnstile onToken={setHumanToken} resetSignal={humanReset} />
+
+                  <Button type="submit" size="lg" className="w-full" disabled={loading || waitingForHuman} style={chosen ? { background: chosen.color, color: "#fff" } : undefined}>
                     {loading ? <Spinner color="#fff" /> : null}
                     {loading ? "Signing in..." : chosen ? `Enter ${chosen.label}` : "Sign in"}
                     {!loading && <ArrowRight size={15} />}
@@ -317,14 +331,18 @@ export default function LoginView({ onSignIn }) {
                 <form onSubmit={submitRegister} className="space-y-4">
                   <div>
                     <h1 className="text-2xl font-bold font-display" style={{ color: C.ink }}>Create your account</h1>
-                    <p className="text-sm mt-1" style={{ color: C.muted }}>Starts on Staff access - an admin can raise your role any time.</p>
+                    <p className="text-sm mt-1" style={{ color: C.muted }}>
+                      {DEMO_MODE
+                        ? "Starts on Staff access - an admin can raise your role any time."
+                        : "Use the email your administrator invited, then choose a password to activate your account."}
+                    </p>
                   </div>
 
                   <TextField label="Full name" icon={User} type="text" placeholder="Jane Doe" value={regName} onChange={(e) => setRegName(e.target.value)} error={regErrors.name} />
                   <TextField label="Email" icon={Mail} type="email" placeholder="you@company.com" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} error={regErrors.email} />
                   <TextField label="Contact number" icon={Phone} type="tel" placeholder="+254 7.." value={regPhone} onChange={(e) => setRegPhone(e.target.value)} error={regErrors.phone} />
                   <TextField
-                    label="Password" icon={Lock} type={showPw ? "text" : "password"} placeholder="At least 6 characters"
+                    label="Password" icon={Lock} type={showPw ? "text" : "password"} placeholder="8+ characters, a letter and a number"
                     value={regPassword} onChange={(e) => setRegPassword(e.target.value)} error={regErrors.password}
                     right={
                       <button type="button" onClick={() => setShowPw((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }}>
@@ -337,11 +355,29 @@ export default function LoginView({ onSignIn }) {
                     value={regConfirm} onChange={(e) => setRegConfirm(e.target.value)} error={regErrors.confirm}
                   />
 
+                  <div>
+                    <label className="flex items-start gap-2 text-xs leading-relaxed" style={{ color: C.muted }}>
+                      <input
+                        type="checkbox" className="mt-0.5" checked={regAccepted}
+                        onChange={(e) => setRegAccepted(e.target.checked)}
+                      />
+                      <span>
+                        I am {MIN_AGE} or older and I agree to the{" "}
+                        <a href="/terms.html" target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: C.blue }}>Terms of Use</a>
+                        {" "}and{" "}
+                        <a href="/privacy.html" target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: C.blue }}>Privacy Policy</a>.
+                      </span>
+                    </label>
+                    {regErrors.accepted && <p className="text-xs mt-1 font-medium" style={{ color: C.coral }}>{regErrors.accepted}</p>}
+                  </div>
+
                   {error && (
                     <p className="text-xs font-medium rounded-lg px-3 py-2" style={{ background: C.coralSoft, color: C.coral }}>{error}</p>
                   )}
 
-                  <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                  <Turnstile onToken={setHumanToken} resetSignal={humanReset} />
+
+                  <Button type="submit" size="lg" className="w-full" disabled={loading || waitingForHuman}>
                     {loading ? <Spinner color="#fff" /> : null}
                     {loading ? "Creating account..." : "Create account"}
                     {!loading && <ArrowRight size={15} />}
@@ -352,17 +388,10 @@ export default function LoginView({ onSignIn }) {
               {mode === "reset" && (
                 <div className="space-y-4">
                   <h1 className="text-2xl font-bold font-display" style={{ color: C.ink }}>Reset password</h1>
-                  {done ? (
-                    <p className="rounded-lg p-4 text-sm" style={{ background: C.emeraldSoft, color: C.emerald }}>
-                      If an account exists for that email, reset instructions are on the way.
-                    </p>
-                  ) : (
-                    <form onSubmit={(e) => { e.preventDefault(); setDone(true); }} className="space-y-4">
-                      <p className="text-sm" style={{ color: C.muted }}>Enter your email and we'll send reset instructions.</p>
-                      <input type="email" required placeholder="you@company.com" className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none" style={{ borderColor: C.line }} />
-                      <Button type="submit" size="lg" className="w-full">Send reset link</Button>
-                    </form>
-                  )}
+                  <p className="rounded-lg p-4 text-sm leading-relaxed" style={{ background: C.surface2, color: C.ink2 }}>
+                    Password resets are handled by your administrator. Ask them to remove and re-invite your email, then
+                    use <strong>Create account</strong> to choose a new password.
+                  </p>
                   <button type="button" onClick={() => { setMode("signin"); setDone(false); }} className="text-sm font-semibold" style={{ color: C.blue }}>
                     Back to sign in
                   </button>
@@ -370,6 +399,12 @@ export default function LoginView({ onSignIn }) {
               )}
             </>
           )}
+
+          <p className="mt-8 text-[11px] text-center" style={{ color: C.faint }}>
+            <a href="/terms.html" target="_blank" rel="noopener noreferrer" className="underline">Terms</a>
+            {" · "}
+            <a href="/privacy.html" target="_blank" rel="noopener noreferrer" className="underline">Privacy</a>
+          </p>
         </div>
       </div>
     </div>

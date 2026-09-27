@@ -3,14 +3,22 @@ import { createRoot } from "react-dom/client";
 import { StoreProvider } from "./lib/store.jsx";
 import App from "./App.jsx";
 import "./index.css";
+import { installGlobalErrorHandlers, newRef, reportError, RELEASE } from "./lib/monitor.js";
+
+installGlobalErrorHandlers();
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { error: null };
+    this.state = { error: null, ref: "" };
   }
   static getDerivedStateFromError(error) {
     return { error };
+  }
+  componentDidCatch(error, info) {
+    const ref = newRef();
+    reportError(error, { componentStack: info?.componentStack, ref });
+    this.setState({ ref });
   }
   render() {
     if (this.state.error) {
@@ -19,6 +27,9 @@ class ErrorBoundary extends React.Component {
           <h1 style={{ fontSize: 18, fontWeight: 700 }}>Something went wrong</h1>
           <p style={{ color: "#64748b", marginTop: 8, fontSize: 14 }}>
             {String(this.state.error?.message || this.state.error)}
+          </p>
+          <p style={{ color: "#94a3b8", marginTop: 8, fontSize: 12 }}>
+            This has been reported. If you contact support, quote code <strong>{this.state.ref || "-"}</strong> (build {RELEASE}).
           </p>
           <button
             onClick={() => { localStorage.clear(); location.reload(); }}

@@ -51,5 +51,6 @@ export function demoAccountForRole(role) {
 
 /** Both resolve to { token, user } or throw ApiError with a message
     fit to show the person directly. */
-export const login = (email, password) => api.login({ email, password });
-export const register = (name, email, phone, password) => api.register({ name, email, phone, password });
+export const login = (email, password, turnstileToken) => api.login({ email, password, turnstileToken });
+export const register = (name, email, phone, password, acceptedTerms, turnstileToken) =>
+  api.register({ name, email, phone, password, acceptedTerms, turnstileToken });

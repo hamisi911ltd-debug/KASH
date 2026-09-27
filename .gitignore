@@ -6,3 +6,7 @@ dist-single
 .wrangler
 worker/.jwtsecret.tmp
 worker/.seed-bulk.json
+
+# Source maps kept locally for decoding crash reports - never publish these
+sourcemaps
+.dev.vars

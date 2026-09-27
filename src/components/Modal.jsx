@@ -4,7 +4,7 @@
    treatment so the app feels like a single coherent product.
    ============================================================ */
 import React, { useEffect, useRef, useState } from "react";
-import { X, AlertTriangle, Smartphone, CheckCircle2 } from "lucide-react";
+import { X, AlertTriangle, Smartphone, CheckCircle2, ShieldCheck, ShieldX } from "lucide-react";
 import { C } from "../lib/constants";
 import { Button, Spinner } from "./ui.jsx";
 import { formatKES } from "../lib/format";
@@ -220,6 +220,72 @@ export function ConfirmDialog({ title, message, confirmLabel = "Delete", tone = 
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button variant={tone} onClick={() => { onConfirm(); onClose(); }}>{confirmLabel}</Button>
+        </div>
+      </div>
+    </Overlay>
+  );
+}
+
+/* ---------------------------------------------------------- ApprovalDialog */
+
+/**
+ * Give (or refuse) the formal sign-off on a big expense/order. Who approved
+ * it, their role and the time are recorded server-side (worker/src/index.js)
+ * the moment this succeeds - this dialog only collects the decision and an
+ * optional note to go with it.
+ */
+export function ApprovalDialog({ title, summary, amount, decision, onConfirm, onClose }) {
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const approving = decision === "approve";
+
+  const submit = async () => {
+    setBusy(true);
+    try {
+      await onConfirm(note.trim());
+      onClose();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Overlay onClose={onClose}>
+      <div
+        className="n1-pop w-full max-w-sm rounded-2xl p-6"
+        style={{ background: C.surface, boxShadow: C.shadowLg }}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: approving ? C.emeraldSoft : C.coralSoft }}>
+            {approving ? <ShieldCheck size={18} style={{ color: C.emerald }} /> : <ShieldX size={18} style={{ color: C.coral }} />}
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-bold font-display" style={{ color: C.ink }}>{title}</h3>
+            <p className="text-sm mt-1.5" style={{ color: C.muted }}>{summary}</p>
+            {amount != null && <p className="text-base font-bold mt-1" style={{ color: C.ink }}>{formatKES(amount)}</p>}
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Note (optional)</label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+            placeholder={approving ? "Anything worth recording with this approval..." : "Why is this being rejected..."}
+            className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
+            style={{ borderColor: C.line, background: C.surface }}
+          />
+          <p className="text-[11px] mt-1.5" style={{ color: C.faint }}>
+            Your name, role and the time are recorded automatically - this note is just extra context.
+          </p>
+        </div>
+        <div className="flex justify-end gap-2 mt-5">
+          <Button variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
+          <Button variant={approving ? "primary" : "danger"} onClick={submit} disabled={busy}>
+            {busy ? <Spinner color="#fff" size={14} /> : null}
+            {approving ? "Approve" : "Reject"}
+          </Button>
         </div>
       </div>
     </Overlay>

@@ -164,6 +164,9 @@ export function buildLedger(data) {
       id: e.id, refId: e.id, date: e.date, division: e.division, kind: "expense",
       category: e.category, desc: e.notes || e.vendor || e.category,
       amount: Number(e.amount) || 0, source: "manual", method: e.method, vendor: e.vendor,
+      // Whether this needed - and got - a head of department's sign-off.
+      // null for a small expense that never needed one. See ExpensesView.
+      approval: e.approval || null, createdBy: e.createdBy || "",
     });
   });
 

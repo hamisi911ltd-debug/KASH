@@ -2,14 +2,39 @@ name = "kash-api"
 main = "src/index.js"
 compatibility_date = "2024-11-01"
 
+# Security events (sign-ins, failed attempts, role changes) are written as
+# one JSON line each; read them with `npx wrangler tail` or the dashboard.
+[observability]
+enabled = true
+
 [[kv_namespaces]]
 binding = "KASH_KV"
 id = "2be14a2fc4ef46d6b6b91cde129bd461"
+
+# Settings below are NOT inherited by [env.live] - each deployment states its
+# own. Secrets (JWT_SECRET) are set with `npx wrangler secret put JWT_SECRET`
+# and never live in this file.
+#
+#   OPEN_SIGNUP        "true" lets anyone create a Staff account. Only the
+#                      public demo wants that; leave it out for a real
+#                      business, where people join by invitation.
+#   ALLOWED_ORIGINS    Comma-separated websites allowed to call this API,
+#                      e.g. "https://app.kash.co.ke". Empty = any website.
+#   PBKDF2_ITERATIONS  Password-hashing rounds (10000-100000). Raise it once
+#                      you're on a paid Workers plan; existing passwords are
+#                      upgraded automatically the next time each person signs in.
+[vars]
+OPEN_SIGNUP = "true"
 
 # A second, separate deployment of the same Worker code - its own empty
 # KV store, no demo data. Deploy with `wrangler deploy --env live`.
 [env.live]
 name = "kash-api-live"
+[env.live.observability]
+enabled = true
+[env.live.vars]
+# Fill in your real site before going live, e.g.:
+# ALLOWED_ORIGINS = "https://app.kash.co.ke"
 [[env.live.kv_namespaces]]
 binding = "KASH_KV"
 id = "1cd697611f9142a0b8b49f1de345d027"

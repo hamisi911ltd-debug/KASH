@@ -21,25 +21,56 @@ function fromB64Url(b64url) {
 
 /* ---------------------------------------------------------- passwords */
 
-export async function hashPassword(password) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
+/* Legacy hashes are "salt.hash" and always used 10,000 rounds. New ones are
+   "pbkdf2$<rounds>$salt$hash", so the round count travels with the hash and
+   can be raised later (see PBKDF2_ITERATIONS in wrangler.toml) without
+   locking anybody out. The Workers runtime caps PBKDF2 at 100,000 rounds. */
+export const LEGACY_ITERATIONS = 10000;
+export const MAX_ITERATIONS = 100000;
+
+export function clampIterations(value) {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n) || n < LEGACY_ITERATIONS) return LEGACY_ITERATIONS;
+  return Math.min(n, MAX_ITERATIONS);
+}
+
+async function derive(password, salt, iterations) {
   const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 10000, hash: "SHA-256" }, key, 256);
-  return `${toB64Url(salt)}.${toB64Url(new Uint8Array(bits))}`;
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, key, 256);
+  return toB64Url(new Uint8Array(bits));
+}
+
+function parseStored(stored) {
+  const s = String(stored || "");
+  if (s.startsWith("pbkdf2$")) {
+    const [, iter, saltB64, hashB64] = s.split("$");
+    return { iterations: clampIterations(iter), saltB64, hashB64 };
+  }
+  const [saltB64, hashB64] = s.split(".");
+  return { iterations: LEGACY_ITERATIONS, saltB64, hashB64 };
+}
+
+export async function hashPassword(password, iterations = LEGACY_ITERATIONS) {
+  const rounds = clampIterations(iterations);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  return `pbkdf2$${rounds}$${toB64Url(salt)}$${await derive(password, salt, rounds)}`;
 }
 
 export async function verifyPassword(password, stored) {
-  const [saltB64, hashB64] = String(stored || "").split(".");
+  const { iterations, saltB64, hashB64 } = parseStored(stored);
   if (!saltB64 || !hashB64) return false;
-  const salt = fromB64Url(saltB64);
-  const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 10000, hash: "SHA-256" }, key, 256);
-  const computed = toB64Url(new Uint8Array(bits));
+  const computed = await derive(password, fromB64Url(saltB64), iterations);
   // constant-time-ish compare
   if (computed.length !== hashB64.length) return false;
   let diff = 0;
   for (let i = 0; i < computed.length; i++) diff |= computed.charCodeAt(i) ^ hashB64.charCodeAt(i);
   return diff === 0;
+}
+
+/** True when a stored hash was made with fewer rounds than we now want,
+    so a successful login can quietly re-hash it stronger. */
+export function passwordNeedsUpgrade(stored, wantedIterations) {
+  return parseStored(stored).iterations < clampIterations(wantedIterations);
 }
 
 /* ---------------------------------------------------------- session tokens (HS256 JWT) */

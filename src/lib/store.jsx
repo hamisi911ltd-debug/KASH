@@ -167,6 +167,37 @@ export function StoreProvider({ children }) {
     [token]
   );
 
+  /** Approve or reject an expense/order that needed a department head's
+      sign-off. The server is the real record of who/when/what (see
+      worker/src/index.js); this also mirrors that decision into the local
+      company-wide approvals log for Super Admin/Admin/Director, so it shows
+      up immediately rather than waiting for the next full sync. */
+  const approveRecord = useCallback(
+    async (collection, id, decision, note) => {
+      const record = await api.approve(token, collection, id, decision, note);
+      setData((d) => {
+        const next = { ...d, [collection]: d[collection].map((r) => (r.id === id ? record : r)) };
+        const seesCompanyLog = !session?.division || session.division === "All";
+        if (seesCompanyLog && Array.isArray(d.approvals)) {
+          const entry = {
+            id: `local-${record.id}-${Date.now()}`,
+            collection, recordId: id,
+            division: record.division || (collection === "orders" ? "Food" : "General"),
+            summary: collection === "expenses"
+              ? `${record.category || ""}${record.vendor ? ` - ${record.vendor}` : ""}`
+              : `${record.item || "Order"}${record.customer ? ` - ${record.customer}` : ""}`,
+            amount: Number(record.amount) || 0, requestedBy: record.createdBy || "",
+            ...record.approval,
+          };
+          next.approvals = [entry, ...d.approvals];
+        }
+        return next;
+      });
+      return record;
+    },
+    [token, session?.division]
+  );
+
   /** Delete, then hand back an async restore closure so the toast can
       offer Undo (the restored record gets a new id - the delete already
       really happened server-side, so undo re-creates rather than un-deletes). */
@@ -234,13 +265,13 @@ export function StoreProvider({ children }) {
       session, setSession,
       toasts, toast, dismissToast,
       notify, notifyIfEnabled,
-      addRecord, updateRecord, patchRecord, removeRecord,
+      addRecord, updateRecord, patchRecord, removeRecord, approveRecord,
       markNotificationRead, markAllNotificationsRead, clearNotifications,
       toggleReminder, patchRoom, updateCompany, exportBackup,
     }),
     [
       data, dataLoading, dataError, resync, prefs, theme, session, toasts, toast, dismissToast, notify, notifyIfEnabled,
-      addRecord, updateRecord, patchRecord, removeRecord, markNotificationRead,
+      addRecord, updateRecord, patchRecord, removeRecord, approveRecord, markNotificationRead,
       markAllNotificationsRead, clearNotifications, toggleReminder, patchRoom, updateCompany, exportBackup,
     ]
   );

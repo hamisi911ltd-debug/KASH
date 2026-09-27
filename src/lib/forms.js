@@ -404,7 +404,7 @@ export function buildForms(data, session) {
         { key: "email", label: "Work email", type: "email", required: true },
         { key: "role", label: "Role", type: "select", options: opt(ROLES) },
         { key: "division", label: "Division", type: "select", options: divisionOptions(["All", ...DIVISIONS.filter((d) => d !== "General")]) },
-        { key: "status", label: "Status", type: "select", options: opt(["Invited", "Active", "Suspended"]), default: "Invited" },
+        { key: "status", label: "Status", type: "select", options: opt(["Invited", "Active", "Suspended"]), default: "Invited", hint: "A new invite always starts as Invited; they become Active when they set a password." },
       ],
     },
     reminder: {
