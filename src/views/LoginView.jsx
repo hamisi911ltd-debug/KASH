@@ -242,9 +242,11 @@ export default function LoginView({ onSignIn }) {
               </button>
 
               <div className="flex rounded-xl p-1 mb-7" style={{ background: C.surface2 }}>
+                {/* Real businesses sign in with their invited company email only. Self
+                   sign-up exists only on the public demo. */}
                 {[
                   ["signin", "Sign in"],
-                  ["register", "Create account"],
+                  ...(DEMO_MODE ? [["register", "Create account"]] : []),
                 ].map(([key, label]) => (
                   <button
                     type="button"
