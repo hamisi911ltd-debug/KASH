@@ -36,7 +36,7 @@ const PROPERTIES = [
     image: "images/apartment1.jpg",
     gallery: [],
     description: "A modern 2 bedroom apartment at Alina Ridge in Kileleshwa - a quiet, secure building with a gym, restaurant and mini supermarket on site.",
-    whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Modern%202%20Bedroom%20Apartment",
+    whatsapp: "https://wa.me/254142426451?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Modern%202%20Bedroom%20Apartment",
   },
   {
     slug: "cozy-studio-apartment",
@@ -49,7 +49,7 @@ const PROPERTIES = [
     image: "images/alina-studio-1.jpg",
     gallery: ["images/alina-studio-1.jpg", "images/alina-studio-2.jpg"],
     description: "A bright, self-contained studio at Alina Ridge with a comfortable living area, a separate sleeping area and a balcony view over the trees.",
-    whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Cozy%20Studio%20Apartment",
+    whatsapp: "https://wa.me/254142426451?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Cozy%20Studio%20Apartment",
   },
   {
     slug: "luxury-3-bedroom-apartment",
@@ -62,7 +62,7 @@ const PROPERTIES = [
     image: "images/apartment2.jpg",
     gallery: [],
     description: "A spacious, well-furnished 3 bedroom home at Alina Ridge - good for a family stay, a small group, or visiting relatives.",
-    whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Luxury%203%20Bedroom%20Apartment",
+    whatsapp: "https://wa.me/254142426451?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Luxury%203%20Bedroom%20Apartment",
   },
   {
     slug: "beachfront-airbnb-home",
@@ -75,7 +75,7 @@ const PROPERTIES = [
     image: "images/pool1.jpg",
     gallery: [],
     description: "A 3 bedroom Airbnb unit at Alina Ridge, Kileleshwa.",
-    whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Beachfront%20Airbnb%20Home",
+    whatsapp: "https://wa.me/254142426451?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Beachfront%20Airbnb%20Home",
   },
   {
     slug: "self-contained-kitchen-suite",
@@ -88,7 +88,7 @@ const PROPERTIES = [
     image: "images/kitchen.jpg",
     gallery: [],
     description: "A self-contained suite at Alina Ridge with its own fully equipped kitchen - a good fit for a longer stay where you'd rather cook.",
-    whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Self-Contained%20Kitchen%20Suite",
+    whatsapp: "https://wa.me/254142426451?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Self-Contained%20Kitchen%20Suite",
   },
   {
     slug: "garden-view-apartment",
@@ -101,6 +101,6 @@ const PROPERTIES = [
     image: "images/living-room.jpg",
     gallery: [],
     description: "A calm apartment at Alina Ridge with a view over the surrounding greenery - a quiet escape while staying close to town.",
-    whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Garden%20View%20Apartment",
+    whatsapp: "https://wa.me/254142426451?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Garden%20View%20Apartment",
   },
 ];

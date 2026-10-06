@@ -14,6 +14,8 @@ OPEN_SIGNUP = "true"
 
 [env.live]
 name = "kash-api-live"
+[env.live.vars]
+ALLOWED_ORIGINS = "https://kashgeneralservices.com,https://erp.kashgeneralservices.com,https://kash-live-eux.pages.dev"
 [env.live.observability]
 enabled = true
 [[env.live.kv_namespaces]]

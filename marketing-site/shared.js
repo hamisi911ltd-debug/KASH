@@ -76,13 +76,14 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
   }
 
-  /* Social profile links. Fill these in with the real page addresses; any
-     left empty hides its icon, so no visitor ever lands on a dead link. */
+  /* Social profile links. Replace each with the business’s own page address.
+     Until then each icon opens the platform’s home page. */
   var SOCIAL = {
-    facebook: "",
-    instagram: "",
-    x: "",
-    linkedin: "",
+    facebook: "https://www.facebook.com/",
+    instagram: "https://www.instagram.com/",
+    tiktok: "https://www.tiktok.com/",
+    x: "https://x.com/",
+    linkedin: "https://www.linkedin.com/",
   };
   function wireSocial() {
     document.querySelectorAll("[data-social]").forEach(function (a) {
