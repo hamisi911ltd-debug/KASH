@@ -19,7 +19,7 @@
    of "what can this role do", not two that can drift apart.
    ============================================================ */
 import { COLLECTIONS, ID_PREFIX, normalisers } from "../../src/lib/schema.js";
-import { APPROVABLE_COLLECTIONS } from "../../src/lib/constants.js";
+import { APPROVABLE_COLLECTIONS, MESSAGE_EVERYONE } from "../../src/lib/constants.js";
 import { capsForRole, canOpenView } from "../../src/lib/auth.js";
 import { setToday } from "../../src/lib/seed.js";
 import { toISODate } from "../../src/lib/format.js";
@@ -463,7 +463,7 @@ function scopeData(full, user) {
 
   // Messages are private to the two people in the thread, always - even
   // an Admin only sees threads they're personally part of.
-  d.messages = full.messages.filter((m) => m.from === user.name || m.to === user.name);
+  d.messages = full.messages.filter((m) => m.from === user.name || m.to === user.name || m.to === MESSAGE_EVERYONE);
 
   // The company-wide "who approved what" trail is for company-wide eyes
   // only (Super Admin/Admin/Director - division "All"). A department head
@@ -480,7 +480,7 @@ function scopeData(full, user) {
 function ownsRecord(collection, record, user) {
   if (collection === "trips") return record.driverId === user.driverId;
   if (collection === "orders" || collection === "bookings" || collection === "maintenance") return record.createdBy === user.name;
-  if (collection === "messages") return record.from === user.name || record.to === user.name;
+  if (collection === "messages") return record.from === user.name || record.to === user.name || record.to === MESSAGE_EVERYONE;
   return false;
 }
 
@@ -495,11 +495,10 @@ function ownsRecord(collection, record, user) {
     the hub every department raises things to; departments don't
     message each other directly. */
 async function canMessage(env, user, toName) {
-  const caps = capsForRole(user.role);
-  if (caps.write && (!user.division || user.division === "All")) return true;
+  // Staff can message any colleague directly, or the whole team at once.
+  if (toName === MESSAGE_EVERYONE) return true;
   const users = await getCollection(env, "users");
-  const recipient = users.find((u) => u.name === toName);
-  return !!recipient && (recipient.role === "Super Admin" || recipient.role === "Admin" || recipient.role === "Director");
+  return users.some((u) => u.name === toName && u.status !== "Suspended");
 }
 
 const FREE_PATCH_COLLECTIONS = new Set(["notifications", "reminders"]);

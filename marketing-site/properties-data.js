@@ -1,88 +1,106 @@
 /* ============================================================
-   Single source of truth for every listed property - the grid on
-   hospitality.html and the detail page (property.html?id=<slug>) both
-   read from this one array, so a price/photo/description only ever
-   needs updating in one place.
+   Every listed property - the grid on hospitality.html and the detail
+   page (property.html?id=<slug>) both read from this one array.
 
-   `mapQuery` is a plain place name/area fed straight into Google's
-   key-less embed (`google.com/maps?q=...&output=embed`) and into a
-   "Get Directions" link - it's a placeholder neighbourhood, not a
-   verified street address. Swap it for the property's real address
-   (or "lat,lng" coordinates, which work the same way) as soon as you
-   have it, so the pin lands on the right building rather than just
-   the general area.
+   All units are in the Alina Ridge building, Kileleshwa, Nairobi. The
+   building-wide facilities are kept once in BUILDING below so they're
+   edited in one place.
    ============================================================ */
+const BUILDING = {
+  name: "Alina Ridge",
+  area: "Kileleshwa, Nairobi, Kenya",
+  // The embedded map and the directions link both use this.
+  mapQuery: "Alina Ridge, Kileleshwa, Nairobi, Kenya",
+  directionsUrl: "https://maps.app.goo.gl/83xZaM1rRdbBn2cW6",
+  facilities: [
+    "Free Wi-Fi in every unit",
+    "Gym",
+    "Parking across 3 levels (ground floor and 2 basements)",
+    "Restaurant on site",
+    "Mini supermarket",
+    "Kids' play area",
+    "24-hour security",
+  ],
+  notes: "There is no swimming pool at this building.",
+};
+
 const PROPERTIES = [
   {
     slug: "modern-2-bedroom-apartment",
     title: "Modern 2 Bedroom Apartment",
     type: "Apartment",
-    location: "Nairobi, Kenya",
-    mapQuery: "Kilimani, Nairobi, Kenya",
+    location: BUILDING.area,
+    mapQuery: BUILDING.mapQuery,
     beds: 2, baths: 2, wifi: true,
     price: 8500,
     image: "images/apartment1.jpg",
-    description: "A bright, modern 2 bedroom apartment in a quiet, well-secured Kilimani compound - close to shops, restaurants and the CBD. Comfortably fits a family or two working professionals sharing.",
+    gallery: [],
+    description: "A modern 2 bedroom apartment at Alina Ridge in Kileleshwa - a quiet, secure building with a gym, restaurant and mini supermarket on site.",
     whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Modern%202%20Bedroom%20Apartment",
   },
   {
     slug: "cozy-studio-apartment",
     title: "Cozy Studio Apartment",
     type: "Apartment",
-    location: "Nairobi, Kenya",
-    mapQuery: "Westlands, Nairobi, Kenya",
+    location: BUILDING.area,
+    mapQuery: BUILDING.mapQuery,
     beds: 1, baths: 1, wifi: true,
     price: 6500,
-    image: "images/hospitality.jpg",
-    description: "A cozy, self-contained studio in Westlands, ideal for a solo traveller or a couple on a short stay - walking distance to malls, cafes and nightlife.",
+    image: "images/alina-studio-1.jpg",
+    gallery: ["images/alina-studio-1.jpg", "images/alina-studio-2.jpg"],
+    description: "A bright, self-contained studio at Alina Ridge with a comfortable living area, a separate sleeping area and a balcony view over the trees.",
     whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Cozy%20Studio%20Apartment",
   },
   {
     slug: "luxury-3-bedroom-apartment",
     title: "Luxury 3 Bedroom Apartment",
     type: "Airbnb",
-    location: "Nairobi, Kenya",
-    mapQuery: "Kileleshwa, Nairobi, Kenya",
+    location: BUILDING.area,
+    mapQuery: BUILDING.mapQuery,
     beds: 3, baths: 3, wifi: true,
     price: 12000,
     image: "images/apartment2.jpg",
-    description: "A spacious, beautifully furnished 3 bedroom home in leafy Kileleshwa - great for a family holiday, a small group, or hosting visiting relatives in comfort.",
+    gallery: [],
+    description: "A spacious, well-furnished 3 bedroom home at Alina Ridge - good for a family stay, a small group, or visiting relatives.",
     whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Luxury%203%20Bedroom%20Apartment",
   },
   {
     slug: "beachfront-airbnb-home",
     title: "Beachfront Airbnb Home",
     type: "Airbnb",
-    location: "Mombasa, Kenya",
-    mapQuery: "Nyali Beach, Mombasa, Kenya",
+    location: BUILDING.area,
+    mapQuery: BUILDING.mapQuery,
     beds: 3, baths: 3, wifi: true,
     price: 18000,
     image: "images/pool1.jpg",
-    description: "Wake up to the ocean in this beachfront home on Nyali Beach, Mombasa - private pool, palm-shaded garden, and the beach a few steps from the door.",
+    gallery: [],
+    description: "A 3 bedroom Airbnb unit at Alina Ridge, Kileleshwa.",
     whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Beachfront%20Airbnb%20Home",
   },
   {
     slug: "self-contained-kitchen-suite",
     title: "Self-Contained Kitchen Suite",
     type: "Apartment",
-    location: "Nairobi, Kenya",
-    mapQuery: "Lavington, Nairobi, Kenya",
+    location: BUILDING.area,
+    mapQuery: BUILDING.mapQuery,
     beds: 2, baths: 1, wifi: true,
     price: 9000,
     image: "images/kitchen.jpg",
-    description: "A well-equipped suite in Lavington with a full kitchen - a good fit for a longer stay where you'd rather cook than eat out every night.",
+    gallery: [],
+    description: "A self-contained suite at Alina Ridge with its own fully equipped kitchen - a good fit for a longer stay where you'd rather cook.",
     whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Self-Contained%20Kitchen%20Suite",
   },
   {
     slug: "garden-view-apartment",
     title: "Garden View Apartment",
     type: "Apartment",
-    location: "Nairobi, Kenya",
-    mapQuery: "Karen, Nairobi, Kenya",
+    location: BUILDING.area,
+    mapQuery: BUILDING.mapQuery,
     beds: 2, baths: 2, wifi: true,
     price: 10500,
     image: "images/living-room.jpg",
-    description: "A calm, garden-facing apartment in leafy Karen - a good escape from the city noise, while still a straightforward drive from the CBD.",
+    gallery: [],
+    description: "A calm apartment at Alina Ridge with a view over the surrounding greenery - a quiet escape while staying close to town.",
     whatsapp: "https://wa.me/254722001004?text=Hi%2C%20I%27d%20like%20to%20book%20the%20Garden%20View%20Apartment",
   },
 ];

@@ -247,3 +247,7 @@ export const STORAGE_KEY = "kash.data.v1";
 export const PREFS_KEY = "kash.prefs.v1";
 export const THEME_KEY = "kash.theme";
 export const SESSION_KEY = "kash.session.v1";
+
+/* Recipient name for a message to every staff member at once. Shared by the
+   app and the worker so both agree on what a broadcast is. */
+export const MESSAGE_EVERYONE = "Everyone";

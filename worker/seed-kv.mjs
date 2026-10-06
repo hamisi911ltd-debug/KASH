@@ -13,7 +13,7 @@ import { buildSeedData } from "../src/lib/seed.js";
 import { COLLECTIONS } from "../src/lib/schema.js";
 import { hashPassword } from "./src/crypto.js";
 
-const NAMESPACE_ID = "2be14a2fc4ef46d6b6b91cde129bd461";
+const NAMESPACE_ID = "58c6755f4e2d4ba6be4e3501ec9ca791";
 const DEMO_PASSWORD = "kash1234";
 
 async function main() {

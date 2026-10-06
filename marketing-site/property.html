@@ -49,6 +49,7 @@
             <div class="prop-detail-photo">
               <img id="propPhoto" src="" alt="">
             </div>
+            <div id="propGallery" style="display:none; margin-top:12px; display:none; gap:10px; grid-template-columns:repeat(auto-fill,minmax(120px,1fr));"></div>
 
             <div style="margin-top:22px;">
               <span class="eyebrow" id="propType" style="color:var(--coral);"></span>
@@ -58,6 +59,11 @@
                 <span id="propLoc"></span>
               </div>
               <p id="propDesc" style="margin-top:16px; color:var(--ink-2); line-height:1.7;"></p>
+
+              <h3 style="margin-top:26px; font-size:1.05rem;">Building facilities</h3>
+              <p id="buildingName" style="margin-top:4px; color:var(--muted); font-size:.85rem;"></p>
+              <ul class="prop-detail-amenities" id="buildingList"></ul>
+              <p id="buildingNotes" style="margin-top:12px; font-size:.84rem; color:var(--ink-2);"></p>
 
               <ul class="prop-detail-amenities">
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M5 10V7a1 1 0 0 1 1-1h4v4"/></svg><span id="propBeds"></span></li>
@@ -140,8 +146,31 @@
     // works for a place name/area. Swap mapQuery in properties-data.js for
     // a real address (or "lat,lng") once you have one for this property.
     var query = encodeURIComponent(p.mapQuery || p.location);
+    var b = typeof BUILDING !== "undefined" ? BUILDING : null;
+    if (b) {
+      document.getElementById("buildingName").textContent = b.name + " · " + b.area;
+      var list = document.getElementById("buildingList");
+      b.facilities.forEach(function (f) {
+        var li = document.createElement("li");
+        li.textContent = f;
+        list.appendChild(li);
+      });
+      document.getElementById("buildingNotes").textContent = b.notes;
+    }
+    var gallery = (p.gallery || []).length ? p.gallery : [];
+    if (gallery.length) {
+      var g = document.getElementById("propGallery");
+      g.style.display = "grid";
+      gallery.forEach(function (src) {
+        var im = document.createElement("img");
+        im.src = src; im.alt = p.title; im.loading = "lazy";
+        im.style.cssText = "width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:12px;";
+        im.addEventListener("click", function () { photo.src = src; });
+        g.appendChild(im);
+      });
+    }
     document.getElementById("mapFrame").src = "https://www.google.com/maps?q=" + query + "&output=embed";
-    document.getElementById("directionsBtn").href = "https://www.google.com/maps/search/?api=1&query=" + query;
+    document.getElementById("directionsBtn").href = (b && b.directionsUrl) || ("https://www.google.com/maps/search/?api=1&query=" + query);
     document.getElementById("mapAreaLabel").textContent = p.mapQuery || p.location;
   })();
 </script>

@@ -76,6 +76,22 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
   }
 
+  /* Social profile links. Fill these in with the real page addresses; any
+     left empty hides its icon, so no visitor ever lands on a dead link. */
+  var SOCIAL = {
+    facebook: "",
+    instagram: "",
+    x: "",
+    linkedin: "",
+  };
+  function wireSocial() {
+    document.querySelectorAll("[data-social]").forEach(function (a) {
+      var url = SOCIAL[a.getAttribute("data-social")];
+      if (url) { a.href = url; a.target = "_blank"; a.rel = "noopener"; }
+      else a.style.display = "none";
+    });
+  }
+
   function setYear() {
     var y = document.getElementById("year");
     if (y) y.textContent = new Date().getFullYear();
@@ -114,6 +130,7 @@
     wireServicesDropdown();
     markActiveNav();
     setYear();
+    wireSocial();
     document.dispatchEvent(new CustomEvent("kash:chrome-ready"));
   });
 })();

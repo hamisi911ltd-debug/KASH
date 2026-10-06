@@ -1,0 +1,21 @@
+name = "kash-api"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[observability]
+enabled = true
+
+[[kv_namespaces]]
+binding = "KASH_KV"
+id = "58c6755f4e2d4ba6be4e3501ec9ca791"
+
+[vars]
+OPEN_SIGNUP = "true"
+
+[env.live]
+name = "kash-api-live"
+[env.live.observability]
+enabled = true
+[[env.live.kv_namespaces]]
+binding = "KASH_KV"
+id = "1495886fa54e4e0c9591b49882b9f131"

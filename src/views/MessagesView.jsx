@@ -5,7 +5,7 @@
    ============================================================ */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Send, Search, MessagesSquare, Clock, Pencil, Trash2, ArrowLeft } from "lucide-react";
-import { C, DIVISIONS, divisionLabel } from "../lib/constants";
+import { C, DIVISIONS, divisionLabel, MESSAGE_EVERYONE } from "../lib/constants";
 import { relativeTime, formatDateLong } from "../lib/format";
 import { TODAY } from "../lib/seed";
 import { useStore } from "../lib/store.jsx";
@@ -29,13 +29,18 @@ function Messages() {
   const endRef = useRef(null);
 
   const contacts = useMemo(() => {
-    // A division worker (writeOwn, not write) can only message Admin -
-    // departments stay siloed; only Admin/Super Admin/Director sees across all of them.
+    // Anyone signed in can message anyone, or the whole team at once.
     const pool = data.users.filter((u) => u.name !== me);
-    const others = caps.writeOwn && !caps.write
-      ? pool.filter((u) => u.role === "Super Admin" || u.role === "Admin" || u.role === "Director")
-      : pool;
-    return others
+    const everyoneThread = data.messages
+      .filter((m) => m.to === MESSAGE_EVERYONE)
+      .sort((a, b) => new Date(a.ts) - new Date(b.ts));
+    const everyone = {
+      user: { id: "everyone", name: MESSAGE_EVERYONE, role: "Whole team", division: "All" },
+      thread: everyoneThread,
+      last: everyoneThread[everyoneThread.length - 1],
+      unread: 0,
+    };
+    const people = pool
       .map((u) => {
         const thread = data.messages
           .filter((m) => (m.from === me && m.to === u.name) || (m.from === u.name && m.to === me))
@@ -49,6 +54,7 @@ function Messages() {
         const bt = b.last ? new Date(b.last.ts).getTime() : 0;
         return bt - at;
       });
+    return [everyone, ...people];
   }, [data.users, data.messages, me]);
 
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -283,7 +289,7 @@ export default function MessagesView() {
     <Page>
       <PageHeader
         title="Messages"
-        subtitle={caps.write ? "Message anyone on the platform, and track shared reminders." : "Message Admin directly, and track shared reminders."}
+        subtitle="Message a colleague directly, or the whole team at once - and track shared reminders."
         actions={
           <>
             {tab === "reminders" ? (

@@ -9,7 +9,7 @@ enabled = true
 
 [[kv_namespaces]]
 binding = "KASH_KV"
-id = "2be14a2fc4ef46d6b6b91cde129bd461"
+id = "58c6755f4e2d4ba6be4e3501ec9ca791"
 
 # Photos a division Manager uploads for their website listings. Served back
 # out at GET /uploads/<key> by the Worker itself (see worker/src/index.js) -
@@ -44,7 +44,7 @@ enabled = true
 # ALLOWED_ORIGINS = "https://app.kash.co.ke"
 [[env.live.kv_namespaces]]
 binding = "KASH_KV"
-id = "1cd697611f9142a0b8b49f1de345d027"
+id = "1495886fa54e4e0c9591b49882b9f131"
 [[env.live.r2_buckets]]
 binding = "IMAGES"
 bucket_name = "kash-listing-images-live"
