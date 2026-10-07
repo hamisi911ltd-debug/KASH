@@ -106,9 +106,18 @@
         <div class="grid-head"><div><span class="eyebrow" style="color:var(--teal);">Welcome to KASH</span><h2>One trusted name for everything your business and home need</h2></div></div>
         <p style="color:var(--ink-2); max-width:72ch; font-size:1.02rem;">KASH General Suppliers is a Kenyan company that brings three kinds of service together under one roof. Instead of juggling a transporter, a food supplier and a place to stay, you deal with one team that knows your needs and answers the phone. Whether you run a restaurant, a shop, a farm, a school trip or a family visit to Nairobi or the coast, we have something ready for you.</p>
         <div class="welcome-grid">
-          <div class="welcome-item cross-in" style="--d:0"><span class="w-badge w-blue">T</span><h3>Transport &amp; logistics</h3><p>Trucks for bulk cargo, saloon cars and Ubers for people and small loads, and tuktuks for quick local trips in Mombasa and beyond. Every vehicle is maintained, every driver is experienced, and every trip is tracked from pickup to drop-off.</p><a href="transport.html" class="learn" style="color:var(--blue);">See our fleet &rarr;</a></div>
-          <div class="welcome-item cross-in" style="--d:1"><span class="w-badge w-gold">A</span><h3>Agro &amp; food supply</h3><p>Fresh chicken, farm eggs, goat meat and beef, cut to order and delivered on time for hotels, restaurants, butcheries and households. We buy close to home, so what reaches your kitchen is fresh, clean and fairly priced.</p><a href="agro.html" class="learn" style="color:var(--gold);">See our products &rarr;</a></div>
-          <div class="welcome-item cross-in" style="--d:2"><span class="w-badge w-coral">P</span><h3>Properties &amp; stays</h3><p>Furnished apartments and Airbnb homes in Kileleshwa at Alina Ridge, with free Wi-Fi, a gym, a restaurant, a mini supermarket, a kids&rsquo; play area and 24-hour security. Good for business trips, family visits and longer stays.</p><a href="hospitality.html" class="learn" style="color:var(--coral);">See our properties &rarr;</a></div>
+          <div class="welcome-item cross-in" style="--d:0">
+            <img class="w-photo" src="images/kenya-taxi-1.jpg" alt="">
+            <div class="w-content"><span class="w-badge w-blue">T</span><h3>Transport &amp; logistics</h3><p>Trucks for bulk cargo, saloon cars and Ubers for people and small loads, and tuktuks for quick local trips in Mombasa and beyond. Every vehicle is maintained, every driver is experienced, and every trip is tracked from pickup to drop-off.</p><a href="transport.html" class="learn">See our fleet &rarr;</a></div>
+          </div>
+          <div class="welcome-item cross-in" style="--d:1">
+            <img class="w-photo" src="images/cattle.jpg" alt="">
+            <div class="w-content"><span class="w-badge w-gold">A</span><h3>Agro &amp; food supply</h3><p>Fresh chicken, farm eggs, goat meat and beef, cut to order and delivered on time for hotels, restaurants, butcheries and households. We buy close to home, so what reaches your kitchen is fresh, clean and fairly priced.</p><a href="agro.html" class="learn">See our products &rarr;</a></div>
+          </div>
+          <div class="welcome-item cross-in" style="--d:2">
+            <img class="w-photo" src="images/apartment1.jpg" alt="">
+            <div class="w-content"><span class="w-badge w-coral">P</span><h3>Properties &amp; stays</h3><p>Furnished apartments and Airbnb homes in Kileleshwa at Alina Ridge, with free Wi-Fi, a gym, a restaurant, a mini supermarket, a kids&rsquo; play area and 24-hour security. Good for business trips, family visits and longer stays.</p><a href="hospitality.html" class="learn">See our properties &rarr;</a></div>
+          </div>
         </div>
         <div class="why-grid reveal" style="--d:1">
           <div><b>Reliable</b><span>Promises kept, on time, every time.</span></div>
@@ -272,6 +281,22 @@
       i = (i + 1) % imgs.length;
       imgs[i].classList.add("on"); dots[i].classList.add("on");
     }, 3800);
+  })();
+</script>
+<script>
+  // Photo-gallery rows: auto-advance one card at a time, looping back to
+  // the start - still scrollable by hand, autoplay just resumes after.
+  (function () {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    document.querySelectorAll(".g-track").forEach(function (track) {
+      if (track.scrollWidth <= track.clientWidth + 4) return; // nothing to scroll
+      setInterval(function () {
+        var card = track.querySelector(".g-item");
+        var step = card ? card.getBoundingClientRect().width + 14 : track.clientWidth * 0.8;
+        var atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+        track.scrollTo({ left: atEnd ? 0 : track.scrollLeft + step, behavior: "smooth" });
+      }, 3200);
+    });
   })();
 </script>
 </body>
