@@ -609,3 +609,20 @@ body[data-page="contact"] .fab-contact{display:none;} /* already there - no poin
 .home-hero-grid{align-items:start;}
 .home-hero .actions{margin-top:22px;}
 .home-hero h1{margin-top:6px;}
+
+/* ---------------------------------------------------------- hero: slideshow as the full background, fading to the left */
+.home-hero{position:relative; overflow:hidden; isolation:isolate; min-height:min(88vh,720px); display:flex; align-items:center; padding-block:clamp(40px,6vw,80px);}
+.home-hero > .hero-slider{position:absolute; top:0; right:0; bottom:0; left:auto; width:78%; max-width:none; aspect-ratio:auto; border-radius:0; box-shadow:none; animation:none; justify-self:auto; z-index:0;}
+.home-hero > .hero-slider::after{background:linear-gradient(90deg, var(--cream) 0%, rgba(246,239,225,.82) 14%, rgba(246,239,225,.35) 42%, rgba(246,239,225,0) 72%), linear-gradient(0deg, rgba(21,47,77,.18), rgba(21,47,77,0) 40%);}
+.home-hero > .hero-slider .slider-dots{left:auto; right:32px; bottom:26px; transform:none;}
+.home-hero > .hero-slider .tagline-tag{top:auto; bottom:64px; right:32px; text-align:right;}
+.home-hero > .wrap{position:relative; z-index:1; width:100%;}
+.home-hero-grid{grid-template-columns:minmax(0,.9fr) minmax(0,1fr);}
+.home-hero-grid > div:first-child{background:transparent; max-width:520px;}
+.home-hero .hero-watermark{z-index:0;}
+@media (max-width:920px){
+  .home-hero{min-height:auto;}
+  .home-hero > .hero-slider{width:100%; opacity:.5;}
+  .home-hero > .hero-slider::after{background:linear-gradient(180deg, rgba(246,239,225,.5), rgba(246,239,225,.92));}
+  .home-hero-grid{grid-template-columns:1fr;}
+}
