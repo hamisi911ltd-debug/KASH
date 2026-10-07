@@ -7,7 +7,7 @@
 import React, { useState } from "react";
 import {
   Mail, Lock, Eye, EyeOff, Truck, Beef, BedDouble, ArrowRight,
-  LayoutDashboard, ChevronLeft, User, Phone,
+  LayoutDashboard, ChevronLeft, User, Phone, MonitorCog,
 } from "lucide-react";
 import { C } from "../lib/constants";
 import { DEMO_MODE, DEMO_LOGINS, DEMO_PASSWORD, login, register } from "../lib/auth";
@@ -21,6 +21,7 @@ const BUSINESSES = [
   { key: "transport", label: "Transport", sub: "Fleet, trips & drivers", icon: Truck, color: C.emerald, soft: C.emeraldSoft, role: "Transport Manager" },
   { key: "food", label: "Agro", sub: "Chicken, eggs, goat & meat", icon: Beef, color: C.amber, soft: C.amberSoft, role: "Agro Manager" },
   { key: "hospitality", label: "Hospitality", sub: "Rooms & bookings", icon: BedDouble, color: C.coral, soft: C.coralSoft, role: "Hospitality Manager" },
+  { key: "website", label: "IT", sub: "Website, accounts & system settings", icon: MonitorCog, color: C.violet, soft: C.violetSoft, role: "IT Officer" },
 ];
 
 const VALUE_PROPS = [

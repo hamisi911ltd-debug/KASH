@@ -778,7 +778,8 @@ const app = {
         const canPay = collection === "payments" && caps.payments;
         const canMsg = collection === "messages"; // anyone signed in - checked properly below
         const canListing = collection === "listings" && caps.manageListings;
-        if (!caps.write && !canOwn && !canPay && !canMsg && !canListing) return err("You don't have access to add that.", 403);
+        const canUsers = collection === "users" && caps.manageUsers;
+        if (!caps.write && !canOwn && !canPay && !canMsg && !canListing && !canUsers) return err("You don't have access to add that.", 403);
 
         let body = await readJson(request);
         if (collection === "messages") {
@@ -847,6 +848,7 @@ const app = {
         const allowed =
           caps.write ||
           (collection === "listings" && caps.manageListings) ||
+          (collection === "users" && caps.manageUsers) ||
           FREE_PATCH_COLLECTIONS.has(collection) ||
           (existing && ownsRecord(collection, existing, user) && (collection === "messages" || caps.writeOwn));
         if (!allowed) return err("You don't have access to change that.", 403);

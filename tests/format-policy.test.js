@@ -100,10 +100,10 @@ describe("role permissions (the rules the server enforces)", () => {
     }
   });
 
-  it("only Super Admin, Admin and Director can manage users or settings", () => {
+  it("only Super Admin, Admin, Director and IT Officer can manage users or settings", () => {
     const allowed = ROLES.filter((r) => ROLE_CAPS[r].manageUsers);
-    expect(allowed.sort()).toEqual(["Admin", "Director", "Super Admin"]);
-    expect(ROLES.filter((r) => ROLE_CAPS[r].settings).sort()).toEqual(["Admin", "Director", "Super Admin"]);
+    expect(allowed.sort()).toEqual(["Admin", "Director", "IT Officer", "Super Admin"]);
+    expect(ROLES.filter((r) => ROLE_CAPS[r].settings).sort()).toEqual(["Admin", "Director", "IT Officer", "Super Admin"]);
   });
 
   it("no worker role can write to the whole division or delete", () => {

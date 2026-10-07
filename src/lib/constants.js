@@ -122,7 +122,7 @@ export const ROLE_VIEWS = {
   "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "website", "updates", "settings"],
   "Hospitality Attendant": ["hospitality", "payments", "updates", "settings"],
   Accountant: ["overview", "all", "payments", "expenses", "reports", "approvals", "updates", "settings"],
-  "IT Officer": ["website", "updates", "settings"],
+  "IT Officer": ["website", "users", "updates", "settings"],
   Staff: ["overview", "payments", "updates", "settings"],
 };
 
@@ -157,7 +157,12 @@ export const ROLE_CAPS = {
   "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: true },
   "Hospitality Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
   Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: true, manageListings: false },
-  "IT Officer": { write: false, manageUsers: false, deleteAny: false, settings: false, payments: false, approve: false, manageListings: true },
+  // More control than a Manager over the system itself (invites/suspends
+  // accounts, company profile settings) but deliberately none of a
+  // Manager's financial reach - no payments, no expense approvals, and
+  // "write" stays false so they can't touch a division's own operational
+  // records (trips, orders, bookings).
+  "IT Officer": { write: false, manageUsers: true, deleteAny: false, settings: true, payments: false, approve: false, manageListings: true },
   Staff: { write: false, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
 };
 

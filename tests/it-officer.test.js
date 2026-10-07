@@ -33,13 +33,28 @@ describe("IT Officer - website publishing only", () => {
     expect(res.status).toBe(201);
   });
 
-  it("cannot see or change money, users or approvals", async () => {
+  it("cannot see or change money or approvals", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
     expect((await call(env, "POST", "/api/expenses", { token: t.it.token, body: { amount: 100 } })).status).toBe(403);
-    expect((await call(env, "POST", "/api/users", { token: t.it.token, body: { name: "X", email: "x@kash.test", role: "Staff" } })).status).toBe(403);
+    expect((await call(env, "POST", "/api/payments", { token: t.it.token, body: { amount: 100 } })).status).toBe(403);
     const exp = await call(env, "GET", "/api/sync", { token: t.it.token });
     expect(exp.body.data.approvals).toEqual([]);
+  });
+
+  it("can invite and manage user accounts, but can't touch a Super Admin or promote anyone into one", async () => {
+    const env = makeEnv();
+    const t = await bootstrap(env, staff);
+    const invited = await call(env, "POST", "/api/users", { token: t.it.token, body: { name: "New Hire", email: "newhire@kash.test", role: "Staff" } });
+    expect(invited.status).toBe(201);
+    const promote = await call(env, "PATCH", `/api/users/${invited.body.id}`, { token: t.it.token, body: { role: "Super Admin" } });
+    expect(promote.status).toBe(403);
+    const suspend = await call(env, "PATCH", `/api/users/${invited.body.id}`, { token: t.it.token, body: { status: "Suspended" } });
+    expect(suspend.status).toBe(200);
+    const superAdmin = await call(env, "GET", "/api/sync", { token: t.it.token });
+    const sa = superAdmin.body.data.users.find((u) => u.role === "Super Admin");
+    const touchSa = await call(env, "PATCH", `/api/users/${sa.id}`, { token: t.it.token, body: { status: "Suspended" } });
+    expect(touchSa.status).toBe(403);
   });
 
   it("a Driver still cannot publish", async () => {
