@@ -119,17 +119,32 @@
   (function () {
     function qs(name) { return new URLSearchParams(location.search).get(name); }
     var id = qs("id");
-    var p = (typeof PROPERTIES !== "undefined" ? PROPERTIES : []).find(function (x) { return x.slug === id; });
+    var staticP = (typeof PROPERTIES !== "undefined" ? PROPERTIES : []).find(function (x) { return x.slug === id; });
     var root = document.getElementById("propertyRoot");
     var notFound = document.getElementById("notFound");
 
-    if (!p) {
+    function notFoundNow() {
       root.style.display = "none";
       notFound.style.display = "block";
       document.title = "Property Not Found - KASH General Suppliers";
-      return;
     }
 
+    /* A property published from the ERP has no built-in entry: read it from
+       the live feed and show it the same way. */
+    function fromLive(l) {
+      var b = typeof BUILDING !== "undefined" ? BUILDING : {};
+      var img = /^https?:///.test(l.imageUrl || "") ? l.imageUrl : "";
+      return {
+        slug: l.id, title: l.title || "Property", type: "Apartment",
+        location: b.area || "", mapQuery: b.mapQuery || b.area || "",
+        beds: null, baths: null, wifi: false, price: Number(l.price) || 0,
+        image: img, gallery: img ? [img] : [], description: l.description || "",
+        amenities: l.amenities || [], meta: l.meta || "",
+        whatsapp: "https://wa.me/254142426451?text=" + encodeURIComponent("Hi, I'd like to book " + (l.title || "this property")),
+      };
+    }
+
+    function start(p) {
     document.title = p.title + " - KASH General Suppliers";
     document.getElementById("crumbTitle").textContent = p.title;
     document.getElementById("propTitle").textContent = p.title;
@@ -140,8 +155,11 @@
     photo.src = p.image;
     photo.alt = p.title;
     document.getElementById("propPrice").textContent = "KES " + p.price.toLocaleString();
-    document.getElementById("propBeds").textContent = p.beds + (p.beds === 1 ? " Bed" : " Beds");
-    document.getElementById("propBaths").textContent = p.baths + (p.baths === 1 ? " Bath" : " Baths");
+    var bedsEl = document.getElementById("propBeds"), bathsEl = document.getElementById("propBaths");
+    if (p.beds == null) bedsEl.parentElement.style.display = "none";
+    else bedsEl.textContent = p.beds + (p.beds === 1 ? " Bed" : " Beds");
+    if (p.baths == null) bathsEl.parentElement.style.display = "none";
+    else bathsEl.textContent = p.baths + (p.baths === 1 ? " Bath" : " Baths");
     document.getElementById("wifiItem").style.display = p.wifi ? "" : "none";
     document.getElementById("bookBtn").href = p.whatsapp;
 
@@ -185,6 +203,15 @@
     document.getElementById("mapFrame").src = "https://www.google.com/maps?q=" + query + "&output=embed";
     document.getElementById("directionsBtn").href = (b && b.directionsUrl) || ("https://www.google.com/maps/search/?api=1&query=" + query);
     document.getElementById("mapAreaLabel").textContent = p.mapQuery || p.location;
+    }
+
+    if (staticP) start(staticP);
+    else if (window.KASH && id) {
+      window.KASH.fetchPublished("Hospitality").then(function (items) {
+        var hit = items.filter(function (x) { return x.id === id; })[0];
+        if (hit) start(fromLive(hit)); else notFoundNow();
+      });
+    } else notFoundNow();
   })();
 </script>
 </body>

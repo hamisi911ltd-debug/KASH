@@ -103,6 +103,17 @@
     return n;
   }
 
+  /* Resolves to the division's published listings, or [] if the feed is
+     unreachable - callers then fall back to the built-in content. */
+  function fetchPublished(division) {
+    return fetch(KASH_API + "/api/public/listings?division=" + encodeURIComponent(division))
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .catch(function () { return []; });
+  }
+  window.KASH = window.KASH || {};
+  window.KASH.fetchPublished = fetchPublished;
+  window.KASH.api = KASH_API;
+
   function renderListing(l, container) {
     var card = el("div", "p-card");
     var photo = el("div", "photo");

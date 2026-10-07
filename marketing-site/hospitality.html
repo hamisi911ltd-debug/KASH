@@ -67,7 +67,7 @@
           <p style="margin-top:6px; color:var(--ink-2); font-size:.9rem;">Handpicked homes and apartments for your comfort, whether for a short stay or long visit. Tap any property to see full details, amenities and its location on the map.</p>
         </div>
       </div>
-      <div class="properties">
+      <div class="properties" id="static-properties">
         <div class="prop-card">
           <div class="photo"><img src="images/apartment1.jpg" alt="Modern 2 bedroom apartment living room"><span class="p-badge" style="color:var(--teal);">Apartment</span></div>
           <div class="prop-body">
@@ -164,6 +164,31 @@
 </main>
 
 <div id="site-footer"></div>
+<script>
+  // Once the feed has properties, they replace the built-in cards. Each card
+  // opens its own detail page, where the amenities and photos are shown.
+  document.addEventListener("kash:chrome-ready", function () {
+    window.KASH.fetchPublished("Hospitality").then(function (items) {
+      if (!items.length) return;
+      var wrap = document.getElementById("static-properties");
+      wrap.innerHTML = "";
+      items.forEach(function (l) {
+        var card = document.createElement("div"); card.className = "prop-card";
+        var photo = document.createElement("div"); photo.className = "photo";
+        if (/^https?:///.test(l.imageUrl || "")) { var img = document.createElement("img"); img.src = l.imageUrl; img.alt = l.title || ""; img.loading = "lazy"; photo.appendChild(img); }
+        card.appendChild(photo);
+        var body = document.createElement("div"); body.className = "prop-body";
+        var h = document.createElement("h3"); h.textContent = l.title || ""; body.appendChild(h);
+        if (l.meta) { var m = document.createElement("div"); m.className = "prop-loc"; m.textContent = l.meta; body.appendChild(m); }
+        if (l.price) { var pr = document.createElement("p"); pr.className = "prop-price"; pr.innerHTML = ""; var b = document.createElement("b"); b.textContent = "KSh " + Number(l.price).toLocaleString(); pr.appendChild(b); pr.appendChild(document.createTextNode(" /night")); body.appendChild(pr); }
+        var a = document.createElement("a"); a.className = "btn btn-line-navy btn-sm prop-cta"; a.href = "property.html?id=" + encodeURIComponent(l.id); a.textContent = "View Details";
+        body.appendChild(a);
+        card.appendChild(body);
+        wrap.appendChild(card);
+      });
+    });
+  });
+</script>
 <script src="shared.js"></script>
 </body>
 </html>

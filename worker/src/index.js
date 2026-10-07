@@ -539,7 +539,7 @@ const app = {
         const all = await getCollection(env, "listings");
         const pub = all
           .filter((l) => l.active && (!division || l.division === division))
-          .map((l) => ({ id: l.id, division: l.division, title: l.title, description: l.description, price: l.price, meta: l.meta, imageUrl: l.imageUrl }));
+          .map((l) => ({ id: l.id, division: l.division, title: l.title, description: l.description, price: l.price, meta: l.meta, imageUrl: l.imageUrl, amenities: l.amenities || [] }));
         return json(pub, 200, { "Cache-Control": "public, max-age=60" });
       }
 
