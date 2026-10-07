@@ -518,3 +518,36 @@ body[data-page="contact"] .fab-contact{display:none;} /* already there - no poin
 .cta-band p{margin-top:6px; color:rgba(246,239,225,.8);}
 .cta-actions{display:flex; gap:12px; flex-wrap:wrap;}
 .cta-band .btn-line-navy{color:var(--cream); border-color:var(--cream);}
+
+/* ---------------------------------------------------------- layout: airier home, smaller photos, more motion */
+.welcome{padding-block:clamp(10px,2vw,20px);}
+.welcome .grid-head{margin-bottom:6px;}
+.welcome > p{margin-top:18px; line-height:1.85;}
+.welcome-grid{gap:clamp(18px,3vw,32px); margin-top:clamp(28px,4vw,44px);}
+.welcome-item{transition:transform .35s ease, box-shadow .35s ease; padding:clamp(22px,3vw,30px);}
+.welcome-item:hover{transform:translateY(-6px); box-shadow:var(--shadow-md);}
+.why-grid{margin-top:clamp(30px,4vw,44px); padding-top:clamp(24px,3vw,32px);}
+.why-grid > div{transition:transform .3s ease;}
+.why-grid > div:hover{transform:translateY(-3px);}
+
+/* photos: smaller, so the page reads at a glance */
+.div-card .photo{aspect-ratio:16/9; max-height:210px;}
+.world-photo{aspect-ratio:4/3; max-height:360px; max-width:520px; width:100%; justify-self:center;}
+.world-row{gap:clamp(32px,6vw,80px);}
+.world-copy{max-width:52ch;}
+.world-copy h2{margin-top:10px;}
+.p-card .photo{aspect-ratio:4/3; max-height:200px;}
+.fleet-card .photo{aspect-ratio:16/10; max-height:200px;}
+.prop-card .photo{aspect-ratio:16/10; max-height:200px;}
+
+/* the home hero photo floats gently */
+.home-hero-photo{animation:floaty 7s ease-in-out infinite;}
+@keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+@media (prefers-reduced-motion:reduce){ .home-hero-photo{animation:none;} }
+
+/* section headings and cards rise in */
+.story-head, .world-copy, .welcome-item, .step{transition:transform .8s cubic-bezier(.2,.8,.2,1), opacity .8s cubic-bezier(.2,.8,.2,1);}
+.world:hover .world-copy h2{color:var(--blue);}
+.world-copy h2{transition:color .3s ease;}
+.cta-band .btn{transition:transform .2s ease;}
+.cta-band .btn:hover{transform:translateY(-3px);}
