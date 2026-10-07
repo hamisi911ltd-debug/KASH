@@ -190,7 +190,9 @@ export const normalisers = {
     meta: (v.meta || "").trim(),
     // Only ever an http(s) link - never trust this as HTML, and never
     // resolve a bare/relative path someone pasted in by mistake.
-    imageUrl: /^https?:\/\//.test(String(v.imageUrl || "").trim()) ? v.imageUrl.trim() : "",
+    // Up to five photos, each an http(s) link; the first one is the cover.
+    images: (Array.isArray(v.images) ? v.images : [v.imageUrl]).map((u) => String(u || "").trim()).filter((u) => /^https?:\/\//.test(u)).slice(0, 5),
+    imageUrl: ((Array.isArray(v.images) ? v.images : [v.imageUrl]).map((u) => String(u || "").trim()).filter((u) => /^https?:\/\//.test(u))[0]) || "",
     active: v.active === false || v.active === "false" ? false : true,
     // The amenities ticked for this listing - kept to plain text labels.
     amenities: Array.isArray(v.amenities) ? v.amenities.map((a) => String(a).trim()).filter(Boolean).slice(0, 40) : [],

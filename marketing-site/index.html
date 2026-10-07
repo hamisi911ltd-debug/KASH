@@ -120,9 +120,87 @@
       </div>
     </div>
   </section>
+
+<section class="story" aria-label="How KASH works">
+  <div class="wrap">
+    <div class="story-head reveal">
+      <span class="eyebrow" style="color:var(--teal);">How it works</span>
+      <h2>From first call to finished job, one team</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal" style="--d:0"><span class="step-no">1</span><h3>Tell us what you need</h3><p>A truck, a weekly chicken order, or a place to stay. Call, WhatsApp or send a message through the site.</p></div>
+      <div class="step reveal" style="--d:1"><span class="step-no">2</span><h3>We plan it with you</h3><p>We confirm the price, the vehicle or room, and the timing, in writing, before anything starts.</p></div>
+      <div class="step reveal" style="--d:2"><span class="step-no">3</span><h3>We deliver and follow up</h3><p>Goods move on time, meat arrives fresh, and your guests are checked in. We check back afterwards.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="world reveal">
+  <div class="wrap world-row">
+    <div class="world-photo"><img src="images/transport.jpg" alt="A KASH truck on the road" loading="lazy"></div>
+    <div class="world-copy">
+      <span class="eyebrow" style="color:var(--blue);">Transport and logistics</span>
+      <h2>Cargo and people, moved with care</h2>
+      <p>Heavy trucks for bulk goods, saloon cars and Ubers for people, and tuktuks for quick trips around Mombasa. Vehicles are serviced on schedule, and drivers know Kenyan roads well.</p>
+      <a class="btn btn-navy btn-sm" href="transport.html">Explore transport &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="world world-flip reveal">
+  <div class="wrap world-row">
+    <div class="world-photo"><img src="images/hen.jpg" alt="Free-range chickens on a Kenyan farm" loading="lazy"></div>
+    <div class="world-copy">
+      <span class="eyebrow" style="color:var(--gold);">Agro and food supply</span>
+      <h2>Fresh from the farm to your kitchen</h2>
+      <p>Chicken whole or in cuts, farm eggs, goat meat and beef. Prepared to order for hotels, restaurants, butcheries and households, with clean handling at every step.</p>
+      <a class="btn btn-navy btn-sm" href="agro.html">Explore products &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="world reveal">
+  <div class="wrap world-row">
+    <div class="world-photo"><img src="images/living-room.jpg" alt="A furnished living room at Alina Ridge" loading="lazy"></div>
+    <div class="world-copy">
+      <span class="eyebrow" style="color:var(--coral);">Properties and stays</span>
+      <h2>A home base in Kileleshwa</h2>
+      <p>Furnished apartments and Airbnb units at Alina Ridge, with free Wi-Fi, a gym, a restaurant, a mini supermarket, a kids&rsquo; play area and 24-hour security.</p>
+      <a class="btn btn-navy btn-sm" href="hospitality.html">See the properties &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band reveal">
+  <div class="wrap cta-inner">
+    <div>
+      <h2>Let’s plan your next move</h2>
+      <p>Call or WhatsApp us, and a real person will reply.</p>
+    </div>
+    <div class="cta-actions">
+      <a class="btn btn-gold" href="tel:+254142426451">Call +254 142 426 451</a>
+      <a class="btn btn-line-navy" href="contact.html">Contact us</a>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <div id="site-footer"></div>
 <script src="shared.js"></script>
+<script>
+  // Scroll reveal: each .reveal block fades and rises in as it enters the screen.
+  (function () {
+    var items = document.querySelectorAll(".reveal");
+    if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      items.forEach(function (el) { el.classList.add("in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+    items.forEach(function (el) { io.observe(el); });
+  })();
+</script>
 </body>
 </html>

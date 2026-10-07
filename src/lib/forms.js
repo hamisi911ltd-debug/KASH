@@ -430,7 +430,15 @@ export function buildForms(data, session) {
         { key: "description", label: "Description", type: "textarea", placeholder: "What a visitor sees on the website" },
         { key: "price", label: "Price (KSh)", type: "number", min: 0 },
         { key: "meta", label: "Extra details", type: "text", placeholder: "e.g. 2 Beds · 2 Baths · Wi-Fi, or 450/kg" },
-        { key: "imageUrl", label: "Photo", type: "image" },
+        {
+          key: "images", label: "Photos (1 to 5 - the first is the cover)", type: "images", max: 5,
+          validate: (v) => {
+            const n = Array.isArray(v) ? v.length : 0;
+            if (n < 1) return "Add at least one photo.";
+            if (n > 5) return "No more than five photos.";
+            return null;
+          },
+        },
         { key: "amenities", label: "Amenities (tick what applies)", type: "checks", options: AMENITIES.map((a) => ({ value: a, label: a })) },
         { key: "active", label: "Active (visible on the website)", type: "toggle", default: true },
       ],

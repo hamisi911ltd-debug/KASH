@@ -133,7 +133,7 @@
        the live feed and show it the same way. */
     function fromLive(l) {
       var b = typeof BUILDING !== "undefined" ? BUILDING : {};
-      var img = /^https?:///.test(l.imageUrl || "") ? l.imageUrl : "";
+      var img = /^https?:\/\//.test(l.imageUrl || "") ? l.imageUrl : "";
       return {
         slug: l.id, title: l.title || "Property", type: "Apartment",
         location: b.area || "", mapQuery: b.mapQuery || b.area || "",

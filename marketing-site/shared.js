@@ -117,7 +117,7 @@
   function renderListing(l, container) {
     var card = el("div", "p-card");
     var photo = el("div", "photo");
-    if (/^https?:///.test(l.imageUrl || "")) {
+    if (/^https?:\/\//.test(l.imageUrl || "")) {
       var img = el("img"); img.src = l.imageUrl; img.alt = l.title || ""; img.loading = "lazy";
       photo.appendChild(img);
     } else {

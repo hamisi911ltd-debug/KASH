@@ -175,7 +175,7 @@
       items.forEach(function (l) {
         var card = document.createElement("div"); card.className = "prop-card";
         var photo = document.createElement("div"); photo.className = "photo";
-        if (/^https?:///.test(l.imageUrl || "")) { var img = document.createElement("img"); img.src = l.imageUrl; img.alt = l.title || ""; img.loading = "lazy"; photo.appendChild(img); }
+        if (/^https?:\/\//.test(l.imageUrl || "")) { var img = document.createElement("img"); img.src = l.imageUrl; img.alt = l.title || ""; img.loading = "lazy"; photo.appendChild(img); }
         card.appendChild(photo);
         var body = document.createElement("div"); body.className = "prop-body";
         var h = document.createElement("h3"); h.textContent = l.title || ""; body.appendChild(h);
