@@ -1,4 +1,94 @@
-const AMENITIES = ["Free Wi-Fi","Water (24 hours)","Hot water","Backup power","Parking","Gym","24-hour security","Balcony","Fully equipped kitchen","Furnished","Air conditioning","Smart TV","Workspace","Swimming pool","Restaurant on site","Mini supermarket","Kids' play area","Lift"];
+const AMENITY_GROUPS = {
+  "Essentials": [
+    "Free Wi-Fi",
+    "Water (24 hours)",
+    "Hot water",
+    "Backup power",
+    "Towels provided",
+    "Bed linen provided",
+    "Toiletries provided",
+    "Iron and ironing board",
+    "Hair dryer",
+    "Wardrobe or hangers",
+    "Washing machine",
+    "Drying rack"
+  ],
+  "Kitchen": [
+    "Fully equipped kitchen",
+    "Refrigerator",
+    "Microwave",
+    "Stove or cooker",
+    "Kettle",
+    "Coffee or tea maker",
+    "Dishwasher",
+    "Cooking basics (oil, salt, spices)",
+    "Dining table"
+  ],
+  "Comfort and living": [
+    "Furnished",
+    "Air conditioning",
+    "Fans",
+    "Heating",
+    "Smart TV",
+    "Streaming subscription",
+    "Sofa bed",
+    "Balcony",
+    "Garden access",
+    "Blackout curtains",
+    "Desk and chair"
+  ],
+  "Family": [
+    "Kids' play area",
+    "High chair",
+    "Cot or crib available",
+    "Extra blankets and pillows"
+  ],
+  "Bathroom": [
+    "Private bathroom",
+    "Shower",
+    "Bathtub",
+    "Extra bathroom"
+  ],
+  "Work": [
+    "Dedicated workspace",
+    "Fast fibre internet"
+  ],
+  "Leisure": [
+    "Gym",
+    "Swimming pool",
+    "Hot tub",
+    "Board games",
+    "BBQ area",
+    "Garden or outdoor seating"
+  ],
+  "Services": [
+    "Restaurant on site",
+    "Mini supermarket",
+    "Laundry service",
+    "Airport pickup",
+    "Cleaning service",
+    "Concierge"
+  ],
+  "Building and safety": [
+    "24-hour security",
+    "CCTV",
+    "Parking",
+    "Lift",
+    "Smoke detector",
+    "Fire extinguisher",
+    "First aid kit",
+    "Keyless entry"
+  ],
+  "Accessibility": [
+    "Step-free access",
+    "Wheelchair accessible"
+  ],
+  "House rules": [
+    "Pets allowed",
+    "Smoking allowed"
+  ]
+};
+const AMENITIES = Object.values(AMENITY_GROUPS).flat();
 
 /* ============================================================
    Every listed property - the grid on hospitality.html and the detail

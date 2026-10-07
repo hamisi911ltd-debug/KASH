@@ -61,7 +61,7 @@
               <p id="propDesc" style="margin-top:16px; color:var(--ink-2); line-height:1.7;"></p>
 
               <h3 style="margin-top:26px; font-size:1.05rem;">In this unit</h3>
-              <ul class="prop-detail-amenities" id="unitAmenities"></ul>
+              <div id="unitAmenities"></div>
 
               <h3 style="margin-top:26px; font-size:1.05rem;">Building facilities</h3>
               <p id="buildingName" style="margin-top:4px; color:var(--muted); font-size:.85rem;"></p>
@@ -178,15 +178,24 @@
       });
       document.getElementById("buildingNotes").textContent = b.notes;
     }
-    var all = (typeof AMENITIES !== "undefined" ? AMENITIES : []);
+    var groups = (typeof AMENITY_GROUPS !== "undefined" ? AMENITY_GROUPS : {});
     var ticked = p.amenities || [];
     var unit = document.getElementById("unitAmenities");
-    all.forEach(function (name) {
-      var has = ticked.indexOf(name) !== -1;
-      var li = document.createElement("li");
-      li.textContent = (has ? "✓ " : "✗ ") + name;
-      if (!has) li.style.opacity = "0.45";
-      unit.appendChild(li);
+    Object.keys(groups).forEach(function (group) {
+      var h = document.createElement("h4");
+      h.textContent = group;
+      h.style.cssText = "margin-top:18px; font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);";
+      unit.appendChild(h);
+      var ul = document.createElement("ul");
+      ul.className = "prop-detail-amenities";
+      groups[group].forEach(function (name) {
+        var has = ticked.indexOf(name) !== -1;
+        var li = document.createElement("li");
+        li.textContent = (has ? "✓ " : "✗ ") + name;
+        if (!has) li.style.opacity = "0.45";
+        ul.appendChild(li);
+      });
+      unit.appendChild(ul);
     });
     var gallery = (p.gallery || []).length ? p.gallery : [];
     if (gallery.length) {
