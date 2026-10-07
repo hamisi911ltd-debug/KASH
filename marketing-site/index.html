@@ -35,9 +35,29 @@
               <a href="#" data-social="facebook" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 8h-2a2 2 0 0 0-2 2v3H9v3h2v6h3v-6h2l1-3h-3v-2a1 1 0 0 1 1-1h2z"/></svg></a>
             </div>
         </div>
-        <div class="home-hero-photo fx fx3">
-          <img src="images/truck-container-port.jpg" alt="A KASH cargo truck on the road">
+        <div class="home-hero-photo fx fx3 hero-slider" aria-roledescription="carousel" aria-label="Highlights from KASH">
+          <img src="images/truck-container-port.jpg" alt="KASH in Kenya" class="on">
+            <img src="images/kenya-chicken-1.jpg" alt="KASH in Kenya" class="">
+            <img src="images/kenya-tuktuk-1.jpg" alt="KASH in Kenya" class="">
+            <img src="images/kenya-taxi-1.jpg" alt="KASH in Kenya" class="">
+            <img src="images/living-room.jpg" alt="Furnished homes in Kileleshwa" class="">
+            <img src="images/apartment1.jpg" alt="Furnished homes in Kileleshwa" class="">
+            <img src="images/kenya-chicken-2.jpg" alt="KASH in Kenya" class="">
+            <img src="images/kenya-tuktuk-2.jpg" alt="KASH in Kenya" class="">
+            <img src="images/kenya-taxi-2.jpg" alt="KASH in Kenya" class="">
+            <img src="images/alina-studio-1.jpg" alt="Studio living at Alina Ridge" class="">
+            <img src="images/kenya-chicken-3.jpg" alt="KASH in Kenya" class="">
+            <img src="images/kenya-tuktuk-3.jpg" alt="KASH in Kenya" class="">
+            <img src="images/kenya-taxi-3.jpg" alt="KASH in Kenya" class="">
+            <img src="images/hospitality.jpg" alt="Comfortable stays" class="">
+            <img src="images/kitchen.jpg" alt="Self-contained suites" class="">
+            <img src="images/kenya-tuktuk-4.jpg" alt="KASH in Kenya" class="">
+            <img src="images/kenya-taxi-4.jpg" alt="KASH in Kenya" class="">
+            <img src="images/apartment2.jpg" alt="Family homes" class="">
+            <img src="images/alina-studio-2.jpg" alt="Studio living at Alina Ridge" class="">
+            <img src="images/pool1.jpg" alt="Holiday homes" class="">
           <p class="tagline-tag script">More Than<br>Just a Supplier</p>
+          <div class="slider-dots" aria-hidden="true"><span class="on"></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span></div>
         </div>
       </div>
 
@@ -200,6 +220,19 @@
       entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
     }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
     items.forEach(function (el) { io.observe(el); });
+  })();
+</script>
+<script>
+  // Hero slideshow: fades through every photo, one at a time.
+  (function () {
+    var box = document.querySelector(".hero-slider");
+    if (!box || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var imgs = box.querySelectorAll("img"), dots = box.querySelectorAll(".slider-dots span"), i = 0;
+    setInterval(function () {
+      imgs[i].classList.remove("on"); dots[i].classList.remove("on");
+      i = (i + 1) % imgs.length;
+      imgs[i].classList.add("on"); dots[i].classList.add("on");
+    }, 3800);
   })();
 </script>
 </body>
