@@ -694,6 +694,9 @@ body[data-page="contact"] .fab-contact{display:none;} /* already there - no poin
   .flip-in, .welcome-item.cross-in, .g-track .g-item{opacity:1; transform:none; transition:none;}
 }
 .g-row{opacity:0; transform:translateX(-70px); transition:opacity .9s ease, transform 1s cubic-bezier(.2,.8,.2,1);}
-.g-row:nth-child(even), .g-row:nth-child(3){transform:translateX(70px);}
+.g-row:nth-child(even){transform:translateX(70px);}
 .g-row.in{opacity:1; transform:none;}
 @media (prefers-reduced-motion:reduce){ .g-row{opacity:1; transform:none; transition:none;} }
+
+.photo.no-photo{display:flex; align-items:center; justify-content:center;}
+.photo.no-photo svg{width:30%; height:30%; max-width:72px; max-height:72px;}
