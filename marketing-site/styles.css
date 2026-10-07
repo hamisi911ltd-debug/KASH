@@ -567,3 +567,7 @@ body[data-page="contact"] .fab-contact{display:none;} /* already there - no poin
 .banner-over .banner-fact span{color:rgba(255,255,255,.8);}
 .banner-over .banner-fact svg{color:#fff;}
 @media (max-width:860px){ .banner-over{min-height:440px;} .banner-over .banner-copy{min-height:440px; max-width:none;} }
+
+/* card photos: a fixed height so the photo always fills the full card width */
+.div-card .photo, .p-card .photo, .fleet-card .photo, .prop-card .photo{aspect-ratio:auto; height:200px; max-height:none; width:100%;}
+.div-card .photo{height:210px;}
