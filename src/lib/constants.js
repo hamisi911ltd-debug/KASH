@@ -254,3 +254,12 @@ export const SESSION_KEY = "kash.session.v1";
 /* Recipient name for a message to every staff member at once. Shared by the
    app and the worker so both agree on what a broadcast is. */
 export const MESSAGE_EVERYONE = "Everyone";
+
+/* The amenities a listing can tick. Shared by the ERP form and the public
+   website, so the same names appear everywhere. */
+export const AMENITIES = [
+  "Free Wi-Fi", "Water (24 hours)", "Hot water", "Backup power", "Parking",
+  "Gym", "24-hour security", "Balcony", "Fully equipped kitchen", "Furnished",
+  "Air conditioning", "Smart TV", "Workspace", "Swimming pool", "Restaurant on site",
+  "Mini supermarket", "Kids' play area", "Lift",
+];

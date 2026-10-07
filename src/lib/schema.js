@@ -192,6 +192,8 @@ export const normalisers = {
     // resolve a bare/relative path someone pasted in by mistake.
     imageUrl: /^https?:\/\//.test(String(v.imageUrl || "").trim()) ? v.imageUrl.trim() : "",
     active: v.active === false || v.active === "false" ? false : true,
+    // The amenities ticked for this listing - kept to plain text labels.
+    amenities: Array.isArray(v.amenities) ? v.amenities.map((a) => String(a).trim()).filter(Boolean).slice(0, 40) : [],
   }),
 };
 

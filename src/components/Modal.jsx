@@ -149,6 +149,20 @@ function Field({ field, value, onChange, error, onUploadImage, onDeleteImage, di
       />
     );
   }
+  if (field.type === "checks") {
+    const picked = Array.isArray(value) ? value : [];
+    const toggleOne = (v) => onChange(field.key, picked.includes(v) ? picked.filter((x) => x !== v) : [...picked, v]);
+    return (
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg border p-3" style={style}>
+        {(field.options || []).map((o) => (
+          <label key={o.value} className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: C.ink }}>
+            <input type="checkbox" checked={picked.includes(o.value)} onChange={() => toggleOne(o.value)} />
+            {o.label}
+          </label>
+        ))}
+      </div>
+    );
+  }
   if (field.type === "toggle") {
     return (
       <button
@@ -192,7 +206,7 @@ export function FormModal({ config, initial, onClose, onSubmit, onUploadImage, o
     const base = {};
     config.fields.forEach((f) => {
       const opts = typeof f.options === "function" ? f.options() : f.options;
-      base[f.key] = initial?.[f.key] ?? f.default ?? (f.type === "select" ? (opts?.[0]?.value ?? "") : f.type === "toggle" ? false : "");
+      base[f.key] = initial?.[f.key] ?? f.default ?? (f.type === "checks" ? [] : f.type === "select" ? (opts?.[0]?.value ?? "") : f.type === "toggle" ? false : "");
     });
     return base;
   });

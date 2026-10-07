@@ -12,7 +12,7 @@ import {
   VEHICLE_TYPES, ROOM_TYPES, TRIP_STATUSES, ORDER_STATUSES, BOOKING_STATUSES,
   PAYMENT_STATUSES, PAYMENT_METHODS, EXPENSE_CATEGORIES, DIVISIONS, ROLES,
   DRIVER_STATUSES, VEHICLE_STATUSES, ROOM_STATUSES, PAYMENT_DIRECTIONS,
-  divisionOptions,
+  divisionOptions, AMENITIES,
 } from "./constants";
 import { capsForRole } from "./auth";
 import { daysBetween } from "./format";
@@ -431,6 +431,7 @@ export function buildForms(data, session) {
         { key: "price", label: "Price (KSh)", type: "number", min: 0 },
         { key: "meta", label: "Extra details", type: "text", placeholder: "e.g. 2 Beds · 2 Baths · Wi-Fi, or 450/kg" },
         { key: "imageUrl", label: "Photo", type: "image" },
+        { key: "amenities", label: "Amenities (tick what applies)", type: "checks", options: AMENITIES.map((a) => ({ value: a, label: a })) },
         { key: "active", label: "Active (visible on the website)", type: "toggle", default: true },
       ],
     },
