@@ -657,3 +657,11 @@ body[data-page="contact"] .fab-contact{display:none;} /* already there - no poin
 .g-item{transition:transform .5s ease, box-shadow .5s ease;}
 .g-item:hover{transform:translateY(-6px); box-shadow:var(--shadow-md);}
 @media (max-width:620px){ .gallery .g-item:nth-child(5n+1){grid-row:auto; min-height:0; aspect-ratio:4/3;} }
+
+@media (min-width:921px){
+  .home-hero-grid > .hero-slider{align-self:stretch; height:auto; min-height:340px; aspect-ratio:auto; max-width:none; justify-self:stretch; border-radius:26px; box-shadow:var(--shadow-lg);}
+}
+@media (max-width:920px){
+  .home-hero-grid{grid-template-columns:minmax(0,1fr);}
+  .home-hero-grid > .hero-slider{width:100%; min-width:0; max-width:none; height:auto; min-height:0; aspect-ratio:4/3.4; justify-self:stretch; border-radius:22px; box-shadow:var(--shadow-lg);}
+}
