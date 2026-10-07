@@ -626,3 +626,4 @@ body[data-page="contact"] .fab-contact{display:none;} /* already there - no poin
   .home-hero > .hero-slider::after{background:linear-gradient(180deg, rgba(246,239,225,.5), rgba(246,239,225,.92));}
   .home-hero-grid{grid-template-columns:1fr;}
 }
+.home-below{position:relative; z-index:1; padding-block:0 clamp(20px,3vw,30px);}
