@@ -168,7 +168,15 @@ export function MobileDrawer({ open, onClose, role, activeView, onNavigate, onSi
 }
 
 export function MobileBottomNav({ role, activeView, onNavigate, onMore }) {
-  const items = PRIMARY_TABS.filter((t) => canOpenView(role, t.key));
+  let items = PRIMARY_TABS.filter((t) => canOpenView(role, t.key));
+  /* Same fallback as DivisionTabs: a role with none of the four main
+     spaces (the IT Officer, say) still gets real buttons here, not just
+     the catch-all "More". */
+  if (items.length === 0) {
+    items = NAV
+      .filter((n) => canOpenView(role, n.key) && SIDEBAR_KEYS.includes(n.key))
+      .map((n) => ({ key: n.key, label: n.label, icon: n.icon, color: C.blue }));
+  }
   return (
     <div
       className="lg:hidden n1-bottomnav flex items-stretch border-t"
