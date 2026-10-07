@@ -93,6 +93,7 @@ export const ROLES = [
   "Hospitality Manager",
   "Hospitality Attendant",
   "Accountant",
+  "IT Officer",
   "Staff",
 ];
 
@@ -121,6 +122,7 @@ export const ROLE_VIEWS = {
   "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "website", "updates", "settings"],
   "Hospitality Attendant": ["hospitality", "payments", "updates", "settings"],
   Accountant: ["overview", "all", "payments", "expenses", "reports", "approvals", "updates", "settings"],
+  "IT Officer": ["website", "updates", "settings"],
   Staff: ["overview", "payments", "updates", "settings"],
 };
 
@@ -155,6 +157,7 @@ export const ROLE_CAPS = {
   "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: true },
   "Hospitality Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
   Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: true, manageListings: false },
+  "IT Officer": { write: false, manageUsers: false, deleteAny: false, settings: false, payments: false, approve: false, manageListings: true },
   Staff: { write: false, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
 };
 

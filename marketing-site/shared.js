@@ -93,6 +93,47 @@
     });
   }
 
+  /* ---- live listings: what the ERP publishes shows up here ---- */
+  var KASH_API = "https://kash-api-live.johndrekuz.workers.dev";
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function renderListing(l, container) {
+    var card = el("div", "p-card");
+    var photo = el("div", "photo");
+    if (/^https?:///.test(l.imageUrl || "")) {
+      var img = el("img"); img.src = l.imageUrl; img.alt = l.title || ""; img.loading = "lazy";
+      photo.appendChild(img);
+    } else {
+      photo.style.background = "var(--cream-2)";
+    }
+    card.appendChild(photo);
+    var body = el("div", "p-body");
+    body.appendChild(el("h3", null, l.title || ""));
+    if (l.description) body.appendChild(el("p", null, l.description));
+    if (l.meta) body.appendChild(el("p", "p-price", l.meta));
+    if (l.price) body.appendChild(el("p", "p-price", "From KSh " + Number(l.price).toLocaleString()));
+    card.appendChild(body);
+    container.appendChild(card);
+  }
+
+  function loadListings(division, containerId) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    fetch(KASH_API + "/api/public/listings?division=" + encodeURIComponent(division))
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (items) {
+        if (!items.length) { container.style.display = "none"; return; }
+        items.forEach(function (l) { renderListing(l, container); });
+      })
+      .catch(function () { container.style.display = "none"; }); // if the feed is unreachable, the page still shows its own content
+  }
+
   function setYear() {
     var y = document.getElementById("year");
     if (y) y.textContent = new Date().getFullYear();
@@ -132,6 +173,10 @@
     markActiveNav();
     setYear();
     wireSocial();
+    var page = document.body.getAttribute("data-page");
+    if (page === "transport") loadListings("Transport", "live-transport");
+    if (page === "agro") loadListings("Food", "live-agro");
+    if (page === "hospitality") loadListings("Hospitality", "live-hospitality");
     document.dispatchEvent(new CustomEvent("kash:chrome-ready"));
   });
 })();

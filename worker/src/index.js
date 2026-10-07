@@ -777,7 +777,8 @@ const app = {
         const canOwn = caps.writeOwn && ["trips", "orders", "bookings", "maintenance"].includes(collection);
         const canPay = collection === "payments" && caps.payments;
         const canMsg = collection === "messages"; // anyone signed in - checked properly below
-        if (!caps.write && !canOwn && !canPay && !canMsg) return err("You don't have access to add that.", 403);
+        const canListing = collection === "listings" && caps.manageListings;
+        if (!caps.write && !canOwn && !canPay && !canMsg && !canListing) return err("You don't have access to add that.", 403);
 
         let body = await readJson(request);
         if (collection === "messages") {
@@ -823,7 +824,7 @@ const app = {
       if (request.method === "PUT") {
         const existing = rows.find((r) => r.id === id);
         if (!existing) return err("Not found.", 404);
-        const allowed = caps.write || (caps.writeOwn && ownsRecord(collection, existing, user));
+        const allowed = caps.write || (collection === "listings" && caps.manageListings) || (caps.writeOwn && ownsRecord(collection, existing, user));
         if (!allowed) return err("You don't have access to edit that.", 403);
         if (collection === "listings" && !listingDivisionOk(existing.division)) {
           return err("You can only edit listings for your own division.", 403);
@@ -845,6 +846,7 @@ const app = {
         // writeOwn workers - anyone in the thread (either side) can do it.
         const allowed =
           caps.write ||
+          (collection === "listings" && caps.manageListings) ||
           FREE_PATCH_COLLECTIONS.has(collection) ||
           (existing && ownsRecord(collection, existing, user) && (collection === "messages" || caps.writeOwn));
         if (!allowed) return err("You don't have access to change that.", 403);
