@@ -54,6 +54,12 @@
     if (toggle && ["transport", "agro", "hospitality"].indexOf(page) !== -1) {
       toggle.classList.add("active");
     }
+    // Same idea for the bottom tab bar's "More" tab - About/Contact live
+    // inside its sheet, not as their own tab.
+    var moreTab = document.getElementById("menuOpen");
+    if (moreTab && ["about", "contact"].indexOf(page) !== -1) {
+      moreTab.classList.add("active");
+    }
   }
 
   function wireServicesDropdown() {
