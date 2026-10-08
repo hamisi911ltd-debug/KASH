@@ -265,20 +265,6 @@
 <div id="site-footer"></div>
 <script src="shared.js?v=3"></script>
 <script>
-  // Scroll reveal: each .reveal block fades and rises in as it enters the screen.
-  (function () {
-    var items = document.querySelectorAll(".reveal, .flip-in, .cross-in, .g-row");
-    if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      items.forEach(function (el) { el.classList.add("in"); });
-      return;
-    }
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
-    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
-    items.forEach(function (el) { io.observe(el); });
-  })();
-</script>
-<script>
   // Hero slideshow: fades through every photo, one at a time.
   (function () {
     var box = document.querySelector(".hero-slider");

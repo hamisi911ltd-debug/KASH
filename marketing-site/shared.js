@@ -150,6 +150,23 @@
     if (y) y.textContent = new Date().getFullYear();
   }
 
+  // Scroll reveal: every ".reveal" block (and the flip/cross-in cards and
+  // photo-gallery rows that ride along with it) fades and rises in as it
+  // enters the screen. Shared across every page, not just the homepage,
+  // so content below the fold on Transport/Agro/Hospitality/About isn't
+  // left permanently invisible.
+  function wireReveal() {
+    var items = document.querySelectorAll(".reveal, .flip-in, .cross-in, .g-row");
+    if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      items.forEach(function (el) { el.classList.add("in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+    items.forEach(function (el) { io.observe(el); });
+  }
+
   function loadPartial(mountId, path) {
     return fetch(path)
       .then(function (res) {
@@ -174,6 +191,8 @@
         if (mount) mount.textContent = ""; // fail quiet rather than show a broken fetch error inline
       });
   }
+
+  wireReveal();
 
   Promise.all([
     loadPartial("site-header", "partials/header.html"),

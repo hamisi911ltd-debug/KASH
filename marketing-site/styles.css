@@ -719,3 +719,20 @@ body[data-page="contact"] .fab-contact{display:none;} /* already there - no poin
 .g-track{scroll-behavior:smooth;}
 .welcome-item{padding:0;}
 .welcome-item .w-content{padding:clamp(26px,3.6vw,36px);}
+
+/* Agro "From farm to table" bento mosaic: one big photo, three smaller
+   ones in an asymmetric grid, each with a caption over a gradient. */
+.meat-mosaic{display:grid; grid-template-columns:1.4fr 1fr 1fr; grid-template-rows:1fr 1fr; gap:14px; margin-top:26px; min-height:460px;}
+.mm-item{position:relative; margin:0; overflow:hidden; border-radius:22px; box-shadow:var(--shadow-sm);}
+.mm-item img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .7s cubic-bezier(.2,.8,.2,1);}
+.mm-item:hover img{transform:scale(1.08);}
+.mm-item::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(21,47,77,0) 55%, rgba(21,47,77,.65) 100%); pointer-events:none;}
+.mm-item figcaption{position:absolute; left:16px; right:16px; bottom:14px; color:#fff; font-weight:700; font-size:.88rem; z-index:1;}
+.mm-big{grid-row:1 / 3; grid-column:1;}
+.mm-cattle{grid-row:1; grid-column:2 / 4;}
+.mm-beef{grid-row:2; grid-column:2;}
+.mm-meat{grid-row:2; grid-column:3;}
+@media (max-width:760px){
+  .meat-mosaic{grid-template-columns:1fr; grid-template-rows:none; min-height:0;}
+  .mm-big, .mm-cattle, .mm-beef, .mm-meat{grid-column:1; grid-row:auto; height:240px;}
+}
