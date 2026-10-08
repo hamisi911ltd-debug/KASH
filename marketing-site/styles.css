@@ -31,7 +31,7 @@ html{-webkit-text-size-adjust:100%; scroll-behavior:smooth;}
 /* Belt-and-braces: nothing on the page - a horizontally-scrolling photo
    row, a card mid-flip, a welcome card sliding in from off-canvas -
    should ever be able to force a sideways scrollbar on the whole page. */
-html,body{margin:0;padding:0; max-width:100%;}
+html,body{margin:0;padding:0; max-width:100%; touch-action:pan-y;}
 /* overflow-x:hidden goes on html only, never body - on body it's a known
    Chrome/Safari trap that silently breaks position:sticky on the header. */
 html{overflow-x:hidden;}
