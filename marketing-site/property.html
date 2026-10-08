@@ -178,25 +178,29 @@
       });
       document.getElementById("buildingNotes").textContent = b.notes;
     }
-    var groups = (typeof AMENITY_GROUPS !== "undefined" ? AMENITY_GROUPS : {});
-    var ticked = p.amenities || [];
+    // Only the amenities this unit actually has, capped at 5 - the ones
+    // that matter most for a quick decision, not a long tick/cross list.
     var unit = document.getElementById("unitAmenities");
-    Object.keys(groups).forEach(function (group) {
-      var h = document.createElement("h4");
-      h.textContent = group;
-      h.style.cssText = "margin-top:18px; font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);";
-      unit.appendChild(h);
+    var ticked = (p.amenities || []).slice(0, 5);
+    if (ticked.length) {
       var ul = document.createElement("ul");
-      ul.className = "prop-detail-amenities";
-      groups[group].forEach(function (name) {
-        var has = ticked.indexOf(name) !== -1;
+      ul.className = "prop-detail-amenities prop-amenities-compact";
+      ticked.forEach(function (name) {
         var li = document.createElement("li");
-        li.textContent = (has ? "✓ " : "✗ ") + name;
-        if (!has) li.style.opacity = "0.45";
+        var check = document.createElement("svg");
+        check.setAttribute("viewBox", "0 0 24 24");
+        check.innerHTML = '<path d="M5 13l4 4L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+        li.appendChild(check);
+        li.appendChild(document.createTextNode(name));
         ul.appendChild(li);
       });
       unit.appendChild(ul);
-    });
+    } else {
+      var none = document.createElement("p");
+      none.textContent = "Message us on WhatsApp for the full list of amenities.";
+      none.style.cssText = "color:var(--muted); font-size:.85rem; margin-top:8px;";
+      unit.appendChild(none);
+    }
     var gallery = (p.gallery || []).length ? p.gallery : [];
     if (gallery.length) {
       var g = document.getElementById("propGallery");

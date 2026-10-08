@@ -38,25 +38,35 @@
   </section>
 
   <div class="wrap">
-    <div class="search-bar">
+    <form class="search-bar" id="staySearch">
       <div class="search-field">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
-        <div><div class="flabel">Location</div><div class="fvalue">e.g. Nairobi, Mombasa, Naivasha...</div></div>
+        <div><label class="flabel" for="searchLocation">Location</label><input class="fvalue" id="searchLocation" type="text" placeholder="e.g. Kileleshwa, studio, 2 bedroom..." autocomplete="off"></div>
       </div>
       <div class="search-field">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-        <div><div class="flabel">Check In</div><div class="fvalue">Select date</div></div>
+        <div><label class="flabel" for="searchCheckIn">Check In</label><input class="fvalue" id="searchCheckIn" type="date"></div>
       </div>
       <div class="search-field">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-        <div><div class="flabel">Check Out</div><div class="fvalue">Select date</div></div>
+        <div><label class="flabel" for="searchCheckOut">Check Out</label><input class="fvalue" id="searchCheckOut" type="date"></div>
       </div>
       <div class="search-field">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c0-3.9 3.4-7 7.5-7s7.5 3.1 7.5 7"/></svg>
-        <div><div class="flabel">Guests</div><div class="fvalue">1 Guest</div></div>
+        <div><label class="flabel" for="searchGuests">Guests</label>
+          <select class="fvalue" id="searchGuests">
+            <option value="0">Any</option>
+            <option value="1">1 Guest</option>
+            <option value="2">2 Guests</option>
+            <option value="3">3 Guests</option>
+            <option value="4">4 Guests</option>
+            <option value="6">5+ Guests</option>
+          </select>
+        </div>
       </div>
-      <a class="btn btn-navy" href="#properties">Search <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></a>
-    </div>
+      <button type="submit" class="btn btn-navy">Search <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+    </form>
+    <p id="searchStatus" style="display:none; margin-top:10px; font-size:.86rem; color:var(--ink-2);"></p>
   </div>
 
   <section id="properties">
@@ -188,6 +198,57 @@
       });
     });
   });
+</script>
+<script>
+  // Search bar: filters the property cards shown below by location/unit
+  // text and a rough guests-to-beds match. There's no live availability
+  // backend behind this site, so Check In/Check Out don't narrow results -
+  // they're carried into the WhatsApp message each "View Details" page
+  // sends, same as the rest of the booking flow.
+  (function () {
+    var form = document.getElementById("staySearch");
+    var status = document.getElementById("searchStatus");
+    if (!form) return;
+
+    function bedsIn(card) {
+      var m = card.querySelector(".prop-meta");
+      var text = m ? m.textContent : "";
+      var match = text.match(/(\d+)\s*Bed/i);
+      return match ? Number(match[1]) : 0;
+    }
+
+    function runFilter() {
+      var q = (document.getElementById("searchLocation").value || "").trim().toLowerCase();
+      var guests = Number(document.getElementById("searchGuests").value || 0);
+      var cards = document.querySelectorAll("#static-properties .prop-card, #live-hospitality .prop-card");
+      var shown = 0;
+      cards.forEach(function (card) {
+        var text = card.textContent.toLowerCase();
+        var matchesText = !q || text.indexOf(q) !== -1;
+        var matchesGuests = !guests || bedsIn(card) * 2 >= guests;
+        var visible = matchesText && matchesGuests;
+        card.style.display = visible ? "" : "none";
+        if (visible) shown++;
+      });
+      if (!cards.length) return; // live feed hasn't loaded yet
+      if (shown === 0) {
+        status.textContent = "No properties match that search - try clearing a filter.";
+        status.style.display = "block";
+      } else {
+        status.style.display = "none";
+      }
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      runFilter();
+      document.getElementById("properties").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    // Re-apply once the live feed (if any) has replaced/added cards.
+    document.addEventListener("kash:chrome-ready", function () {
+      setTimeout(runFilter, 600);
+    });
+  })();
 </script>
 <script src="shared.js?v=3"></script>
 </body>
