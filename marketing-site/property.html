@@ -60,15 +60,7 @@
               </div>
               <p id="propDesc" style="margin-top:16px; color:var(--ink-2); line-height:1.7;"></p>
 
-              <h3 style="margin-top:26px; font-size:1.05rem;">In this unit</h3>
-              <div id="unitAmenities"></div>
-
-              <h3 style="margin-top:26px; font-size:1.05rem;">Building facilities</h3>
-              <p id="buildingName" style="margin-top:4px; color:var(--muted); font-size:.85rem;"></p>
-              <ul class="prop-detail-amenities" id="buildingList"></ul>
-              <p id="buildingNotes" style="margin-top:12px; font-size:.84rem; color:var(--ink-2);"></p>
-
-              <ul class="prop-detail-amenities">
+              <ul class="prop-detail-amenities" style="margin-top:22px;">
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M5 10V7a1 1 0 0 1 1-1h4v4"/></svg><span id="propBeds"></span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16v4a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z"/><path d="M6 12V6a2 2 0 0 1 4 0"/></svg><span id="propBaths"></span></li>
                 <li id="wifiItem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg><span>Free Wi-Fi</span></li>
@@ -83,7 +75,7 @@
               Book via WhatsApp
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
-            <p class="note">Message us to check availability and confirm your dates.</p>
+            <p class="note">Message us for full amenities, building facilities, availability and dates.</p>
           </div>
         </div>
       </div>
@@ -167,40 +159,6 @@
     // works for a place name/area. Swap mapQuery in properties-data.js for
     // a real address (or "lat,lng") once you have one for this property.
     var query = encodeURIComponent(p.mapQuery || p.location);
-    var b = typeof BUILDING !== "undefined" ? BUILDING : null;
-    if (b) {
-      document.getElementById("buildingName").textContent = b.name + " · " + b.area;
-      var list = document.getElementById("buildingList");
-      b.facilities.forEach(function (f) {
-        var li = document.createElement("li");
-        li.textContent = f;
-        list.appendChild(li);
-      });
-      document.getElementById("buildingNotes").textContent = b.notes;
-    }
-    // Only the amenities this unit actually has, capped at 5 - the ones
-    // that matter most for a quick decision, not a long tick/cross list.
-    var unit = document.getElementById("unitAmenities");
-    var ticked = (p.amenities || []).slice(0, 5);
-    if (ticked.length) {
-      var ul = document.createElement("ul");
-      ul.className = "prop-detail-amenities prop-amenities-compact";
-      ticked.forEach(function (name) {
-        var li = document.createElement("li");
-        var check = document.createElement("svg");
-        check.setAttribute("viewBox", "0 0 24 24");
-        check.innerHTML = '<path d="M5 13l4 4L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
-        li.appendChild(check);
-        li.appendChild(document.createTextNode(name));
-        ul.appendChild(li);
-      });
-      unit.appendChild(ul);
-    } else {
-      var none = document.createElement("p");
-      none.textContent = "Message us on WhatsApp for the full list of amenities.";
-      none.style.cssText = "color:var(--muted); font-size:.85rem; margin-top:8px;";
-      unit.appendChild(none);
-    }
     var gallery = (p.gallery || []).length ? p.gallery : [];
     if (gallery.length) {
       var g = document.getElementById("propGallery");
