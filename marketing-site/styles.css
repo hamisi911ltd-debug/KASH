@@ -31,7 +31,10 @@ html{-webkit-text-size-adjust:100%; scroll-behavior:smooth;}
 /* Belt-and-braces: nothing on the page - a horizontally-scrolling photo
    row, a card mid-flip, a welcome card sliding in from off-canvas -
    should ever be able to force a sideways scrollbar on the whole page. */
-html,body{margin:0;padding:0; overflow-x:hidden; max-width:100%;}
+html,body{margin:0;padding:0; max-width:100%;}
+/* overflow-x:hidden goes on html only, never body - on body it's a known
+   Chrome/Safari trap that silently breaks position:sticky on the header. */
+html{overflow-x:hidden;}
 /* A CSS grid item won't shrink below its content's natural min-content
    width unless told to - a wide photo, a horizontally-scrolling track
    or one long line is then enough to blow the whole row (and on a
@@ -51,7 +54,6 @@ body{
   -webkit-font-smoothing:antialiased;
   /* room for the iPhone notch/home-indicator in landscape */
   padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right);
-  overflow-x:hidden;
 }
 ::selection{background:var(--teal); color:#fff;}
 a{color:inherit;} img,svg{display:block; max-width:100%;} button{font:inherit;}
@@ -66,8 +68,8 @@ p{margin:0;}
 /* ---------------------------------------------------------- logo */
 /* The KASH wordmark (logo.png) already reads "KASH" on its own - .word now
    only ever carries the "GENERAL SUPPLIERS" subtitle beside it. */
-.logo{display:inline-flex; align-items:center; gap:12px; text-decoration:none; min-width:0; flex-shrink:1;}
-.logo-mark{height:34px; width:auto; display:block; flex-shrink:0;}
+.logo{display:inline-flex; flex-direction:column; align-items:flex-start; gap:3px; text-decoration:none; min-width:0; flex-shrink:1;}
+.logo-mark{height:46px; width:auto; display:block; flex-shrink:0;}
 .logo .word{min-width:0;}
 .logo .word small{display:block; font-size:.66rem; font-weight:800; letter-spacing:.1em; color:var(--navy);}
 
@@ -408,111 +410,6 @@ body[data-page="contact"] .fab-contact{display:none;} /* already there - no poin
 }
 
 /* ============================================================ SMALL PHONES - compact but comfortable, not cramped ============================================================ */
-@media (max-width:480px){
-  body{font-size:14.5px;}
-  .wrap{padding-inline:16px;}
-  section{padding-block:clamp(26px,7vw,40px);}
-  .section-tight{padding-block:0 clamp(26px,7vw,40px);}
-
-  .logo{gap:8px;}
-  .logo-mark{height:27px;}
-  .logo .word small{font-size:.6rem;}
-  .header-row{padding-block:10px;}
-  .btn{padding:.68em 1.15em; font-size:.85rem; gap:6px;}
-  .btn-sm{padding:.54em 1em; font-size:.78rem;}
-
-  .home-hero{padding-block:22px 18px;}
-  .home-hero h1{font-size:1.8rem; margin-top:8px;}
-  .home-hero .lede{font-size:.9rem; margin-top:10px;}
-  .home-hero .actions{margin-top:16px;}
-  .home-hero-photo{border-radius:18px;}
-  .hero-watermark{display:none;}
-  .tagline-tag{font-size:1rem; top:10px; right:14px;}
-  .home-hero > .hero-slider{min-height:190px;}
-  .social-row{margin-top:14px; gap:8px;}
-  .social-row a{width:34px; height:34px;}
-
-  .light-hero-grid h2{font-size:1.7rem;}
-  .light-hero-grid p.lede{font-size:.9rem;}
-  .light-hero-grid .actions{margin-top:14px; gap:8px;}
-  .light-hero-photo{border-radius:18px; aspect-ratio:4/2.7;}
-
-  .div-cards{gap:14px; margin-top:20px;}
-  .div-card .photo{height:150px;}
-  .div-card .body{padding:24px 16px 16px;}
-  .div-card h3{font-size:1.02rem;}
-  .div-card p{font-size:.86rem;}
-  .div-card .badge-icon{width:38px; height:38px; left:14px; bottom:-16px;}
-  .div-card .badge-icon svg{width:17px;height:17px;}
-
-  .trust-strip{gap:12px; margin-top:20px;}
-  .trust-item svg{width:20px;height:20px;}
-  .trust-item b{font-size:.84rem;}
-  .trust-item span{font-size:.72rem;}
-
-  .cat-strip{padding:14px; border-radius:16px; gap:10px;}
-  .cat-item b{font-size:.78rem;}
-  .cat-item span{font-size:.66rem;}
-
-  .grid-head h2{font-size:1.35rem;}
-  .story-head h2{font-size:1.5rem;}
-  .world-copy h2{font-size:1.3rem;}
-  .cta-band h2{font-size:1.3rem;}
-  .products, .properties{gap:14px;}
-  .p-card .photo, .fleet-card .photo, .prop-card .photo{height:150px;}
-  .p-body, .prop-body{padding:14px;}
-  .p-body h3, .prop-body h3{font-size:1rem;}
-  .fleet-grid{gap:14px;}
-  .fleet-body{padding:12px 14px;}
-
-  .banner{border-radius:18px; min-height:0;}
-  .banner-copy{padding:20px 18px; gap:14px;}
-  .banner-copy h3{font-size:1.15rem;}
-  .banner-copy p.desc{font-size:.88rem;}
-  .banner-facts{gap:14px 18px; padding-top:14px;}
-  .banner-photo{min-height:150px;}
-  .banner-over{min-height:320px;}
-  .banner-over .banner-copy{min-height:320px;}
-
-  .search-bar{border-radius:20px; padding:7px;}
-  .search-field{padding:11px 14px;}
-  .search-field .flabel{font-size:.78rem;}
-  .search-field .fvalue{font-size:.74rem;}
-
-  .welcome-item{min-height:210px;}
-  .welcome-item .w-content{padding:18px;}
-  .welcome-item h3{font-size:1.05rem;}
-  .welcome-item p{font-size:.86rem; margin-top:6px; line-height:1.5;}
-  .welcome-item .learn{font-size:.85rem; margin-top:10px;}
-  .why-grid > div{padding:12px 14px;}
-  .why-grid b{font-size:.86rem;}
-  .why-grid span{font-size:.76rem;}
-
-  .step{padding:20px 18px;}
-  .step h3{font-size:1rem;}
-  .step p{font-size:.86rem;}
-  .world-photo{max-height:170px;}
-  .world-copy p{font-size:.9rem; margin-top:8px;}
-
-  .g-label{font-size:.92rem; margin:14px 0 8px;}
-  .g-track .g-item{flex-basis:clamp(120px,40vw,160px);}
-
-  .meat-mosaic{gap:10px; margin-top:18px;}
-  .mm-big, .mm-cattle, .mm-beef, .mm-meat{height:140px;}
-  .mm-item figcaption{font-size:.76rem; left:12px; right:12px; bottom:10px;}
-
-  .photo.no-photo svg{max-width:52px; max-height:52px;}
-
-  .prop-detail-amenities{grid-template-columns:1fr;}
-  .prop-detail-card{position:static;}
-  .contact-grid, .value-grid{gap:16px;}
-
-  .foot-top{padding-bottom:20px;}
-  .foot-nav{gap:18px; font-size:.85rem;}
-  .foot-social a{width:32px;height:32px;}
-  .foot-bottom{font-size:.76rem;}
-  .footer-wave{width:250px; height:250px; right:-30px; bottom:-40px;}
-}
 
 /* ---------------------------------------------------------- social icons under the hero button */
 .social-row{display:flex; gap:10px; margin-top:18px;}
@@ -786,4 +683,113 @@ body[data-page="contact"] .fab-contact{display:none;} /* already there - no poin
 @media (max-width:760px){
   .meat-mosaic{grid-template-columns:1fr; grid-template-rows:none; min-height:0;}
   .mm-big, .mm-cattle, .mm-beef, .mm-meat{grid-column:1; grid-row:auto; height:240px;}
+}
+
+
+/* ============================================================ PHONES (moved to the very end of the file on purpose - these must win the cascade over every earlier unconditional rule with the same selector) ============================================================ */
+@media (max-width:480px){
+  body{font-size:13.5px;}
+  .wrap{padding-inline:14px;}
+  section{padding-block:clamp(20px,6vw,32px);}
+  .section-tight{padding-block:0 clamp(20px,6vw,32px);}
+
+  .logo{gap:3px;}
+  .logo-mark{height:32px;}
+  .logo .word small{font-size:.58rem;}
+  .header-row{padding-block:8px;}
+  .btn{padding:.6em 1em; font-size:.8rem; gap:6px;}
+  .btn-sm{padding:.5em .9em; font-size:.74rem;}
+
+  .home-hero{padding-block:18px 14px;}
+  .home-hero h1{font-size:1.5rem; margin-top:6px;}
+  .home-hero .lede{font-size:.85rem; margin-top:8px;}
+  .home-hero .actions{margin-top:14px;}
+  .home-hero-photo{border-radius:16px;}
+  .hero-watermark{display:none;}
+  .tagline-tag{font-size:.9rem; top:8px; right:12px;}
+  .home-hero > .hero-slider{min-height:150px;}
+  .social-row{margin-top:12px; gap:7px;}
+  .social-row a{width:30px; height:30px;}
+  .social-row svg{width:14px; height:14px;}
+
+  .light-hero-grid h2{font-size:1.45rem;}
+  .light-hero-grid p.lede{font-size:.85rem;}
+  .light-hero-grid .actions{margin-top:12px; gap:8px;}
+  .light-hero-photo{border-radius:16px; aspect-ratio:4/2.2;}
+
+  .div-cards{gap:12px; margin-top:16px;}
+  .div-card .photo{height:115px;}
+  .div-card .body{padding:18px 14px 14px;}
+  .div-card h3{font-size:.95rem;}
+  .div-card p{font-size:.8rem;}
+  .div-card .badge-icon{width:34px; height:34px; left:12px; bottom:-14px;}
+  .div-card .badge-icon svg{width:15px;height:15px;}
+
+  .trust-strip{gap:10px; margin-top:16px;}
+  .trust-item svg{width:18px;height:18px;}
+  .trust-item b{font-size:.8rem;}
+  .trust-item span{font-size:.7rem;}
+
+  .cat-strip{padding:12px; border-radius:14px; gap:8px;}
+  .cat-item b{font-size:.75rem;}
+  .cat-item span{font-size:.64rem;}
+
+  .grid-head h2{font-size:1.15rem;}
+  .story-head h2{font-size:1.25rem;}
+  .world-copy h2{font-size:1.1rem;}
+  .cta-band h2{font-size:1.1rem;}
+  .products, .properties{gap:12px;}
+  .p-card .photo, .fleet-card .photo, .prop-card .photo{height:115px;}
+  .p-body, .prop-body{padding:12px;}
+  .p-body h3, .prop-body h3{font-size:.92rem;}
+  .fleet-grid{gap:12px;}
+  .fleet-body{padding:10px 12px;}
+
+  .banner{border-radius:16px; min-height:0;}
+  .banner-copy{padding:16px 14px; gap:12px;}
+  .banner-copy h3{font-size:1.02rem;}
+  .banner-copy p.desc{font-size:.82rem;}
+  .banner-facts{gap:12px 16px; padding-top:12px;}
+  .banner-photo{min-height:120px;}
+  .banner-over{min-height:260px;}
+  .banner-over .banner-copy{min-height:260px;}
+
+  .search-bar{border-radius:18px; padding:6px;}
+  .search-field{padding:9px 12px;}
+  .search-field .flabel{font-size:.74rem;}
+  .search-field .fvalue{font-size:.7rem;}
+
+  .welcome-item{min-height:170px;}
+  .welcome-item .w-content{padding:14px;}
+  .welcome-item h3{font-size:.95rem;}
+  .welcome-item p{font-size:.8rem; margin-top:5px; line-height:1.45;}
+  .welcome-item .learn{font-size:.8rem; margin-top:8px;}
+  .why-grid > div{padding:10px 12px;}
+  .why-grid b{font-size:.82rem;}
+  .why-grid span{font-size:.72rem;}
+
+  .step{padding:16px 14px;}
+  .step h3{font-size:.92rem;}
+  .step p{font-size:.8rem;}
+  .world-photo{max-height:130px;}
+  .world-copy p{font-size:.84rem; margin-top:6px;}
+
+  .g-label{font-size:.84rem; margin:12px 0 7px;}
+  .g-track .g-item{flex-basis:clamp(100px,34vw,135px);}
+
+  .meat-mosaic{gap:8px; margin-top:14px;}
+  .mm-big, .mm-cattle, .mm-beef, .mm-meat{height:110px;}
+  .mm-item figcaption{font-size:.7rem; left:10px; right:10px; bottom:8px;}
+
+  .photo.no-photo svg{max-width:40px; max-height:40px;}
+
+  .prop-detail-amenities{grid-template-columns:1fr;}
+  .prop-detail-card{position:static;}
+  .contact-grid, .value-grid{gap:16px;}
+
+  .foot-top{padding-bottom:20px;}
+  .foot-nav{gap:18px; font-size:.85rem;}
+  .foot-social a{width:32px;height:32px;}
+  .foot-bottom{font-size:.76rem;}
+  .footer-wave{width:250px; height:250px; right:-30px; bottom:-40px;}
 }
