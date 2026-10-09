@@ -223,10 +223,11 @@
   }
 
   // Background decoration, not floating objects: a thin Kenyan flag-colour
-  // stripe at the very top of the page, and one large, very faint, static
-  // Maasai shield-and-spears watermark low in a corner (see #kash-bg and
-  // .kash-flagbar in styles.css) - the shield-and-spears is the actual
-  // centrepiece of Kenya's own coat of arms/flag, not a stock flag icon.
+  // stripe at the very top of the page, a Maasai shield-and-spears
+  // watermark bottom-right (the actual centrepiece of Kenya's own coat of
+  // arms, not a stock flag icon), and an acacia silhouette bottom-left for
+  // balance - both static in position, each with its own slow, gentle
+  // animation (see #kash-bg in styles.css).
   function wireKenyanBackground() {
     var bar = document.createElement("div");
     bar.className = "kash-flagbar";
@@ -238,23 +239,34 @@
     var box = document.createElement("div");
     box.id = "kash-bg";
     box.setAttribute("aria-hidden", "true");
-    // The shield itself is painted in the flag's own black/red/green bands
-    // (clipped to the shield's outline), same as the real coat of arms -
-    // only the crossed spears stay a plain neutral tone.
+    // The shield is the real Maasai silhouette (waisted sides, pointed top
+    // and bottom, a raised centre spine) rather than a plain oval, painted
+    // in the flag's own black/white/red/white/green bands clipped to that
+    // outline - same as the real coat of arms. Spears stay a plain tone.
     box.innerHTML =
-      '<svg viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg">' +
+      '<svg class="kash-shield" viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg">' +
       '<line x1="18" y1="292" x2="200" y2="8" stroke="var(--navy)" stroke-width="8" stroke-linecap="round"/>' +
       '<polygon points="200,8 216,24 186,36" fill="var(--navy)"/>' +
       '<line x1="202" y1="292" x2="20" y2="8" stroke="var(--navy)" stroke-width="8" stroke-linecap="round"/>' +
       '<polygon points="20,8 4,24 34,36" fill="var(--navy)"/>' +
-      '<defs><clipPath id="kashShieldClip"><path d="M110 46 C152 46 180 76 180 126 C180 194 152 248 110 270 C68 248 40 194 40 126 C40 76 68 46 110 46 Z"/></clipPath></defs>' +
+      '<defs><clipPath id="kashShieldClip"><path d="M110 38 C135 55 152 68 150 80 C147 105 126 125 124 150 C126 175 147 195 150 220 C152 232 135 255 110 282 C85 255 68 232 70 220 C73 195 94 175 96 150 C94 125 73 105 70 80 C68 68 85 55 110 38 Z"/></clipPath></defs>' +
       '<g clip-path="url(#kashShieldClip)">' +
-      '<rect x="30" y="40" width="160" height="72" fill="#000"/>' +
-      '<rect x="30" y="112" width="160" height="10" fill="#fff"/>' +
-      '<rect x="30" y="122" width="160" height="70" fill="#BB0000"/>' +
-      '<rect x="30" y="192" width="160" height="10" fill="#fff"/>' +
-      '<rect x="30" y="202" width="160" height="76" fill="#060"/>' +
+      '<rect x="40" y="36" width="140" height="72" fill="#000"/>' +
+      '<rect x="40" y="108" width="140" height="10" fill="#fff"/>' +
+      '<rect x="40" y="118" width="140" height="72" fill="#BB0000"/>' +
+      '<rect x="40" y="190" width="140" height="10" fill="#fff"/>' +
+      '<rect x="40" y="200" width="140" height="86" fill="#060"/>' +
       "</g>" +
+      '<path d="M110 38 C135 55 152 68 150 80 C147 105 126 125 124 150 C126 175 147 195 150 220 C152 232 135 255 110 282 C85 255 68 232 70 220 C73 195 94 175 96 150 C94 125 73 105 70 80 C68 68 85 55 110 38 Z" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="2"/>' +
+      '<line x1="110" y1="52" x2="110" y2="268" stroke="rgba(255,255,255,.4)" stroke-width="2"/>' +
+      '<line x1="112.5" y1="52" x2="112.5" y2="268" stroke="rgba(0,0,0,.25)" stroke-width="2"/>' +
+      "</svg>" +
+      // An umbrella acacia - the single most recognisable Kenyan-savannah
+      // silhouette - balancing the shield on the other side of the page.
+      '<svg class="kash-tree" viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M143 220 L149 130 L157 130 L163 220 Z" fill="var(--navy)"/>' +
+      '<path d="M152 140 L80 104 M154 138 L120 78 M156 140 L190 80 M158 142 L228 100" stroke="var(--navy)" stroke-width="4" stroke-linecap="round"/>' +
+      '<path d="M15 98 C34 58 95 36 152 36 C208 36 266 56 285 96 C266 114 238 108 216 114 C196 102 182 116 160 106 C140 118 122 100 100 110 C80 100 52 116 32 108 C24 106 18 102 15 98 Z" fill="var(--teal)"/>' +
       "</svg>";
     document.body.appendChild(box);
   }

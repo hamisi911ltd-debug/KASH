@@ -61,10 +61,13 @@ body{
 .kash-flagbar span:nth-child(5){flex:1; background:#060;}
 
 #kash-bg{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
-#kash-bg svg{position:absolute; right:-8%; bottom:-10%; width:48vw; max-width:640px; height:auto; opacity:.05; animation:kashShieldBreathe 11s ease-in-out infinite;}
-@keyframes kashShieldBreathe{0%,100%{opacity:.04;} 50%{opacity:.075;}}
+#kash-bg svg{position:absolute; height:auto;}
+#kash-bg .kash-shield{right:-6%; bottom:-10%; width:42vw; max-width:560px; opacity:.15; animation:kashShieldBreathe 11s ease-in-out infinite;}
+#kash-bg .kash-tree{left:-4%; bottom:-2%; width:46vw; max-width:600px; opacity:.13; transform-origin:50% 100%; animation:kashTreeSway 14s ease-in-out infinite;}
+@keyframes kashShieldBreathe{0%,100%{opacity:.12;} 50%{opacity:.19;}}
+@keyframes kashTreeSway{0%,100%{transform:rotate(-1.4deg);} 50%{transform:rotate(1.4deg);}}
 @media (prefers-reduced-motion:reduce){ #kash-bg svg{animation:none;} }
-@media (max-width:760px){ #kash-bg svg{width:70vw;} }
+@media (max-width:760px){ #kash-bg .kash-shield{width:62vw;} #kash-bg .kash-tree{width:66vw;} }
 /* Real content always gets its own stacking context above the background
    layer - without this, a few elements elsewhere (anything with its own
    transform/opacity transition) can end up painting at the same level as
