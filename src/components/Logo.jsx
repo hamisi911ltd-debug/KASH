@@ -4,10 +4,10 @@
    the artwork's own aspect ratio automatically. */
 import React from "react";
 
-const ASPECT = 1120 / 561; // logo.png's own width/height
+const ASPECT = 700 / 269; // logo.png's own width/height
 
 export function KashLogo({ size = 24, tagline = false, onDark = false }) {
-  const height = Math.round(size * 1.7); // the artwork has padding baked in; this keeps the "KASH" glyphs visually matched to the old tile size
+  const height = size; // this artwork is cropped tight to the glyphs, no padding to compensate for
   return (
     <div className="inline-flex flex-col">
       <img
