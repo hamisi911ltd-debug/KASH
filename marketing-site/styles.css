@@ -62,8 +62,12 @@ body{
 
 #kash-bg{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
 #kash-bg svg{position:absolute; height:auto;}
-#kash-bg .kash-shield{right:-6%; bottom:-10%; width:42vw; max-width:560px; opacity:.15; animation:kashShieldBreathe 11s ease-in-out infinite;}
-#kash-bg .kash-tree{left:-4%; bottom:-2%; width:46vw; max-width:600px; opacity:.13; transform-origin:50% 100%; animation:kashTreeSway 14s ease-in-out infinite;}
+/* Fully inside the viewport (no negative offsets) - a negative offset
+   had been cropping the shield's own side bulges off past the screen
+   edge, which defeats the point of drawing it properly in the first
+   place. */
+#kash-bg .kash-shield{right:2%; bottom:3%; width:34vw; max-width:460px; opacity:.15; animation:kashShieldBreathe 11s ease-in-out infinite;}
+#kash-bg .kash-tree{left:1%; bottom:2%; width:40vw; max-width:520px; opacity:.13; transform-origin:50% 100%; animation:kashTreeSway 14s ease-in-out infinite;}
 @keyframes kashShieldBreathe{0%,100%{opacity:.12;} 50%{opacity:.19;}}
 @keyframes kashTreeSway{0%,100%{transform:rotate(-1.4deg);} 50%{transform:rotate(1.4deg);}}
 @media (prefers-reduced-motion:reduce){ #kash-bg svg{animation:none;} }

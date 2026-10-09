@@ -263,10 +263,28 @@
       "</svg>" +
       // An umbrella acacia - the single most recognisable Kenyan-savannah
       // silhouette - balancing the shield on the other side of the page.
+      // Tapered forking branches (not plain lines), a clustered leafy
+      // canopy built from several overlapping clumps rather than one
+      // smooth blob, and small round fruit/pods scattered through it.
       '<svg class="kash-tree" viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg">' +
-      '<path d="M143 220 L149 130 L157 130 L163 220 Z" fill="var(--navy)"/>' +
-      '<path d="M152 140 L80 104 M154 138 L120 78 M156 140 L190 80 M158 142 L228 100" stroke="var(--navy)" stroke-width="4" stroke-linecap="round"/>' +
-      '<path d="M15 98 C34 58 95 36 152 36 C208 36 266 56 285 96 C266 114 238 108 216 114 C196 102 182 116 160 106 C140 118 122 100 100 110 C80 100 52 116 32 108 C24 106 18 102 15 98 Z" fill="var(--teal)"/>' +
+      '<path d="M138 220 L146 128 L154 128 L162 220 Z" fill="var(--navy)"/>' +
+      '<polygon points="150,132 68,98 73,107 153,141" fill="var(--navy)"/>' +
+      '<polygon points="151,130 112,92 118,100 155,137" fill="var(--navy)"/>' +
+      '<polygon points="153,128 149,88 157,88 159,131" fill="var(--navy)"/>' +
+      '<polygon points="155,130 193,92 188,100 157,137" fill="var(--navy)"/>' +
+      '<polygon points="156,132 236,100 232,109 158,141" fill="var(--navy)"/>' +
+      '<path d="M90 100 L72 86 M118 88 L108 72 M152 86 L150 68 M184 88 L192 72 M210 100 L228 86" stroke="var(--navy)" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<ellipse cx="68" cy="88" rx="46" ry="24" fill="var(--teal)"/>' +
+      '<ellipse cx="138" cy="70" rx="58" ry="30" fill="var(--teal)"/>' +
+      '<ellipse cx="212" cy="86" rx="50" ry="26" fill="var(--teal)"/>' +
+      '<ellipse cx="100" cy="104" rx="44" ry="20" fill="var(--teal)"/>' +
+      '<ellipse cx="178" cy="106" rx="46" ry="20" fill="var(--teal)"/>' +
+      '<g fill="var(--gold)">' +
+      '<circle cx="48" cy="92" r="3.4"/><circle cx="82" cy="78" r="3"/><circle cx="118" cy="62" r="3.4"/>' +
+      '<circle cx="150" cy="58" r="3"/><circle cx="182" cy="64" r="3.4"/><circle cx="214" cy="76" r="3"/>' +
+      '<circle cx="238" cy="92" r="3.2"/><circle cx="96" cy="100" r="2.8"/><circle cx="160" cy="98" r="3"/>' +
+      '<circle cx="200" cy="102" r="2.8"/>' +
+      "</g>" +
       "</svg>";
     document.body.appendChild(box);
   }
