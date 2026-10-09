@@ -249,17 +249,17 @@
       '<polygon points="200,8 216,24 186,36" fill="var(--navy)"/>' +
       '<line x1="202" y1="292" x2="20" y2="8" stroke="var(--navy)" stroke-width="8" stroke-linecap="round"/>' +
       '<polygon points="20,8 4,24 34,36" fill="var(--navy)"/>' +
-      '<defs><clipPath id="kashShieldClip"><path d="M110 36 C155 36 184 70 184 132 C184 198 155 252 110 284 C65 252 36 198 36 132 C36 70 65 36 110 36 Z"/></clipPath></defs>' +
+      '<defs><clipPath id="kashShieldClip"><path d="M110 38 C135 55 152 68 150 80 C147 105 126 125 124 150 C126 175 147 195 150 220 C152 232 135 255 110 282 C85 255 68 232 70 220 C73 195 94 175 96 150 C94 125 73 105 70 80 C68 68 85 55 110 38 Z"/></clipPath></defs>' +
       '<g clip-path="url(#kashShieldClip)">' +
-      '<rect x="30" y="36" width="160" height="72" fill="#000"/>' +
-      '<rect x="30" y="108" width="160" height="10" fill="#fff"/>' +
-      '<rect x="30" y="118" width="160" height="72" fill="#BB0000"/>' +
-      '<rect x="30" y="190" width="160" height="10" fill="#fff"/>' +
-      '<rect x="30" y="200" width="160" height="90" fill="#060"/>' +
+      '<rect x="40" y="36" width="140" height="72" fill="#000"/>' +
+      '<rect x="40" y="108" width="140" height="10" fill="#fff"/>' +
+      '<rect x="40" y="118" width="140" height="72" fill="#BB0000"/>' +
+      '<rect x="40" y="190" width="140" height="10" fill="#fff"/>' +
+      '<rect x="40" y="200" width="140" height="86" fill="#060"/>' +
       "</g>" +
-      '<path d="M110 36 C155 36 184 70 184 132 C184 198 155 252 110 284 C65 252 36 198 36 132 C36 70 65 36 110 36 Z" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="2"/>' +
-      '<line x1="110" y1="50" x2="110" y2="270" stroke="rgba(255,255,255,.4)" stroke-width="2"/>' +
-      '<line x1="112.5" y1="50" x2="112.5" y2="270" stroke="rgba(0,0,0,.25)" stroke-width="2"/>' +
+      '<path d="M110 38 C135 55 152 68 150 80 C147 105 126 125 124 150 C126 175 147 195 150 220 C152 232 135 255 110 282 C85 255 68 232 70 220 C73 195 94 175 96 150 C94 125 73 105 70 80 C68 68 85 55 110 38 Z" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="2"/>' +
+      '<line x1="110" y1="52" x2="110" y2="268" stroke="rgba(255,255,255,.4)" stroke-width="2"/>' +
+      '<line x1="112.5" y1="52" x2="112.5" y2="268" stroke="rgba(0,0,0,.25)" stroke-width="2"/>' +
       "</svg>" +
       // An umbrella acacia - the single most recognisable Kenyan-savannah
       // silhouette - balancing the shield on the other side of the page.
