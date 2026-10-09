@@ -238,13 +238,23 @@
     var box = document.createElement("div");
     box.id = "kash-bg";
     box.setAttribute("aria-hidden", "true");
+    // The shield itself is painted in the flag's own black/red/green bands
+    // (clipped to the shield's outline), same as the real coat of arms -
+    // only the crossed spears stay a plain neutral tone.
     box.innerHTML =
-      '<svg viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg" style="color:var(--navy);">' +
-      '<line x1="18" y1="292" x2="200" y2="8" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>' +
-      '<polygon points="200,8 216,24 186,36" fill="currentColor"/>' +
-      '<line x1="202" y1="292" x2="20" y2="8" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>' +
-      '<polygon points="20,8 4,24 34,36" fill="currentColor"/>' +
-      '<path d="M110 46 C152 46 180 76 180 126 C180 194 152 248 110 270 C68 248 40 194 40 126 C40 76 68 46 110 46 Z" fill="currentColor"/>' +
+      '<svg viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg">' +
+      '<line x1="18" y1="292" x2="200" y2="8" stroke="var(--navy)" stroke-width="8" stroke-linecap="round"/>' +
+      '<polygon points="200,8 216,24 186,36" fill="var(--navy)"/>' +
+      '<line x1="202" y1="292" x2="20" y2="8" stroke="var(--navy)" stroke-width="8" stroke-linecap="round"/>' +
+      '<polygon points="20,8 4,24 34,36" fill="var(--navy)"/>' +
+      '<defs><clipPath id="kashShieldClip"><path d="M110 46 C152 46 180 76 180 126 C180 194 152 248 110 270 C68 248 40 194 40 126 C40 76 68 46 110 46 Z"/></clipPath></defs>' +
+      '<g clip-path="url(#kashShieldClip)">' +
+      '<rect x="30" y="40" width="160" height="72" fill="#000"/>' +
+      '<rect x="30" y="112" width="160" height="10" fill="#fff"/>' +
+      '<rect x="30" y="122" width="160" height="70" fill="#BB0000"/>' +
+      '<rect x="30" y="192" width="160" height="10" fill="#fff"/>' +
+      '<rect x="30" y="202" width="160" height="76" fill="#060"/>' +
+      "</g>" +
       "</svg>";
     document.body.appendChild(box);
   }
