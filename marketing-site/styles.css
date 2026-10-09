@@ -25,41 +25,52 @@
 /* Deliberately single-theme: KASH General Suppliers always renders in
    this warm cream/beige, regardless of the viewer's system or app theme. */
 
-/* The cream isn't flat - soft, fixed colour blobs in the brand's own
-   palette sit behind everything, plus a handful of slowly drifting
-   Kenyan flags (injected by shared.js so every page gets them without
-   repeating the markup). Low opacity and z-index:0 so any section with
-   its own background (nearly all of them) simply paints over the top -
-   it only ever shows through the cream gaps between sections. */
+/* The cream isn't flat: soft colour blobs in the brand's own palette
+   drift slowly in place behind everything (an animated background, not
+   discrete objects flying across it), plus one big, very faint, static
+   Maasai shield-and-spears watermark - the centrepiece of Kenya's own
+   flag - sitting low in a corner. Both injected once by shared.js so
+   every page gets them without repeating the markup. Low opacity and
+   z-index:0 so any section with its own background (nearly all of them)
+   simply paints over the top. */
 body{
   background-image:
-    radial-gradient(640px circle at 8% 6%, color-mix(in srgb, var(--teal) 16%, transparent), transparent 60%),
-    radial-gradient(560px circle at 96% 18%, color-mix(in srgb, var(--gold) 18%, transparent), transparent 60%),
-    radial-gradient(620px circle at 12% 92%, color-mix(in srgb, var(--coral) 14%, transparent), transparent 60%),
-    radial-gradient(520px circle at 94% 88%, color-mix(in srgb, var(--blue) 14%, transparent), transparent 60%);
-  background-attachment:fixed;
+    radial-gradient(640px circle at 8% 6%, color-mix(in srgb, var(--teal) 20%, transparent), transparent 60%),
+    radial-gradient(560px circle at 96% 18%, color-mix(in srgb, var(--gold) 22%, transparent), transparent 60%),
+    radial-gradient(620px circle at 12% 92%, color-mix(in srgb, var(--coral) 18%, transparent), transparent 60%),
+    radial-gradient(520px circle at 94% 88%, color-mix(in srgb, var(--blue) 18%, transparent), transparent 60%);
+  background-attachment:fixed, fixed, fixed, fixed;
   background-repeat:no-repeat;
+  background-size:140% 140%;
+  animation:kashBgDrift 36s ease-in-out infinite alternate;
 }
-#kash-flags{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
+@keyframes kashBgDrift{
+  0%{background-position:0% 0%, 100% 0%, 0% 100%, 100% 100%;}
+  100%{background-position:14% 10%, 86% 14%, 10% 88%, 90% 84%;}
+}
+@media (prefers-reduced-motion:reduce){ body{animation:none;} }
+
+/* Flag-colour stripe, top of every page - a clean, literal nod rather
+   than an emoji. Scrolls away with the page; it's a first-paint touch,
+   not a persistent fixed bar fighting with the sticky header. */
+.kash-flagbar{display:flex; height:5px;}
+.kash-flagbar span:nth-child(1){flex:1; background:#000;}
+.kash-flagbar span:nth-child(2){flex:1; background:#fff;}
+.kash-flagbar span:nth-child(3){flex:1; background:#BB0000;}
+.kash-flagbar span:nth-child(4){flex:1; background:#fff;}
+.kash-flagbar span:nth-child(5){flex:1; background:#060;}
+
+#kash-bg{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
+#kash-bg svg{position:absolute; right:-8%; bottom:-10%; width:48vw; max-width:640px; height:auto; opacity:.05; animation:kashShieldBreathe 11s ease-in-out infinite;}
+@keyframes kashShieldBreathe{0%,100%{opacity:.04;} 50%{opacity:.075;}}
+@media (prefers-reduced-motion:reduce){ #kash-bg svg{animation:none;} }
+@media (max-width:760px){ #kash-bg svg{width:70vw;} }
 /* Real content always gets its own stacking context above the background
    layer - without this, a few elements elsewhere (anything with its own
    transform/opacity transition) can end up painting at the same level as
-   the fixed flags and let one peek through at the wrong moment. Header
-   already has its own sticky z-index above this, so it's left alone here. */
+   the fixed watermark. Header already has its own sticky z-index above
+   this, so it's left alone here. */
 main, footer{position:relative; z-index:1;}
-#kash-flags span{
-  position:absolute; bottom:-60px; display:block; width:34px; opacity:.28;
-  animation:kashFlagFloat linear infinite;
-  filter:drop-shadow(0 2px 4px rgba(21,47,77,.18));
-}
-#kash-flags svg{display:block; width:100%; height:auto; border-radius:3px;}
-@keyframes kashFlagFloat{
-  0%{transform:translateY(0) translateX(0) rotate(0deg);}
-  50%{transform:translateY(-52vh) translateX(18px) rotate(6deg);}
-  100%{transform:translateY(-110vh) translateX(-10px) rotate(-4deg);}
-}
-@media (prefers-reduced-motion:reduce){ #kash-flags{display:none;} }
-@media (max-width:620px){ #kash-flags span{width:26px;} }
 
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html{-webkit-text-size-adjust:100%; scroll-behavior:smooth;}

@@ -222,44 +222,35 @@
       });
   }
 
-  // A handful of small Kenyan flags drifting slowly up the page, behind
-  // everything (see #kash-flags in styles.css) - purely decorative, so it
-  // skips rendering under reduced-motion and the CSS hides it there too.
-  function wireFloatingFlags() {
+  // Background decoration, not floating objects: a thin Kenyan flag-colour
+  // stripe at the very top of the page, and one large, very faint, static
+  // Maasai shield-and-spears watermark low in a corner (see #kash-bg and
+  // .kash-flagbar in styles.css) - the shield-and-spears is the actual
+  // centrepiece of Kenya's own coat of arms/flag, not a stock flag icon.
+  function wireKenyanBackground() {
+    var bar = document.createElement("div");
+    bar.className = "kash-flagbar";
+    bar.setAttribute("aria-hidden", "true");
+    for (var i = 0; i < 5; i++) bar.appendChild(document.createElement("span"));
+    document.body.insertBefore(bar, document.body.firstChild);
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    // An inline SVG, not the 🇰🇪 emoji - Windows' own fonts render flag
-    // emoji as plain "KE" letters instead of a flag (no colour-flag glyph
-    // support), so an emoji here would look broken for a lot of visitors.
-    // An SVG renders identically everywhere.
-    var FLAG_SVG =
-      '<svg viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg">' +
-      '<rect width="30" height="20" fill="#fff"/>' +
-      '<rect width="30" height="6" fill="#000"/>' +
-      '<rect y="7" width="30" height="6" fill="#BB0000"/>' +
-      '<rect y="14" width="30" height="6" fill="#006600"/>' +
-      '<circle cx="15" cy="10" r="4.6" fill="#BB0000" stroke="#fff" stroke-width="1.1"/>' +
-      '<circle cx="15" cy="10" r="2.6" fill="#000"/>' +
-      "</svg>";
     var box = document.createElement("div");
-    box.id = "kash-flags";
+    box.id = "kash-bg";
     box.setAttribute("aria-hidden", "true");
-    var count = 6;
-    for (var i = 0; i < count; i++) {
-      var span = document.createElement("span");
-      span.innerHTML = FLAG_SVG;
-      var left = Math.round((i + 0.5) * (100 / count) + (Math.random() * 6 - 3));
-      var duration = 22 + Math.random() * 14;
-      var delay = -(Math.random() * duration);
-      span.style.left = left + "%";
-      span.style.animationDuration = duration.toFixed(1) + "s";
-      span.style.animationDelay = delay.toFixed(1) + "s";
-      box.appendChild(span);
-    }
-    document.body.insertBefore(box, document.body.firstChild);
+    box.innerHTML =
+      '<svg viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg" style="color:var(--navy);">' +
+      '<line x1="18" y1="292" x2="200" y2="8" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>' +
+      '<polygon points="200,8 216,24 186,36" fill="currentColor"/>' +
+      '<line x1="202" y1="292" x2="20" y2="8" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>' +
+      '<polygon points="20,8 4,24 34,36" fill="currentColor"/>' +
+      '<path d="M110 46 C152 46 180 76 180 126 C180 194 152 248 110 270 C68 248 40 194 40 126 C40 76 68 46 110 46 Z" fill="currentColor"/>' +
+      "</svg>";
+    document.body.appendChild(box);
   }
 
   wireReveal();
-  wireFloatingFlags();
+  wireKenyanBackground();
 
   Promise.all([
     loadPartial("site-header", "partials/header.html"),
