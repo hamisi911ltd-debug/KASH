@@ -121,20 +121,44 @@
   window.KASH.api = KASH_API;
 
   function renderListing(l, container) {
+    // Matches the hand-written static product cards (.p-card: photo with a
+    // division badge, title, description, price, an "Add to Quote" CTA) so
+    // whatever the IT Officer publishes sits right alongside them without
+    // looking like a second-class, stripped-down version.
     var card = el("div", "p-card");
     var photo = el("div", "photo");
     if (/^https?:\/\//.test(l.imageUrl || "")) {
       var img = el("img"); img.src = l.imageUrl; img.alt = l.title || ""; img.loading = "lazy";
       photo.appendChild(img);
     } else {
+      photo.classList.add("no-photo");
       photo.style.background = "var(--cream-2)";
+    }
+    if (l.division) {
+      var badge = el("span", "p-badge", l.division);
+      badge.style.color = "var(--gold)";
+      photo.appendChild(badge);
     }
     card.appendChild(photo);
     var body = el("div", "p-body");
     body.appendChild(el("h3", null, l.title || ""));
     if (l.description) body.appendChild(el("p", null, l.description));
-    if (l.meta) body.appendChild(el("p", "p-price", l.meta));
-    if (l.price) body.appendChild(el("p", "p-price", "From KSh " + Number(l.price).toLocaleString()));
+    if (l.price) {
+      var priceLine = el("p", "p-price");
+      priceLine.appendChild(document.createTextNode("From "));
+      var strong = el("b", null, "KES " + Number(l.price).toLocaleString());
+      priceLine.appendChild(strong);
+      if (l.meta) priceLine.appendChild(document.createTextNode(" " + l.meta));
+      body.appendChild(priceLine);
+    } else if (l.meta) {
+      body.appendChild(el("p", "p-price", l.meta));
+    }
+    var cta = document.createElement("a");
+    cta.className = "btn btn-line-navy btn-sm p-cta";
+    cta.target = "_blank"; cta.rel = "noopener";
+    cta.href = "https://wa.me/254142426451?text=" + encodeURIComponent("Hi, I'd like a quote for " + (l.title || "this item"));
+    cta.textContent = "Add to Quote";
+    body.appendChild(cta);
     card.appendChild(body);
     container.appendChild(card);
   }
@@ -198,7 +222,44 @@
       });
   }
 
+  // A handful of small Kenyan flags drifting slowly up the page, behind
+  // everything (see #kash-flags in styles.css) - purely decorative, so it
+  // skips rendering under reduced-motion and the CSS hides it there too.
+  function wireFloatingFlags() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // An inline SVG, not the 🇰🇪 emoji - Windows' own fonts render flag
+    // emoji as plain "KE" letters instead of a flag (no colour-flag glyph
+    // support), so an emoji here would look broken for a lot of visitors.
+    // An SVG renders identically everywhere.
+    var FLAG_SVG =
+      '<svg viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect width="30" height="20" fill="#fff"/>' +
+      '<rect width="30" height="6" fill="#000"/>' +
+      '<rect y="7" width="30" height="6" fill="#BB0000"/>' +
+      '<rect y="14" width="30" height="6" fill="#006600"/>' +
+      '<circle cx="15" cy="10" r="4.6" fill="#BB0000" stroke="#fff" stroke-width="1.1"/>' +
+      '<circle cx="15" cy="10" r="2.6" fill="#000"/>' +
+      "</svg>";
+    var box = document.createElement("div");
+    box.id = "kash-flags";
+    box.setAttribute("aria-hidden", "true");
+    var count = 6;
+    for (var i = 0; i < count; i++) {
+      var span = document.createElement("span");
+      span.innerHTML = FLAG_SVG;
+      var left = Math.round((i + 0.5) * (100 / count) + (Math.random() * 6 - 3));
+      var duration = 22 + Math.random() * 14;
+      var delay = -(Math.random() * duration);
+      span.style.left = left + "%";
+      span.style.animationDuration = duration.toFixed(1) + "s";
+      span.style.animationDelay = delay.toFixed(1) + "s";
+      box.appendChild(span);
+    }
+    document.body.insertBefore(box, document.body.firstChild);
+  }
+
   wireReveal();
+  wireFloatingFlags();
 
   Promise.all([
     loadPartial("site-header", "partials/header.html"),

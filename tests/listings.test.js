@@ -13,42 +13,46 @@ const staff = [
   { key: "acct", role: "Accountant" },
   { key: "director", role: "Director" },
   { key: "attendant", role: "Agro Attendant", division: "Food" },
+  { key: "it", role: "IT Officer", division: "All" },
 ];
 
-describe("managing a division's website listings", () => {
-  it("a division Manager can publish, edit and remove their own listing", async () => {
+describe("managing the website's listings - IT Officer (and company-wide roles) only", () => {
+  it("the IT Officer can publish, edit and remove a listing for any division", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
     const create = await call(env, "POST", "/api/listings", {
-      token: t.agroMgr.token, body: { title: "Whole Chicken", description: "Fresh broiler", price: 450, meta: "per kg" },
+      token: t.it.token, body: { division: "Food", title: "Whole Chicken", description: "Fresh broiler", price: 450, meta: "per kg" },
     });
     expect(create.status).toBe(201);
     expect(create.body).toMatchObject({ division: "Food", title: "Whole Chicken", active: true });
 
     const edit = await call(env, "PUT", `/api/listings/${create.body.id}`, {
-      token: t.agroMgr.token, body: { ...create.body, price: 500 },
+      token: t.it.token, body: { ...create.body, price: 500 },
     });
     expect(edit.status).toBe(200);
     expect(edit.body.price).toBe(500);
 
-    const del = await call(env, "DELETE", `/api/listings/${create.body.id}`, { token: t.agroMgr.token });
+    const del = await call(env, "DELETE", `/api/listings/${create.body.id}`, { token: t.it.token });
     expect(del.status).toBe(200);
   });
 
-  it("a manager can't publish, edit or delete another division's listing", async () => {
+  it("a division Manager can no longer publish, edit or delete listings - not even their own division's", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
-    const foodListing = await call(env, "POST", "/api/listings", { token: t.agroMgr.token, body: { title: "Eggs", price: 18 } });
+    const foodListing = await call(env, "POST", "/api/listings", { token: t.it.token, body: { division: "Food", title: "Eggs" } });
     expect(foodListing.status).toBe(201);
 
-    const wrongCreate = await call(env, "POST", "/api/listings", { token: t.transMgr.token, body: { division: "Food", title: "Sneaky" } });
-    expect(wrongCreate.status).toBe(403);
+    const ownDivisionCreate = await call(env, "POST", "/api/listings", { token: t.agroMgr.token, body: { division: "Food", title: "Sneaky" } });
+    expect(ownDivisionCreate.status).toBe(403);
 
-    const wrongEdit = await call(env, "PUT", `/api/listings/${foodListing.body.id}`, { token: t.transMgr.token, body: { ...foodListing.body, price: 1 } });
-    expect(wrongEdit.status).toBe(403);
+    const otherDivisionCreate = await call(env, "POST", "/api/listings", { token: t.transMgr.token, body: { division: "Food", title: "Sneaky" } });
+    expect(otherDivisionCreate.status).toBe(403);
 
-    const wrongDelete = await call(env, "DELETE", `/api/listings/${foodListing.body.id}`, { token: t.transMgr.token });
-    expect(wrongDelete.status).toBe(403);
+    const edit = await call(env, "PUT", `/api/listings/${foodListing.body.id}`, { token: t.agroMgr.token, body: { ...foodListing.body, price: 1 } });
+    expect(edit.status).toBe(403);
+
+    const del = await call(env, "DELETE", `/api/listings/${foodListing.body.id}`, { token: t.hospMgr.token });
+    expect(del.status).toBe(403);
   });
 
   it("the Accountant cannot manage listings, even though they can write everywhere else", async () => {
@@ -65,12 +69,12 @@ describe("managing a division's website listings", () => {
     expect(res.status).toBe(403);
   });
 
-  it("Director/Super Admin (company-wide) can publish for any division", async () => {
+  it("Director/Super Admin (company-wide) can still publish for any division", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
     const res = await call(env, "POST", "/api/listings", { token: t.director.token, body: { division: "Hospitality", title: "Garden View Apartment", price: 10500 } });
     expect(res.status).toBe(201);
-    // ...and edit/delete it too, across the division boundary that stops a Manager.
+    // ...and edit/delete it too, across any division.
     const edit = await call(env, "PUT", `/api/listings/${res.body.id}`, { token: t.director.token, body: { ...res.body, price: 11000 } });
     expect(edit.status).toBe(200);
   });
@@ -79,7 +83,7 @@ describe("managing a division's website listings", () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
     const res = await call(env, "POST", "/api/listings", {
-      token: t.hospMgr.token, body: { title: "Room", imageUrl: "javascript:alert(1)" },
+      token: t.it.token, body: { division: "Hospitality", title: "Room", imageUrl: "javascript:alert(1)" },
     });
     expect(res.status).toBe(201);
     expect(res.body.imageUrl).toBe("");
@@ -97,8 +101,8 @@ describe("the public listings feed the marketing site reads", () => {
   it("only ever returns active listings, and only the public-safe fields", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
-    const live = await call(env, "POST", "/api/listings", { token: t.agroMgr.token, body: { title: "Live Chicken", price: 450, imageUrl: "https://example.com/a.jpg" } });
-    const hidden = await call(env, "POST", "/api/listings", { token: t.agroMgr.token, body: { title: "Draft Item", active: false } });
+    const live = await call(env, "POST", "/api/listings", { token: t.it.token, body: { division: "Food", title: "Live Chicken", price: 450, imageUrl: "https://example.com/a.jpg" } });
+    const hidden = await call(env, "POST", "/api/listings", { token: t.it.token, body: { division: "Food", title: "Draft Item", active: false } });
 
     const res = await call(env, "GET", "/api/public/listings");
     expect(res.status).toBe(200);
@@ -112,8 +116,8 @@ describe("the public listings feed the marketing site reads", () => {
   it("can be filtered to one division, for the page that only wants its own", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
-    await call(env, "POST", "/api/listings", { token: t.agroMgr.token, body: { title: "Eggs" } });
-    await call(env, "POST", "/api/listings", { token: t.transMgr.token, body: { title: "Truck" } });
+    await call(env, "POST", "/api/listings", { token: t.it.token, body: { division: "Food", title: "Eggs" } });
+    await call(env, "POST", "/api/listings", { token: t.it.token, body: { division: "Transport", title: "Truck" } });
 
     const food = await call(env, "GET", "/api/public/listings?division=Food");
     expect(food.body.every((l) => l.division === "Food")).toBe(true);

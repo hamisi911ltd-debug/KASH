@@ -679,7 +679,7 @@ const app = {
         if (bytes.byteLength > MAX_IMAGE_BYTES) return err("That image is too large (max 5MB).", 413);
         if (bytes.byteLength === 0) return err("The image was empty.", 400);
 
-        const requestedDivision = url.searchParams.get("division") || user.division || "Transport";
+        const requestedDivision = url.searchParams.get("division") || (user.division && user.division !== "All" ? user.division : "Transport");
         if (!SITE_DIVISIONS.includes(requestedDivision)) return err("Unknown division.", 400);
         if (user.division && user.division !== "All" && user.division !== requestedDivision) {
           return err("You can only upload images for your own division.", 403);

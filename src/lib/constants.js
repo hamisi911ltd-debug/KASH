@@ -115,11 +115,11 @@ export const ROLE_VIEWS = {
   "Super Admin": "*",
   Admin: "*",
   Director: "*",
-  "Transport Manager": ["transport", "maintenance", "payments", "expenses", "reports", "website", "updates", "settings"],
+  "Transport Manager": ["transport", "maintenance", "payments", "expenses", "reports", "updates", "settings"],
   Driver: ["transport", "maintenance", "payments", "updates", "settings"],
-  "Agro Manager": ["food", "payments", "expenses", "reports", "website", "updates", "settings"],
+  "Agro Manager": ["food", "payments", "expenses", "reports", "updates", "settings"],
   "Agro Attendant": ["food", "payments", "updates", "settings"],
-  "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "website", "updates", "settings"],
+  "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "updates", "settings"],
   "Hospitality Attendant": ["hospitality", "payments", "updates", "settings"],
   Accountant: ["overview", "all", "payments", "expenses", "reports", "approvals", "updates", "settings"],
   "IT Officer": ["website", "users", "updates", "settings"],
@@ -150,11 +150,15 @@ export const ROLE_CAPS = {
   "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: true },
   Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: true },
   Director: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: true },
-  "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: true },
+  // Website control was pulled from every division Manager and centralised
+  // on the IT Officer (plus Super Admin/Admin/Director as the standing
+  // company-wide override) - a Manager now runs their division's day-to-day
+  // but no longer touches what the public site shows.
+  "Transport Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: false },
   Driver: { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
-  "Agro Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: true },
+  "Agro Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: false },
   "Agro Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
-  "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: true },
+  "Hospitality Manager": { write: true, manageUsers: false, deleteAny: true, settings: false, payments: true, approve: true, manageListings: false },
   "Hospitality Attendant": { write: false, writeOwn: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: false, manageListings: false },
   Accountant: { write: true, manageUsers: false, deleteAny: false, settings: false, payments: true, approve: true, manageListings: false },
   // More control than a Manager over the system itself (invites/suspends
