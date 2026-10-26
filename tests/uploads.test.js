@@ -65,12 +65,14 @@ describe("uploading a listing photo", () => {
     expect(workerRes.status).toBe(403);
   });
 
-  it("a company-wide role can upload for whichever division it asks for", async () => {
+  it("the IT Officer can upload for whichever division it asks for, a Director cannot", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
-    const res = await call(env, "POST", "/api/uploads?division=Hospitality", { token: t.director.token, bytes: PNG_BYTES, contentType: "image/png" });
+    const res = await call(env, "POST", "/api/uploads?division=Hospitality", { token: t.it.token, bytes: PNG_BYTES, contentType: "image/png" });
     expect(res.status).toBe(201);
     expect(res.body.key).toMatch(/^listings\/Hospitality\//);
+    const denied = await call(env, "POST", "/api/uploads?division=Hospitality", { token: t.director.token, bytes: PNG_BYTES, contentType: "image/png" });
+    expect(denied.status).toBe(403);
   });
 });
 

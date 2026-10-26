@@ -16,7 +16,7 @@ const staff = [
   { key: "it", role: "IT Officer", division: "All" },
 ];
 
-describe("managing the website's listings - IT Officer (and company-wide roles) only", () => {
+describe("managing the website's listings - IT Officer only", () => {
   it("the IT Officer can publish, edit and remove a listing for any division", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
@@ -69,14 +69,17 @@ describe("managing the website's listings - IT Officer (and company-wide roles) 
     expect(res.status).toBe(403);
   });
 
-  it("Director/Super Admin (company-wide) can still publish for any division", async () => {
+  it("Director/Super Admin/Admin can no longer add, edit or remove listings - the IT Officer alone does", async () => {
     const env = makeEnv();
     const t = await bootstrap(env, staff);
-    const res = await call(env, "POST", "/api/listings", { token: t.director.token, body: { division: "Hospitality", title: "Garden View Apartment", price: 10500 } });
-    expect(res.status).toBe(201);
-    // ...and edit/delete it too, across any division.
-    const edit = await call(env, "PUT", `/api/listings/${res.body.id}`, { token: t.director.token, body: { ...res.body, price: 11000 } });
-    expect(edit.status).toBe(200);
+    const made = await call(env, "POST", "/api/listings", { token: t.it.token, body: { division: "Hospitality", title: "Garden View Apartment", price: 10500 } });
+    expect(made.status).toBe(201);
+    const res = await call(env, "POST", "/api/listings", { token: t.director.token, body: { division: "Hospitality", title: "Another", price: 1 } });
+    expect(res.status).toBe(403);
+    const edit = await call(env, "PUT", `/api/listings/${made.body.id}`, { token: t.director.token, body: { ...made.body, price: 11000 } });
+    expect(edit.status).toBe(403);
+    const del = await call(env, "DELETE", `/api/listings/${made.body.id}`, { token: t.director.token });
+    expect(del.status).toBe(403);
   });
 
   it("hides a bad photo URL rather than trusting whatever was pasted in", async () => {

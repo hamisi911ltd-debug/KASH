@@ -122,7 +122,8 @@ export const ROLE_VIEWS = {
   "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "updates", "settings"],
   "Hospitality Attendant": ["hospitality", "payments", "updates", "settings"],
   Accountant: ["overview", "all", "payments", "expenses", "reports", "approvals", "updates", "settings"],
-  "IT Officer": ["website", "users", "updates", "settings"],
+  // The IT Officer can open every page (read-only: write stays false below) and is the one role that publishes to the website.
+  "IT Officer": "*",
   Staff: ["overview", "payments", "updates", "settings"],
 };
 
@@ -144,12 +145,12 @@ export const ROLE_VIEWS = {
 /* `manageListings` = may publish/edit/remove what appears about their own
    division on the public marketing site (see WebsiteView.jsx). Company-wide
    roles may manage any division's listings; a division Manager only their
-   own. Deliberately excludes the Accountant (financial oversight, not a
-   marketing one) and every worker/writeOwn role. */
+   own. Now held ONLY by the IT Officer: Super Admin/Admin/Director can look
+   at the Website page but cannot add, edit or remove listings. */
 export const ROLE_CAPS = {
-  "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: true },
-  Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: true },
-  Director: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: true },
+  "Super Admin": { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: false },
+  Admin: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: false },
+  Director: { write: true, manageUsers: true, deleteAny: true, settings: true, payments: true, approve: true, manageListings: false },
   // Website control was pulled from every division Manager and centralised
   // on the IT Officer (plus Super Admin/Admin/Director as the standing
   // company-wide override) - a Manager now runs their division's day-to-day
