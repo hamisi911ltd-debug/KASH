@@ -1048,3 +1048,108 @@ body.assistant-open .assistant-launcher{display:none}
 .feat,.cardx,.panel,.finder,.form,.mode,.faq details{
   box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 14px 30px -26px rgba(10,31,61,.58)
 }
+/* =====================================================================
+   MOBILE: compact, thumb-friendly layout (phones). Smaller type, tighter
+   spacing, a shorter hero and a slimmer footer so more fits on screen.
+===================================================================== */
+html,body{overflow-x:hidden}
+img,video,iframe,svg{max-width:100%}
+input,select,textarea{font-size:16px} /* stops iOS zooming into fields */
+
+@media (max-width:640px){
+  :root{--hdr:62px;--gutter:16px}
+  body{font-size:15px;line-height:1.55}
+  .wrap{width:min(1200px,100% - 32px)}
+  .section{padding:40px 0}
+  .section h2,h2{font-size:clamp(1.45rem,6.4vw,1.8rem)}
+  .lede{font-size:.92rem;margin-top:6px}
+  .btn{padding:.72rem 1.05rem;font-size:.88rem}
+
+  /* header */
+  .nav{gap:10px;min-height:var(--hdr)}
+  .scrolled .nav{min-height:56px}
+  .brand img{height:36px}
+  .scrolled .brand img{height:32px}
+  .brand-sub{font-size:.5rem;letter-spacing:.16em;margin-top:2px}
+  .theme-btn,.quote-btn,.burger{width:38px;height:38px;border-radius:10px}
+  .theme-btn svg,.quote-btn svg,.burger svg{width:19px;height:19px}
+  .nav-cta{gap:6px}
+
+  /* hero */
+  .hero{min-height:470px;padding:calc(var(--hdr) + 14px) 0 100px;align-items:flex-start}
+  .hero-copy{max-width:none}
+  .tag{font-size:.8rem;margin-bottom:10px;gap:8px}
+  .tag .brandbar{width:34px}
+  .slide h1{font-size:clamp(1.65rem,8vw,2.1rem);line-height:1.1}
+  .slide p{font-size:.92rem;margin-top:10px;line-height:1.5;max-width:none}
+  .hero-actions{gap:8px;margin-top:16px}
+  .hero-actions .btn{padding:.62rem .95rem;font-size:.82rem}
+  .hero-ctrl{margin-top:18px;gap:12px}
+  .dashes button{width:24px;height:4px}
+  .ribbon{--rh:56px}
+
+  /* services, about, products, tiles */
+  .services{padding-top:24px}
+  .svc-grid{gap:10px}
+  .svc{min-height:210px;border-radius:14px}
+  .svc-body{padding:0 12px 14px}
+  .svc .badge{width:38px;height:38px;margin-bottom:8px}
+  .svc .badge svg{width:19px;height:19px}
+  .svc h3{font-size:.98rem}
+  .svc p{font-size:.78rem;margin-top:3px;line-height:1.4}
+  .svc a{font-size:.8rem;margin-top:8px}
+  .about-grid{gap:22px}
+  .about p.body{font-size:.92rem;margin-top:10px}
+  .pillars{margin-top:18px;gap:12px}
+  .pillar .badge{width:38px;height:38px}
+  .pillar h3{font-size:.95rem}
+  .pillar p{font-size:.85rem}
+  .about .btn{margin-top:18px}
+  .photo{border-radius:18px}
+  .section-head{margin-bottom:18px;gap:8px}
+  .prod-grid{gap:10px}
+  .prod{border-radius:12px}
+  .prod div{padding:9px 10px 11px}
+  .prod b{font-size:.84rem}
+  .prod span{font-size:.7rem}
+  .tile{min-height:130px;padding:14px}
+  .tile h3{font-size:1rem}
+  .tile p{font-size:.8rem;min-height:0}
+
+  /* delivery + quote */
+  .dstage{border-radius:16px}
+  .dstage .dstat span{font-size:.72rem;padding:5px 10px}
+  .quote-grid{gap:22px}
+  .contact-list{margin-top:16px;gap:12px}
+  .contact-list .badge{width:40px;height:40px}
+  .form{padding:16px;border-radius:18px;gap:12px}
+  .field input,.field select,.field textarea{padding:.7rem .8rem}
+  .field textarea{min-height:90px}
+
+  /* footer: compact brand block + two link columns */
+  .site-footer .foot,.foot{grid-template-columns:1fr 1fr;gap:18px 14px;padding:30px 0 20px}
+  .foot > :first-child{grid-column:1/-1}
+  .foot img{height:40px}
+  .foot .script{font-size:1.3rem;margin-top:6px}
+  .foot p{font-size:.84rem;margin-top:8px;max-width:none}
+  .foot h3{font-size:.9rem;margin-bottom:8px}
+  .foot ul{gap:5px}
+  .foot a{font-size:.85rem}
+  .foot .socials{margin-top:12px;gap:8px}
+  .socials a{width:34px;height:34px}
+  .socials svg{width:16px;height:16px}
+  .foot > div:nth-child(3) .script{font-size:1.4rem}
+  .legal{padding:14px 0 18px;font-size:.74rem;gap:6px 14px;flex-direction:column}
+  .legal nav{gap:6px 14px}
+  .foot-ribbon{--rh:56px;height:56px;margin-top:6px}
+
+  /* floating assistant: icon only, so it never covers content */
+  .assistant-bubble,.assistant .bubble,#assistant .bubble{display:none!important}
+}
+
+@media (max-width:380px){
+  .svc-grid,.prod-grid{gap:8px}
+  .svc{min-height:190px}
+  .slide h1{font-size:1.55rem}
+  .hero-actions .btn{flex:1;justify-content:center;text-align:center}
+}
