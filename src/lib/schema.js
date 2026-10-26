@@ -20,6 +20,10 @@ export const COLLECTIONS = [
   // marketing site (kash-suppliers...) - see WebsiteView.jsx and the
   // worker's GET /api/public/listings.
   "listings",
+  // Quote / ride / delivery / booking / enquiry forms submitted on the public
+  // website. Created only by the worker's POST /api/public/requests, then
+  // worked through (status) by staff in the ERP's Website page.
+  "webRequests",
 ];
 
 const num = (v) => (v === "" || v == null ? 0 : Number(v) || 0);
@@ -197,17 +201,31 @@ export const normalisers = {
     // The amenities ticked for this listing - kept to plain text labels.
     amenities: Array.isArray(v.amenities) ? v.amenities.map((a) => String(a).trim()).filter(Boolean).slice(0, 40) : [],
   }),
+  webRequests: (v) => ({
+    division: ["Transport", "Food", "Hospitality", "General"].includes(v.division) ? v.division : "General",
+    kind: String(v.kind || "enquiry").slice(0, 20),
+    name: String(v.name || "").trim().slice(0, 120),
+    phone: String(v.phone || "").trim().slice(0, 40),
+    email: String(v.email || "").trim().slice(0, 160),
+    summary: String(v.summary || "").trim().slice(0, 300),
+    // Everything else the visitor filled in, as plain label/value text.
+    details: v.details && typeof v.details === "object" && !Array.isArray(v.details)
+      ? Object.fromEntries(Object.entries(v.details).slice(0, 30).map(([k, val]) => [String(k).slice(0, 40), String(val ?? "").slice(0, 1000)]))
+      : {},
+    status: ["New", "Contacted", "Done", "Spam"].includes(v.status) ? v.status : "New",
+    receivedAt: v.receivedAt || new Date().toISOString(),
+  }),
 };
 
 export const ID_PREFIX = {
   trips: "t", vehicles: "v", drivers: "d", maintenance: "mx", orders: "o", menu: "m",
   rooms: "r", bookings: "b", expenses: "e", payments: "pay", users: "u", reminders: "rem", messages: "msg", notifications: "n",
-  approvals: "ap", listings: "li",
+  approvals: "ap", listings: "li", webRequests: "wr",
 };
 
 /* Human labels used in toasts and confirmation copy. */
 export const SINGULAR = {
   trips: "Trip", vehicles: "Vehicle", drivers: "Driver", maintenance: "Maintenance record", orders: "Order", menu: "Menu item",
   rooms: "Room", bookings: "Booking", expenses: "Expense", payments: "Payment", users: "User", reminders: "Reminder", messages: "Message",
-  listings: "Website listing",
+  listings: "Website listing", webRequests: "Website request",
 };

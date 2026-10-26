@@ -174,7 +174,7 @@ export const ROLE_CAPS = {
    WebsiteView's "View live site" link and by the marketing site itself
    when it asks the API for a division's listings. */
 export const DIVISION_SITE_PAGE = { Transport: "transport", Food: "agro", Hospitality: "hospitality" };
-export const MARKETING_SITE_URL = "https://kash-suppliers.pages.dev";
+export const MARKETING_SITE_URL = "https://kashgeneralservices.com";
 
 /* Records at or above these amounts (KSh) are created "Pending" and need an
    approver's explicit decision. This is a governance record only - it does

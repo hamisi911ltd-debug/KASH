@@ -15,7 +15,7 @@ import { PageHeader, Page } from "../components/Page.jsx";
 const SITE_DIVISIONS = ["Transport", "Food", "Hospitality"];
 
 export default function WebsiteView() {
-  const { data, session } = useStore();
+  const { data, session, patchRecord } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
   const lockedDivision = session?.division && SITE_DIVISIONS.includes(session.division) ? session.division : null;
   const [division, setDivision] = useState(lockedDivision || "All");
@@ -51,6 +51,51 @@ export default function WebsiteView() {
     { label: "Delete", icon: Trash2, tone: "danger", onClick: (r) => deleteRecord("listings", r.id) },
   ] : [];
 
+  /* Quote / ride / delivery / booking forms filled in on the public site. */
+  const requests = (data.webRequests || []).filter((r) => lockedDivision ? r.division === lockedDivision : division === "All" || r.division === division);
+  const newCount = requests.filter((r) => r.status === "New").length;
+  const STATUS_TONE = { New: "amber", Contacted: "blue", Done: "emerald", Spam: "slate" };
+  const requestColumns = [
+    {
+      key: "name", header: "From", wrap: true, sortValue: (r) => r.name,
+      render: (r) => (
+        <div className="min-w-0">
+          <p className="font-semibold truncate">{r.name || "Unknown"}</p>
+          <p className="text-xs truncate" style={{ color: C.faint }}>{[r.phone, r.email].filter(Boolean).join(" · ")}</p>
+        </div>
+      ),
+    },
+    {
+      key: "summary", header: "Request", wrap: true, sortValue: (r) => r.summary,
+      render: (r) => (
+        <div className="min-w-0">
+          <p className="font-medium">{r.summary}</p>
+          <p className="text-xs" style={{ color: C.faint }}>
+            {Object.entries(r.details || {}).filter(([k]) => !["lat", "lng", "items", "estimatedTotal"].includes(k)).slice(0, 4).map(([k, v]) => `${k}: ${String(v).slice(0, 60)}`).join(" · ")}
+          </p>
+        </div>
+      ),
+    },
+    ...(lockedDivision ? [] : [{ key: "division", header: "Division", sortValue: (r) => r.division, render: (r) => <Badge tone="slate" size="sm">{divisionLabel(r.division)}</Badge> }]),
+    { key: "receivedAt", header: "Received", sortValue: (r) => r.receivedAt, render: (r) => new Date(r.receivedAt).toLocaleString() },
+    {
+      key: "status", header: "Status", sortValue: (r) => r.status,
+      render: (r) => (
+        caps.write || caps.manageListings ? (
+          <select
+            aria-label="Request status"
+            value={r.status}
+            onChange={(e) => patchRecord("webRequests", r.id, { status: e.target.value })}
+            className="text-xs rounded-md px-2 py-1 border"
+            style={{ borderColor: C.line, background: C.surface }}
+          >
+            {["New", "Contacted", "Done", "Spam"].map((s) => <option key={s}>{s}</option>)}
+          </select>
+        ) : <Badge tone={STATUS_TONE[r.status] || "slate"} size="sm">{r.status}</Badge>
+      ),
+    },
+  ];
+
   return (
     <Page>
       <PageHeader
@@ -66,10 +111,26 @@ export default function WebsiteView() {
         }
       />
 
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 max-w-md">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5 max-w-xl">
         <StatCard icon={Globe} label="Live on the website" value={activeCount} tint={C.emerald} />
         <StatCard icon={ImageIcon} label="Total listings" value={shown.length} tint={C.blue} />
+        <StatCard icon={Globe} label="New website requests" value={newCount} tint={C.amber} />
       </div>
+
+      <Card padded={false}>
+        <div className="p-4 sm:p-5 pb-3">
+          <SectionTitle title={`${requests.length} request${requests.length === 1 ? "" : "s"} from the website`} />
+        </div>
+        <div className="px-3 sm:px-5 pb-5">
+          <DataTable
+            columns={requestColumns}
+            rows={requests}
+            exportName="kash-website-requests"
+            emptyIcon={Globe}
+            emptyText="No requests from the website yet."
+          />
+        </div>
+      </Card>
 
       <Card padded={false}>
         <div className="p-4 sm:p-5 pb-3">

@@ -87,6 +87,42 @@ function err(message, status = 400, headers) {
 
 const MAX_BODY_BYTES = 200_000;
 
+/* ---------------------------------------------------------- website requests */
+
+const WEB_REQ_MAX_PER_IP = 8; // per 15-minute window
+const WEB_REQ_KEEP = 2000;    // newest requests kept
+const WEB_KINDS = ["enquiry", "transport", "ride", "delivery", "booking", "handoff"];
+
+/** Turn what the website form sent ({type, data}) into the fields a
+    webRequest holds. Returns null when there's no way to reach the person. */
+function buildWebRequest(body) {
+  const kind = WEB_KINDS.includes(body.type) ? body.type : "enquiry";
+  const data = body.data && typeof body.data === "object" && !Array.isArray(body.data) ? body.data : {};
+  const text = (v) => (v == null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v)).trim();
+  const name = text(data.name);
+  const phone = text(data.phone);
+  const email = text(data.email);
+  if (!name || (!phone && !email)) return null;
+
+  const service = text(data.service).toLowerCase();
+  let division = "General";
+  if (kind === "transport" || kind === "ride" || kind === "delivery") division = "Transport";
+  else if (kind === "booking") division = "Hospitality";
+  else if (/agro|food|chicken|beef|goat|egg/.test(service)) division = "Food";
+  else if (/transport|logistic|mobility|ride|truck|deliver/.test(service)) division = "Transport";
+  else if (/hospitality|airbnb|stay|propert/.test(service)) division = "Hospitality";
+
+  const LABEL = { enquiry: "Quote request", transport: "Truck request", ride: "Ride request", delivery: "Delivery request", booking: "Stay availability", handoff: "Assistant hand-off" };
+  const what = text(data.service) || text(data.property) || text(data.vehicle) || "";
+  const details = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (["name", "phone", "email", "website"].includes(k)) continue;
+    const s = text(v);
+    if (s) details[k] = s;
+  }
+  return { division, kind, name, phone, email, summary: `${LABEL[kind]}${what ? ` - ${what}` : ""}`, details };
+}
+
 /* ---------------------------------------------------------- uploaded images */
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -458,6 +494,11 @@ function scopeData(full, user) {
   if (!sees(user.role, "hospitality")) {
     d.bookings = []; d.rooms = [];
   }
+
+  // Website requests: only roles that manage the website (or write) see them,
+  // and a division-locked manager only their own division's.
+  if (!caps.write && !caps.manageListings) d.webRequests = [];
+  else if (user.division && user.division !== "All") d.webRequests = (full.webRequests || []).filter((r) => r.division === user.division);
   // Hospitality Attendant does see everyone's bookings/rooms (sees("hospitality")
   // is true for them) - front desk needs every guest, not just their own.
 
@@ -541,6 +582,31 @@ const app = {
           .filter((l) => l.active && (!division || l.division === division))
           .map((l) => ({ id: l.id, division: l.division, title: l.title, description: l.description, price: l.price, meta: l.meta, imageUrl: l.imageUrl, images: l.images || (l.imageUrl ? [l.imageUrl] : []), amenities: l.amenities || [] }));
         return json(pub, 200, { "Cache-Control": "public, max-age=60" });
+      }
+
+      // The public website's quote / ride / delivery / booking forms land
+      // here, unauthenticated, and become a "webRequest" staff work through in
+      // the ERP's Website page. Because anyone on the internet can call this,
+      // it only ever APPENDS one capped, sanitised record, is rate-limited per
+      // IP, drops anything a honeypot field catches, and never reads data back.
+      if (url.pathname === "/api/public/requests" && request.method === "POST") {
+        const ip = clientIp(request);
+        if ((await readCount(env, `rl:req:${ip}`)) >= WEB_REQ_MAX_PER_IP) {
+          return err("Too many requests from your connection. Please wait a few minutes or call us.", 429, { "Retry-After": String(RL_WINDOW_SECONDS) });
+        }
+        const body = await readJson(request);
+        if (body.data && typeof body.data === "object" && body.data.website) return json({ ok: true }, 201); // honeypot: pretend success
+        const incoming = buildWebRequest(body);
+        if (!incoming) return err("Please include your name and phone number.", 422);
+        await bump(env, `rl:req:${ip}`);
+        const record = {
+          id: `${ID_PREFIX.webRequests}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+          ...normalisers.webRequests(incoming),
+        };
+        const existing = await getCollection(env, "webRequests");
+        await putCollection(env, "webRequests", [record, ...existing].slice(0, WEB_REQ_KEEP));
+        audit("webrequest.received", { id: record.id, kind: record.kind, division: record.division });
+        return json({ ok: true, id: record.id }, 201);
       }
 
       if (url.pathname === "/api/auth/register" && request.method === "POST") {
@@ -773,6 +839,17 @@ const app = {
       const listingDivisionOk = (division) => !user.division || user.division === "All" || user.division === division;
       const rows = await getCollection(env, collection);
 
+      // Website requests arrive only from the public form (above); staff may
+      // work through them (change status) or clear them, within their division.
+      if (collection === "webRequests") {
+        if (request.method === "POST" || request.method === "PUT") return err("Website requests arrive from the website.", 405);
+        if (!caps.write && !caps.manageListings) return err("You don't have access to website requests.", 403);
+        const target = id ? rows.find((r) => r.id === id) : null;
+        if (target && user.division && user.division !== "All" && user.division !== target.division) {
+          return err("You can only handle requests for your own division.", 403);
+        }
+      }
+
       if (request.method === "POST") {
         const canOwn = caps.writeOwn && ["trips", "orders", "bookings", "maintenance"].includes(collection);
         const canPay = collection === "payments" && caps.payments;
@@ -848,6 +925,7 @@ const app = {
         const allowed =
           caps.write ||
           (collection === "listings" && caps.manageListings) ||
+          (collection === "webRequests" && caps.manageListings) ||
           (collection === "users" && caps.manageUsers) ||
           FREE_PATCH_COLLECTIONS.has(collection) ||
           (existing && ownsRecord(collection, existing, user) && (collection === "messages" || caps.writeOwn));
@@ -858,7 +936,12 @@ const app = {
         }
         // A patch can never rewrite who a record is, who made it, or (for
         // people) anything only the server sets - that includes passwordHash.
-        const body = stripServerFields(await readJson(request), [...(collection === "users" ? SERVER_ONLY_USER_FIELDS : ["id"]), "createdBy"]);
+        let body = stripServerFields(await readJson(request), [...(collection === "users" ? SERVER_ONLY_USER_FIELDS : ["id"]), "createdBy"]);
+        // All staff may change on a website request is its status.
+        if (collection === "webRequests") {
+          if (!["New", "Contacted", "Done", "Spam"].includes(body.status)) return err("Choose a valid status.", 400);
+          body = { status: body.status };
+        }
         if (collection === "users") {
           assertMayChangeUser({ actor: user, target: existing, incoming: { ...existing, ...body }, users: rows });
           audit("user.updated", { by: user.id, target: existing.id, role: body.role, status: body.status });

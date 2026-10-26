@@ -1,0 +1,20 @@
+name = "kash-api"
+main = "src/index.js"
+compatibility_date = "2026-10-21"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kash-production"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[vars]
+SITE_ORIGIN = "https://www.example.com"
+EMAIL_FROM = "KASH General Suppliers <accounts@example.com>"
+PASSWORD_ITERATIONS = "310000"
+ACCESS_TEAM_DOMAIN = "replace-with-your-team.cloudflareaccess.com"
+ACCESS_AUD = "REPLACE_WITH_CLOUDFLARE_ACCESS_APPLICATION_AUD"
+STAFF_EMAILS = "replace-with-your-staff-email@example.com"
+
+[triggers]
+crons = ["17 2 * * *"]
