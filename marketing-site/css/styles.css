@@ -1153,3 +1153,26 @@ input,select,textarea{font-size:16px} /* stops iOS zooming into fields */
   .slide h1{font-size:1.55rem}
   .hero-actions .btn{flex:1;justify-content:center;text-align:center}
 }
+
+/* Mobile footer, extra compact: logo + socials on one line, links as a
+   wrapped row, no tagline paragraph or "Our promise" block. */
+@media (max-width:640px){
+  .foot{display:flex;flex-wrap:wrap;gap:10px 14px;padding:18px 0 10px;align-items:center}
+  .foot > :first-child{flex:1 1 100%;display:grid;grid-template-columns:auto 1fr;grid-template-areas:"logo socials" "tag tag";align-items:center;gap:6px 12px}
+  .foot > :first-child .foot-logo{grid-area:logo}
+  .foot > :first-child > div:nth-child(2){grid-area:tag}
+  .foot > :first-child p{display:none}
+  .foot > :first-child .socials{grid-area:socials;margin:0;justify-content:flex-end;gap:6px}
+  .foot .script{font-size:1.05rem;margin-top:0}
+  .foot img{height:32px}
+  .foot .brand-sub{font-size:.46rem}
+  .socials a{width:30px;height:30px}
+  .socials svg{width:14px;height:14px}
+  .foot > div:nth-child(2){flex:1 1 100%}
+  .foot > div:nth-child(2) h3{display:none}
+  .foot > div:nth-child(2) ul{display:flex;flex-wrap:wrap;gap:4px 14px}
+  .foot > div:nth-child(2) a{font-size:.8rem}
+  .foot > div:nth-child(3){display:none}
+  .legal{padding:10px 0 12px;font-size:.7rem;gap:4px}
+  .foot-ribbon{--rh:36px;height:36px;margin-top:0}
+}
