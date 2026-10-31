@@ -10,4 +10,6 @@
   var hour = new Date().getHours();
   var night = saved ? saved === 'night' : !(hour >= 6 && hour < 18);
   document.documentElement.setAttribute('data-theme', night ? 'dark' : 'light');
+  /* opened on an inner page: don't flash the home banner from index.html first */
+  if (location.hash && !/^#\/?$/.test(location.hash)) document.documentElement.classList.add('deep-link');
 })();

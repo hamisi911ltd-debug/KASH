@@ -10,7 +10,9 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 describe("public/_headers", () => {
   const html = read("index.html");
   const headers = read("public/_headers");
-  const hashes = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
+  // Browsers turn CRLF into LF before hashing an inline script, so a Windows
+  // checkout has to be hashed the same way or the check proves nothing.
+  const hashes = [...html.replace(/\r\n/g, "\n").matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
     (m) => `'sha256-${createHash("sha256").update(m[1]).digest("base64")}'`
   );
 

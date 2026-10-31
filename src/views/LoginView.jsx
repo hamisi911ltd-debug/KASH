@@ -243,11 +243,11 @@ export default function LoginView({ onSignIn }) {
               </button>
 
               <div className="flex rounded-xl p-1 mb-7" style={{ background: C.surface2 }}>
-                {/* Real businesses sign in with their invited company email only. Self
-                   sign-up exists only on the public demo. */}
+                {/* An invited person has no password until they choose one here. The
+                   Worker refuses any email that wasn't invited, except on the public demo. */}
                 {[
                   ["signin", "Sign in"],
-                  ...(DEMO_MODE ? [["register", "Create account"]] : []),
+                  ["register", "Create account"],
                 ].map(([key, label]) => (
                   <button
                     type="button"
@@ -299,6 +299,16 @@ export default function LoginView({ onSignIn }) {
                       Forgot password?
                     </button>
                   </div>
+
+                  {!DEMO_MODE && (
+                    <p className="text-xs" style={{ color: C.muted }}>
+                      First time here?{" "}
+                      <button type="button" onClick={() => { setRegEmail(email); setMode("register"); setError(""); }} className="font-semibold" style={{ color: C.blue }}>
+                        Create your password
+                      </button>{" "}
+                      with the email your administrator invited.
+                    </p>
+                  )}
 
                   <Turnstile onToken={setHumanToken} resetSignal={humanReset} />
 

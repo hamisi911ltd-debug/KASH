@@ -11,7 +11,7 @@ async function loadStaffRequests(){
   try {
     const query = status ? '?status=' + encodeURIComponent(status) : '';
     const response = await fetch('/api/staff/requests' + query, {credentials:'same-origin'});
-    const body = await response.json().catch(() => ({}));
+    const body = await accountJson(response);
     if (!response.ok) throw new Error(body.error && body.error.message || 'Staff access could not be confirmed. Check your Cloudflare Access sign-in.');
     const rows = body.requests || [];
     if (!rows.length){ root.innerHTML = '<p class="account-empty">No requests in this view.</p>'; return; }
@@ -45,7 +45,7 @@ document.addEventListener('change', async (event) => {
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({status:select.value})
     });
-    const body = await response.json().catch(() => ({}));
+    const body = await accountJson(response);
     if (!response.ok) throw new Error(body.error && body.error.message || 'Could not update the request.');
     toast('Request status updated.');
     await loadStaffRequests();

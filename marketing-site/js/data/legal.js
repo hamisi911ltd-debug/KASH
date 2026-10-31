@@ -10,7 +10,7 @@
 'use strict';
 
 const LEGAL = {
-  updated: '15 October 2026',
+  updated: '30 October 2026',
   retentionMonths: 12,       /* keep this in step with RETENTION_DAYS in backend/wrangler.toml (365 = 12 months) */
 
   privacy: {
@@ -58,7 +58,7 @@ const LEGAL = {
     sections: [
       {h:'1. About these terms', p:['By using this website or sending us a request you agree to these terms and to our Privacy Policy. If you do not agree, please do not use the site.']},
       {h:'2. Who can use our services', p:['You must be 18 or older to make a request or booking. If you are younger, a parent or guardian must make the request for you.']},
-      {h:'3. Our services', p:['KASH offers four services: agro and food supply (chicken, beef, goat meat and eggs), transport and logistics, mobility and ride services (Uber-style cabs and tuk-tuks), and hospitality and Airbnb stays. What is available can change.']},
+      {h:'3. Our services', p:['KASH operates in three sectors: agriculture and food, transport and logistics (including Uber-style cabs and tuk-tuks), and hospitality and accommodation. What is available can change.']},
       {h:'4. Requests, quotes and bookings', ul:[
         'Sending a form is a request, not a confirmed booking or order.',
         'A request becomes confirmed only when we confirm it to you, by phone, WhatsApp or email.',

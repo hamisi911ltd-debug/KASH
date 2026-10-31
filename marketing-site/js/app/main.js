@@ -29,5 +29,5 @@
 
   render();
   Assistant.init();
-  loadErpListings().then((changed) => { if (changed) render(true); });
+  loadErpListings().then((changed) => { if (changed && route().name !== 'home') render(true); }); /* the home page shows no ERP listings, so don't restart its banner */
 })();

@@ -121,12 +121,111 @@ function ImageField({ field, value, onChange, error, onUploadImage, onDeleteImag
   );
 }
 
+/** Several photos for one record, the first being the cover. Same plumbing
+    as ImageField, but `value` is an array of URLs (see the listing form). */
+function ImagesField({ field, value, onChange, error, onUploadImage, onDeleteImage, division }) {
+  const [busy, setBusy] = useState(false);
+  const [localError, setLocalError] = useState("");
+  const inputRef = useRef(null);
+  const photos = Array.isArray(value) ? value : [];
+  const max = field.max || 5;
+
+  const handleFiles = async (files) => {
+    setLocalError("");
+    const chosen = Array.from(files || []);
+    if (chosen.length > max - photos.length) setLocalError(`You can add up to ${max} photos.`);
+    let next = photos;
+    setBusy(true);
+    try {
+      for (const file of chosen.slice(0, max - photos.length)) {
+        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+          setLocalError("Please choose a JPEG, PNG, WEBP or GIF image.");
+          continue;
+        }
+        if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+          setLocalError(`That photo is too large - please keep it under ${MAX_IMAGE_MB}MB.`);
+          continue;
+        }
+        const res = await onUploadImage(file, division);
+        next = [...next, res.url];
+        onChange(field.key, next);
+      }
+    } catch (e) {
+      setLocalError(e.message || "Couldn't upload that photo.");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  const removeImage = async (url) => {
+    const prefix = `${API_BASE}/uploads/`;
+    if (url.startsWith(prefix) && onDeleteImage) {
+      try {
+        await onDeleteImage(url.slice(prefix.length));
+      } catch {
+        /* best-effort - the photo still leaves the listing either way */
+      }
+    }
+    onChange(field.key, photos.filter((u) => u !== url));
+  };
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+      {photos.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {photos.map((url, i) => (
+            <div key={url} className="relative h-16 w-16">
+              <img src={url} alt={i === 0 ? "Cover photo" : ""} className="h-full w-full rounded-lg object-cover border" style={{ borderColor: i === 0 ? C.blue : C.line }} />
+              <button
+                type="button"
+                onClick={() => removeImage(url)}
+                disabled={busy}
+                aria-label={`Remove photo ${i + 1}`}
+                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full flex items-center justify-center text-white"
+                style={{ background: C.coral }}
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {photos.length < max && (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+          className="w-full rounded-lg border border-dashed flex flex-col items-center justify-center gap-1.5 py-5 text-sm transition-colors"
+          style={{ borderColor: error || localError ? C.coral : C.line, background: C.surface, color: C.muted }}
+        >
+          {busy ? <Spinner size={16} color={C.blue} /> : <Upload size={16} />}
+          <span>{busy ? "Uploading..." : photos.length ? "Add another photo" : "Click to upload photos"}</span>
+          <span className="text-xs" style={{ color: C.faint }}>JPEG, PNG, WEBP or GIF - up to {MAX_IMAGE_MB}MB each</span>
+        </button>
+      )}
+      {localError && <p className="text-xs mt-1.5 font-medium" style={{ color: C.coral }}>{localError}</p>}
+    </div>
+  );
+}
+
 function Field({ field, value, onChange, error, onUploadImage, onDeleteImage, division }) {
   const base = "w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition-colors focus:border-transparent";
   const style = { borderColor: error ? C.coral : C.line, background: C.surface };
 
   if (field.type === "image") {
     return <ImageField field={field} value={value} onChange={onChange} error={error} onUploadImage={onUploadImage} onDeleteImage={onDeleteImage} division={division} />;
+  }
+  if (field.type === "images") {
+    return <ImagesField field={field} value={value} onChange={onChange} error={error} onUploadImage={onUploadImage} onDeleteImage={onDeleteImage} division={division} />;
   }
   if (field.type === "select") {
     const opts = typeof field.options === "function" ? field.options() : field.options;
@@ -206,7 +305,10 @@ export function FormModal({ config, initial, onClose, onSubmit, onUploadImage, o
     const base = {};
     config.fields.forEach((f) => {
       const opts = typeof f.options === "function" ? f.options() : f.options;
-      base[f.key] = initial?.[f.key] ?? f.default ?? (f.type === "checks" ? [] : f.type === "select" ? (opts?.[0]?.value ?? "") : f.type === "toggle" ? false : "");
+      // A blank select shows its first option, so an empty saved value starts on that option rather than failing "Required" under a visibly chosen one.
+      const saved = f.type === "select" && initial?.[f.key] === "" ? undefined : initial?.[f.key];
+      if (f.type === "images") base[f.key] = saved?.length ? saved : initial?.imageUrl ? [initial.imageUrl] : [];
+      else base[f.key] = saved ?? f.default ?? (f.type === "checks" ? [] : f.type === "select" ? (opts?.[0]?.value ?? "") : f.type === "toggle" ? false : "");
     });
     return base;
   });

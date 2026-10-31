@@ -2,7 +2,7 @@
 
 function pageStaff(){
   return `<section class="section account-section"><div class="staff-wrap">
-    <a class="account-brand" href="#/" aria-label="KASH General Suppliers home"><img src="images/fallback/logo.webp" alt="KASH General Suppliers" width="140" height="54"></a>
+    <a class="account-brand" href="#/" aria-label="KASH General Suppliers home"><img src="images/logo.svg" alt="KASH General Suppliers" width="140" height="32"></a>
     <div class="account-heading"><h1>Staff requests</h1><p>Private request queue. Sign in through your company’s Cloudflare Access account.</p></div>
     <div class="account-error" data-staff-error role="alert" hidden></div>
     <label class="staff-filter">Filter by status

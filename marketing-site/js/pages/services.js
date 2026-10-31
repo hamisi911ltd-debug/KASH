@@ -11,6 +11,7 @@ function pageServices(){
   return heroPage({accent:'blue', crumbs:[['Services']], title:'Everything you need, from one trusted team.', lead:'Food, freight, rides and stays. Pick a service to see how we can help.',
       actions:'<a class="btn btn-amber" href="#/quote">Get a quote</a>'}) + `
   <section class="section services pt-20"><div class="wrap"><div class="svc-grid">${svc}</div></div></section>
-  <section class="section alt"><div class="wrap">${secHead('Why customers choose KASH', 'Simple, honest and dependable.', 'Why KASH')}${featTiles(WHY_KASH)}</div></section>
-  <section class="section"><div class="wrap">${trust()}<div class="mt-34">${ctaBand('Not sure where to start?', 'Tell us what you need and we will point you to the right service.', 'Talk to us', '#/contact')}</div></div></section>`;
+  <section class="section alt"><div class="wrap">${secHead('Our main business areas', 'KASH General Suppliers operates in three principal business sectors.', 'What we do')}${sectorCards()}</div></section>
+  <section class="section"><div class="wrap">${secHead('Why choose KASH General Suppliers?', 'One company, three sectors, nationwide.', 'Why KASH')}${featTiles(COMPANY.why, 'g3')}</div></section>
+  <section class="section alt"><div class="wrap">${trust()}<div class="mt-34">${ctaBand('Not sure where to start?', 'Tell us what you need and we will point you to the right service.', 'Talk to us', '#/contact')}</div></div></section>`;
 }

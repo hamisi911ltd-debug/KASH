@@ -9,7 +9,7 @@ function deliveryStage(){
   return `<div class="dstage" role="img" aria-label="Animation: a KASH rider picks up a parcel, rides across the city, then hands a KASH bag to a customer at the door">
     <div class="scene city"><img src="images/fallback/delivery-city.png" alt="" loading="lazy"><div class="lines"></div></div>
     <div class="scene door"><img src="images/fallback/delivery-doorstep.png" alt="" loading="lazy">
-      <div class="ring"></div><div class="bagtag"><img src="images/logo.webp" alt="">Your KASH order</div><div class="stamp">${ico('check')} Delivered</div></div>
+      <div class="ring"></div><div class="bagtag"><img src="images/logo.svg" alt="">Your KASH order</div><div class="stamp">${ico('check')} Delivered</div></div>
     <div class="whoosh"></div>
     <div class="dstat"><span class="a">Picked up</span><span class="b">On the way</span><span class="c">Delivered with care</span></div>
     <div class="dtrack"><span class="dbike">${ico('bike')}</span></div></div>`;

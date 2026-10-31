@@ -10,7 +10,8 @@ const $  = (s, c) => (c || document).querySelector(s);
 const $$ = (s, c) => Array.prototype.slice.call((c || document).querySelectorAll(s));
 const money = (n) => Number(n).toLocaleString('en-KE');
 /* A photo from images/ (bundled) or a full https link (e.g. uploaded in the ERP). */
-const imgSrc = (f) => /^https?:\/\//.test(f) ? f : 'images/' + f;
+/* Go straight to the known copy of a photo, so a phone doesn't wait on a failed request first. */
+const imgSrc = (f) => /^https?:\/\//.test(f) ? f : ((window.KASH_IMAGE_MAP || {})[f] || 'images/' + f);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const COLOR = {teal:'c-teal', blue:'c-blue', amber:'c-amber', red:'c-red'};

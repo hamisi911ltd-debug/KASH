@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { call, makeEnv, bootstrap } from "./helpers/api.js";
+import { canOpenView } from "../src/lib/auth.js";
 
 beforeEach(() => {
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -11,6 +12,36 @@ const staff = [
   { key: "agroMgr", role: "Agro Manager", division: "Food" },
   { key: "driver", role: "Driver", division: "Transport" },
 ];
+
+describe("IT Officer - signing in", () => {
+  const password = "ItOfficer2026";
+  const setUp = { name: "Ivy", phone: "+254700000000", acceptedTerms: true };
+
+  it("an invited IT Officer can't sign in until they choose a password, then keeps the role and signs in", async () => {
+    const env = makeEnv();
+    const t = await bootstrap(env);
+    const email = "ivy@kash.test";
+    await call(env, "POST", "/api/users", { token: t.owner.token, body: { name: "Ivy", email, role: "IT Officer", division: "All" } });
+
+    const early = await call(env, "POST", "/api/auth/login", { body: { email, password } });
+    expect(early.status).toBe(401);
+
+    const claimed = await call(env, "POST", "/api/auth/register", { body: { ...setUp, email, password } });
+    expect(claimed.status).toBe(201);
+    expect(claimed.body.user).toMatchObject({ role: "IT Officer", division: "All", status: "Active" });
+
+    const back = await call(env, "POST", "/api/auth/login", { body: { email, password } });
+    expect(back.status).toBe(200);
+    expect(canOpenView(back.body.user.role, "website")).toBe(true);
+  });
+
+  it("the sign-up screen doesn't let an uninvited email in", async () => {
+    const env = makeEnv();
+    await bootstrap(env);
+    const res = await call(env, "POST", "/api/auth/register", { body: { ...setUp, email: "stranger@kash.test", password } });
+    expect(res.status).toBe(403);
+  });
+});
 
 describe("IT Officer - website publishing only", () => {
   it("can publish, edit and remove listings for every division", async () => {

@@ -10,12 +10,22 @@ const ACCOUNT_REQUEST_TYPES = {
   handoff:'Customer service request'
 };
 
+/* The API always answers in JSON. Anything else means the customer platform isn't
+   connected (a static host answers /api/* with the home page or a bare 405), which
+   must never be mistaken for a successful sign-in. */
+async function accountJson(response){
+  if (!(response.headers.get('content-type') || '').includes('application/json')){
+    throw new Error('Customer accounts are not available yet. Please call or WhatsApp us and we will help you directly.');
+  }
+  return response.json().catch(() => ({}));
+}
+
 async function accountApi(path, options){
   const response = await fetch(ACCOUNT_API + path, Object.assign({
     credentials:'include',
     headers:{'Content-Type':'application/json'}
   }, options || {}));
-  const body = await response.json().catch(() => ({}));
+  const body = await accountJson(response);
   if (!response.ok) throw new Error(body.error && body.error.message || 'We could not complete that. Please try again.');
   return body;
 }

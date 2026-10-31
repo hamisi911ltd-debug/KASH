@@ -67,9 +67,13 @@ const ASSISTANT = {
       reply:"Our KASH truck carries bulk and heavy cargo. Tell us what you're moving and where, and we'll confirm the truck and price.",
       actions:[{label:'Request a truck', href:'#/quote/truck'}, {label:'See the fleet', href:'#/fleet'}] },
 
-    { id:'food', words:['food','chicken','beef','goat','meat','egg*','steak','ribs','wings','drumstick*','thigh*','butcher*','sell','products','buy'],
-      reply:"We supply chicken, beef, goat meat and eggs, packed fresh and delivered. Add what you need to your quote and we'll confirm today's price.",
-      actions:[{label:'See products', href:'#/products'}, {label:'Start a food quote', href:'#/quote/food'}] },
+    { id:'food', words:['food','chicken','beef','goat','meat','egg*','steak','ribs','wings','drumstick*','thigh*','butcher*','sell','products','buy','cereal*','grain*','vegetable*','fruit*','maize','beans','foodstuff*','farm produce'],
+      reply:"We supply chicken, beef, goat meat and eggs, plus cereals, grains, vegetables, fruits and dry foodstuffs, including bulk supply to institutions. Tell us what you need and we'll confirm availability and price.",
+      actions:[{label:'See products', href:'#/products'}, {label:'Start a food quote', href:'#/quote/food'}, {label:'Ask about other foods', href:'#/contact'}] },
+
+    { id:'events', words:['conference*','workshop*','seminar*','venue*','catering','event*','retreat*','training'],
+      reply:"We arrange conference, workshop and meeting venues, catering, event hospitality and accommodation for corporate retreats and training. Tell us your dates and numbers and we'll come back to you.",
+      actions:[{label:'Contact the team', href:'#/contact'}] },
 
     { id:'availability', words:['availab*'],
       reply:"To check a home's availability, open it, pick your dates and tap Check availability. We reply with the total price and how to reserve.",
@@ -96,8 +100,8 @@ const ASSISTANT = {
       actions:[{label:'Contact page', href:'#/contact'}] },
 
     { id:'about', words:['about kash','about you','about us','who are you','what do you do','services','what is kash','company'],
-      reply:"KASH General Suppliers brings four services together: agro and food, transport and logistics, mobility and rides, and hospitality and Airbnb stays.",
-      actions:[{label:'See our services', href:'#/services'}] },
+      reply:"KASH General Suppliers is a registered Kenyan company with over a decade of experience, working across Kenya in three sectors: agriculture and food, transport and logistics, and hospitality and accommodation.",
+      actions:[{label:'About KASH', href:'#/about'}, {label:'See our services', href:'#/services'}] },
 
     { id:'thanks', words:['thanks','thank you','asante','cheers','appreciate*'],
       reply:"You're welcome! Is there anything else I can help you with?" },

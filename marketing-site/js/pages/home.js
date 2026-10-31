@@ -6,7 +6,9 @@
 
 function heroHtml(){
   const n = HERO_SLIDES.length;
-  const bg = HERO_SLIDES.map((h, i) => `<img class="hs ${i === 0 ? 'on' : ''}" src="${imgSrc(h.img)}" alt="${esc(h.alt)}" ${i ? 'loading="lazy"' : 'fetchpriority="high"'} style="--pos:${h.pos};--mpos:${h.mpos};--ox:${h.ox};--oy:${h.oy};--sc:${i === 0 ? h.sc : 1}">`).join('');
+  const small = window.matchMedia('(max-width:960px)').matches;
+  /* only the first photo loads now; initHero fetches the others as their turn comes */
+  const bg = HERO_SLIDES.map((h, i) => `<img class="hs ${i === 0 ? 'on' : ''}" ${i ? 'data-src' : 'src'}="${imgSrc(small && h.mimg ? h.mimg : h.img)}" alt="${esc(h.alt)}" ${i ? '' : 'fetchpriority="high"'} style="--pos:${h.pos};--mpos:${h.mpos};--ox:${h.ox};--oy:${h.oy};--sc:${i === 0 ? h.sc : 1}">`).join('');
   const sl = HERO_SLIDES.map((h, i) => `<div class="slide ${i === 0 ? 'is-active' : ''}"><h1>${h.h1}</h1><p>${h.p}</p>
     <div class="hero-actions"><a class="btn btn-amber" href="${h.a[1]}">${h.a[0]}</a><a class="btn btn-ghost" href="${h.b[1]}">${h.b[0]}</a></div></div>`).join('');
   const dots = HERO_SLIDES.map((h, i) => `<button class="${i === 0 ? 'on' : ''}" aria-label="Slide ${i + 1}"></button>`).join('');
@@ -44,15 +46,15 @@ function pageHome(){
   <section class="section services" id="services"><div class="wrap"><div class="svc-grid">${svc}</div></div></section>
 
   <section class="section about" id="about" style="padding-top:28px"><div class="wrap about-grid">
-    <div><h2>More than just suppliers.</h2>
-      <p class="body">KASH General Suppliers is a diversified business committed to delivering quality products and reliable services across Kenya. We connect people, businesses and communities through food, transport, logistics and hospitality.</p>
+    <div><h2>${COMPANY.tagline}</h2>
+      <p class="body">${COMPANY.intro[0]}</p>
       <div class="pillars">
-        <div class="pillar"><div class="badge c-teal">${ico('target')}</div><div><h3>Our mission</h3><p>To provide reliable, high-quality products and services that improve lives and businesses.</p></div></div>
-        <div class="pillar"><div class="badge c-amber">${ico('eye')}</div><div><h3>Our vision</h3><p>To be a leading and trusted multi-services brand in East Africa.</p></div></div>
-        <div class="pillar"><div class="badge c-red">${ico('heart')}</div><div><h3>Our values</h3><p>Quality, integrity, reliability, customer focus and teamwork.</p></div></div>
+        <div class="pillar"><div class="badge c-teal">${ico('target')}</div><div><h3>Our mission</h3><p>${COMPANY.mission}</p></div></div>
+        <div class="pillar"><div class="badge c-amber">${ico('eye')}</div><div><h3>Our vision</h3><p>${COMPANY.vision}</p></div></div>
+        <div class="pillar"><div class="badge c-red">${ico('heart')}</div><div><h3>Our values</h3><p>${COMPANY.valuesShort}</p></div></div>
       </div>
       <a class="btn btn-navy" href="#/about">About KASH</a></div>
-    <figure class="photo m-0"><img src="images/tea-farm.jpg" alt="A farmer picking tea leaves on a hillside tea farm in Kericho" loading="lazy">${brandBar()}</figure>
+    <figure class="photo m-0"><img src="${imgSrc('tea-farm.jpg')}" alt="A farmer picking tea leaves on a hillside tea farm in Kericho" loading="lazy">${brandBar()}</figure>
   </div></section>
 
   <section class="section products" id="products"><div class="wrap">

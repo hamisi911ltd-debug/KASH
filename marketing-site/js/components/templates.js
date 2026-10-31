@@ -36,6 +36,10 @@ function featTiles(list, cols='g4'){
 }
 function steps(list){ return `<div class="steps">${list.map((s) => `<div class="step"><h3>${s.title}</h3><p>${s.desc}</p></div>`).join('')}</div>`; }
 function checks(list){ return `<ul class="checks">${list.map((t) => `<li>${ico('check')}<span>${t}</span></li>`).join('')}</ul>`; }
+/* the three business sectors from the company profile, each with its full list of services */
+function sectorCards(){
+  return `<div class="grid g3">${COMPANY.sectors.map((s) => `<article class="feat sector"><div class="badge ${COLOR[s.color]}">${ico(s.icon)}</div><h3>${s.title}</h3><p>${s.intro}</p>${checks(s.items)}<p>${s.close}</p><a class="go" href="#/${s.route}">Explore ${s.title.toLowerCase()}</a></article>`).join('')}</div>`;
+}
 function faq(list){ return `<div class="faq">${list.map((f) => `<details><summary>${f.q}</summary><p>${f.a}</p></details>`).join('')}</div>`; }
 function trust(){ return `<div class="trust">${TRUST.map((t) => `<div><span style="color:${t.color}">${ico(t.icon)}</span><b>${t.title}</b><span>${t.desc}</span></div>`).join('')}</div>`; }
 function secHead(title, lede='', eyebrow='', link=''){

@@ -4,10 +4,10 @@
 ========================================================= */
 /* ---------- The four services (same as the home page) ---------- */
 const SERVICES = [
-  {key:'Agro & Food',                 route:'agro',       title:'Agro & food',            short:'Fresh chicken, eggs, beef and goat meat.',       img:'Hens.png',          color:'teal',  icon:'leaf'},
-  {key:'Transport & Logistics',       route:'transport',  title:'Transport & logistics',  short:'Trucks, cargo and fleet services, delivered.',   img:'truck.jpg',         color:'blue',  icon:'truck'},
+  {key:'Agro & Food',                 route:'agro',       title:'Agriculture & food',     short:'Farm produce and bulk food supply.', img:'hens.webp',          color:'teal',  icon:'leaf'},
+  {key:'Transport & Logistics',       route:'transport',  title:'Transport & logistics',  short:'Goods, cargo and logistics support.', img:'truck.jpg',         color:'blue',  icon:'truck'},
   {key:'Mobility & Ride Services',    route:'mobility',   title:'Mobility & ride services',short:'Uber rides, cabs and tuk-tuks for local trips.', img:'car.jpg',           color:'amber', icon:'car'},
-  {key:'Hospitality & Airbnb',        route:'properties', title:'Hospitality & Airbnb',   short:'Comfortable stays and memorable experiences.',   img:'alina-studio-1.jpg', color:'red',   icon:'bed'},
+  {key:'Hospitality & Airbnb',        route:'properties', title:'Hospitality & accommodation', short:'Stays, venues, catering and events.', img:'alina-studio-1.jpg', color:'red',   icon:'bed'},
 ];
 const SERVICE_OPTIONS = SERVICES.map(s => s.key).concat(['Something else']);
 

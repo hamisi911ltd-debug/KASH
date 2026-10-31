@@ -61,7 +61,7 @@ export function StoreProvider({ children }) {
   });
   const [theme, setThemeState] = useState(() => {
     try {
-      return localStorage.getItem(THEME_KEY) || "light";
+      return (localStorage.getItem(THEME_KEY) || "").replace(/[\\"]/g, "") === "dark" ? "dark" : "light";
     } catch {
       return "light";
     }
@@ -79,7 +79,11 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme);
-    writeJSON(THEME_KEY, theme);
+    try {
+      localStorage.setItem(THEME_KEY, theme); // a plain word: index.html reads it before React loads
+    } catch {
+      /* private mode etc. - the theme just won't persist */
+    }
   }, [theme]);
 
   /* --- pull the whole (role-scoped) dataset whenever the session changes --- */
