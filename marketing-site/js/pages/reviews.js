@@ -14,7 +14,7 @@ const reviewInitials = (name) => (String(name || '?').trim().split(/\s+/).map((p
 const reviewDate = (d) => { const t = new Date(d); return isNaN(t) ? '' : t.toLocaleDateString('en-KE', {month:'long', year:'numeric'}); };
 
 function reviewCard(r){
-  return `<article class="review-card">
+  return `<article class="review-card rv" data-rv>
     ${reviewStars(r.rating)}
     ${r.title ? `<h3>${esc(r.title)}</h3>` : ''}
     <p>${esc(r.body)}</p>
@@ -27,7 +27,7 @@ function reviewSummary(list){
   if (!list.length) return '';
   const avg = list.reduce((t, r) => t + r.rating, 0) / list.length;
   const rows = [5, 4, 3, 2, 1].map((n) => { const c = list.filter((r) => r.rating === n).length; return `<div><span>${n}</span><i><b style="width:${Math.round(c / list.length * 100)}%"></b></i><span>${c}</span></div>`; }).join('');
-  return `<div class="review-summary"><div class="review-score">${avg.toFixed(1)}<small>out of 5</small></div>
+  return `<div class="review-summary rv rv-pop" data-rv><div class="review-score">${avg.toFixed(1)}<small>out of 5</small></div>
     <div>${reviewStars(Math.round(avg))}<p class="muted" style="margin:6px 0 0">Based on ${list.length} approved review${list.length > 1 ? 's' : ''}</p></div>
     <div class="review-bars" aria-hidden="true">${rows}</div></div>`;
 }
@@ -39,7 +39,8 @@ function showReviews(){
   if (!reviewsLoaded){ grid.textContent = 'Loading customer reviews…'; return; }
   const limit = +grid.dataset.limit || 0, list = limit ? REVIEWS.slice(0, limit) : REVIEWS;
   if (sum) sum.innerHTML = reviewSummary(REVIEWS);
-  grid.innerHTML = list.length ? list.map(reviewCard).join('') : `<div class="review-empty" style="grid-column:1/-1">No reviews yet. Be the first to <a href="#/reviews">share your experience</a>.</div>`;
+  grid.innerHTML = list.length ? list.map(reviewCard).join('') : `<div class="review-empty rv" data-rv style="grid-column:1/-1">No reviews yet. Be the first to <a href="#/reviews">share your experience</a>.</div>`;
+  revealOnScroll();
 }
 
 function reviewForm(){
@@ -68,9 +69,9 @@ function pageReviews(){
   return heroPage({accent:'amber', crumbs:[['Customer reviews']], title:'Customer reviews',
     lead:'Real feedback from people who have used KASH. Share your own experience and help others choose with confidence.'}) + `
   <section class="section pt-20"><div class="wrap review-layout">
-    <div><h2 class="sm mb-16">What customers say</h2><div data-review-summary></div>
+    <div><h2 class="sm mb-16 rv" data-rv>What customers say</h2><div data-review-summary></div>
       <div class="review-grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))" data-public-reviews aria-live="polite">Loading customer reviews…</div></div>
-    <aside class="review-form-card" id="reviewFormCard"><h2>Write a review</h2><p class="sub">It takes about a minute. Fields marked <span class="req">*</span> are required.</p>${reviewForm()}</aside>
+    <aside class="review-form-card rv rv-right" id="reviewFormCard" data-rv><h2>Write a review</h2><p class="sub">It takes about a minute. Fields marked <span class="req">*</span> are required.</p>${reviewForm()}</aside>
   </div></section>`;
 }
 
@@ -100,3 +101,16 @@ document.addEventListener('input', (e) => {
   const t = e.target;
   if (t.matches && t.matches('textarea[data-count]')){ const c = $('#' + t.dataset.count); if (c) c.textContent = t.value.length + ' / ' + (t.maxLength || 800); }
 });
+
+/* Scroll reveal: items with data-rv slide and fade in as they come into view, one after another. */
+let rvObserver = null;
+function revealOnScroll(){
+  const items = $$('[data-rv]:not(.in)');
+  if (!items.length) return;
+  if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches){ items.forEach((el) => el.classList.add('in')); return; }
+  if (!rvObserver) rvObserver = new IntersectionObserver((entries) => {
+    entries.forEach((en) => { if (en.isIntersecting){ en.target.classList.add('in'); rvObserver.unobserve(en.target); } });
+  }, {threshold:.12, rootMargin:'0px 0px -6% 0px'});
+  let i = 0;
+  items.forEach((el) => { el.style.setProperty('--d', Math.min(i++ % 6, 5) * 90 + 'ms'); rvObserver.observe(el); });
+}

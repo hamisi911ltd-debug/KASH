@@ -14,8 +14,8 @@ function heroHtml(){
   const dots = HERO_SLIDES.map((h, i) => `<button class="${i === 0 ? 'on' : ''}" aria-label="Slide ${i + 1}"></button>`).join('');
   return `<section class="hero" id="home" aria-roledescription="carousel" aria-label="KASH highlights">
     <div class="hero-bg">${bg}</div><div class="hero-shade"></div>
-    <button class="arrow l" id="prev" aria-label="Previous slide">Previous</button>
-    <button class="arrow r" id="next" aria-label="Next slide">Next</button>
+    <button class="arrow l" id="prev" type="button" aria-label="Previous slide" title="Previous"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+    <button class="arrow r" id="next" type="button" aria-label="Next slide" title="Next"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
     <div class="hero-inner"><div class="hero-copy">
       <div class="tag">${brandBar()}Kenya's trusted supplier</div>
       <div class="slides">${sl}</div>

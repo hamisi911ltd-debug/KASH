@@ -44,6 +44,7 @@ function render(keep){
   initShows(); prefillLocation();
   if (r.name === 'account' && r.param === 'dashboard') loadAccountDashboard();
   if (r.name === 'home' || r.name === 'reviews') showReviews();
+  if (typeof revealOnScroll === 'function') revealOnScroll();
   const back = $('#navBack'); if (back) back.hidden = r.name === 'home';
   if (r.name === 'staff') loadStaffRequests();
   if (r.name === 'quote' && r.param && !keep){ const mp = $('#modePanel'); if (mp) setTimeout(() => mp.scrollIntoView({behavior:'smooth', block:'start'}), 80); }
