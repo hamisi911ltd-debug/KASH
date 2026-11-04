@@ -1,0 +1,8 @@
+{
+  "name": "kash-website",
+  "compatibility_date": "2026-11-03",
+  "assets": { "directory": "." },
+  "routes": [
+    { "pattern": "kashgeneralsuppliers.com", "custom_domain": true }
+  ]
+}

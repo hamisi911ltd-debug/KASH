@@ -15,13 +15,13 @@ const ACCESS_SUMMARY = {
   "Super Admin": "Everything, including users & settings",
   Admin: "Everything, including users & settings",
   Director: "Everything, including users & settings",
-  "Transport Manager": "Transport, Expenses, Reports, Messages",
+  "Transport Manager": "Transport, Expenses, Accounts, Reports, Messages",
   Driver: "Only their own trips & vehicle, Payments",
-  "Agro Manager": "Agro, Expenses, Reports, Messages",
+  "Agro Manager": "Agro, Expenses, Accounts, Reports, Messages",
   "Agro Attendant": "Only orders they rang up, Payments",
-  "Hospitality Manager": "Hospitality, Expenses, Reports, Messages",
+  "Hospitality Manager": "Hospitality, Expenses, Accounts, Reports, Messages",
   "Hospitality Attendant": "Rooms & bookings (no money figures), Payments",
-  Accountant: "All divisions read-only, Expenses & Reports",
+  Accountant: "All businesses read-only, Accounts, Expenses & Reports",
   Staff: "Overview, Messages & Settings only",
 };
 
@@ -76,7 +76,7 @@ export default function UsersView() {
       <PageHeader
         title="Users & roles"
         subtitle="Manage who can access each part of the workspace."
-        actions={caps.manageUsers && <Button size="sm" onClick={() => openForm("user")}><Plus size={14} /> Invite user</Button>}
+        actions={caps.manageUsers && <Button size="sm" onClick={() => openForm("user")}><Plus size={14} /> Add user</Button>}
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">

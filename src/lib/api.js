@@ -66,6 +66,7 @@ export const api = {
   remove: (token, collection, id) => request(`/api/${collection}/${id}`, { method: "DELETE", token }),
   approve: (token, collection, id, decision, note) =>
     request(`/api/${collection}/${id}/approve`, { method: "POST", token, body: { decision, note } }),
+  loadStandardRates: (token) => request("/api/rates/load-standard", { method: "POST", token }),
   updateCompany: (token, body) => request("/api/company", { method: "PATCH", token, body }),
   uploadImage,
   deleteImage: (token, key) => request(`/api/uploads/${key}`, { method: "DELETE", token }),

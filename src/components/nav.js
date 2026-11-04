@@ -1,7 +1,7 @@
 /* Navigation model, shared by the sidebar, top tabs, mobile nav and command palette. */
 import {
   LayoutDashboard, LayoutGrid, Truck, Beef, BedDouble, Wrench,
-  Users, BarChart3, Wallet, Bell, Settings, ArrowLeftRight, MessagesSquare, ClipboardCheck, Globe,
+  Users, BarChart3, Wallet, BookOpen, Tags, Bell, Settings, ArrowLeftRight, MessagesSquare, ClipboardCheck, Globe, Star,
 } from "lucide-react";
 import { C } from "../lib/constants";
 
@@ -12,7 +12,9 @@ export const NAV = [
   { key: "food", label: "Agro", icon: Beef, group: "divisions" },
   { key: "hospitality", label: "Hospitality", icon: BedDouble, group: "divisions" },
   { key: "maintenance", label: "Maintenance", icon: Wrench, group: "operations" },
+  { key: "rates", label: "Rate card", icon: Tags, group: "operations" },
   { key: "payments", label: "Payments", icon: ArrowLeftRight, group: "finance" },
+  { key: "accounts", label: "Accounts", icon: BookOpen, group: "finance" },
   { key: "expenses", label: "Expenses", icon: Wallet, group: "finance" },
   { key: "reports", label: "Reports", icon: BarChart3, group: "finance" },
   // Super Admin/Admin/Director/Accountant (see ROLE_VIEWS) - a department
@@ -21,6 +23,8 @@ export const NAV = [
   // Division Managers + company-wide roles (see ROLE_VIEWS/manageListings) -
   // publish what shows up about their department on the public website.
   { key: "website", label: "Website", icon: Globe, group: "operations" },
+  // Customer reviews wait here for an admin to approve them before the website shows them.
+  { key: "reviews", label: "Reviews", icon: Star, group: "admin" },
   { key: "users", label: "Users & Roles", icon: Users, group: "admin" },
   { key: "updates", label: "Messages", icon: MessagesSquare, group: "admin" },
   { key: "settings", label: "Settings", icon: Settings, group: "admin" },

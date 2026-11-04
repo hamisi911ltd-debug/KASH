@@ -24,6 +24,13 @@ export const COLLECTIONS = [
   // website. Created only by the worker's POST /api/public/requests, then
   // worked through (status) by staff in the ERP's Website page.
   "webRequests",
+  // The Transport rate card (container trucking): edited in the ERP's Rate
+  // card page, published on the website by the worker's GET /api/public/rates.
+  "rates",
+  // Customer reviews. Created only by the worker's POST /api/public/reviews
+  // (always as "Pending"), moderated by an admin in the ERP's Reviews page,
+  // and only the approved ones are published by GET /api/public/reviews.
+  "reviews",
 ];
 
 const num = (v) => (v === "" || v == null ? 0 : Number(v) || 0);
@@ -183,6 +190,13 @@ export const normalisers = {
     priority: v.priority || "Normal",
     done: !!v.done,
   }),
+  rates: (v) => ({
+    destination: String(v.destination || "").trim().slice(0, 80),
+    amount: Math.max(0, Math.round(num(v.amount))),
+    // Position on the card; a destination staff add later sorts to the end.
+    order: Math.round(num(v.order)) || 1000,
+    active: v.active === false || v.active === "false" ? false : true,
+  }),
   listings: (v) => ({
     division: v.division || "Transport",
     title: (v.title || "").trim(),
@@ -215,17 +229,33 @@ export const normalisers = {
     status: ["New", "Contacted", "Done", "Spam"].includes(v.status) ? v.status : "New",
     receivedAt: v.receivedAt || new Date().toISOString(),
   }),
+  reviews: (v) => ({
+    name: String(v.name || "").trim().slice(0, 80),
+    email: String(v.email || "").trim().toLowerCase().slice(0, 160),
+    service: REVIEW_SERVICES.includes(v.service) ? v.service : "General",
+    rating: Math.min(5, Math.max(1, Math.round(Number(v.rating) || 5))),
+    title: String(v.title || "").trim().slice(0, 80),
+    body: String(v.body || "").trim().slice(0, 800),
+    status: REVIEW_STATUSES.includes(v.status) ? v.status : "Pending",
+    submittedAt: v.submittedAt || new Date().toISOString(),
+    decidedAt: v.decidedAt || "",
+    decidedBy: String(v.decidedBy || "").slice(0, 80),
+  }),
 };
+
+/* The services a reviewer can say they used. */
+export const REVIEW_SERVICES = ["Transport & logistics", "Agriculture & food", "Hospitality & stays", "General"];
+export const REVIEW_STATUSES = ["Pending", "Approved", "Rejected"];
 
 export const ID_PREFIX = {
   trips: "t", vehicles: "v", drivers: "d", maintenance: "mx", orders: "o", menu: "m",
   rooms: "r", bookings: "b", expenses: "e", payments: "pay", users: "u", reminders: "rem", messages: "msg", notifications: "n",
-  approvals: "ap", listings: "li", webRequests: "wr",
+  approvals: "ap", listings: "li", webRequests: "wr", rates: "rt", reviews: "rv",
 };
 
 /* Human labels used in toasts and confirmation copy. */
 export const SINGULAR = {
   trips: "Trip", vehicles: "Vehicle", drivers: "Driver", maintenance: "Maintenance record", orders: "Order", menu: "Menu item",
   rooms: "Room", bookings: "Booking", expenses: "Expense", payments: "Payment", users: "User", reminders: "Reminder", messages: "Message",
-  listings: "Website listing", webRequests: "Website request",
+  listings: "Website listing", webRequests: "Website request", rates: "Rate card destination", reviews: "Review",
 };

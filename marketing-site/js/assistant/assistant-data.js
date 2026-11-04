@@ -47,6 +47,10 @@ const ASSISTANT = {
     { id:'greet', words:['hello','hi','hey','habari','jambo','mambo','sasa','good morning','good afternoon','good evening'],
       reply:'Hello! How can I help you today?' },
 
+    { id:'rates', words:['rate card','rates','tariff','container*','icd','cfs','per trip','vat'],
+      reply:"Our container trucking rate card lists the rate to each destination from the Nairobi ICD / CFS depots, before 16% VAT. Open it to search a destination, or tell me where the container is going and I'll look it up.",
+      actions:[{label:'See the rate card', href:'#/transport/rates'}, {label:'Request a truck', href:'#/quote/truck'}] },
+
     { id:'price', words:['price*','cost*','how much','rate*','charge*','fee*','cheap*','expensive','afford*'],
       reply:"The price depends on what you need. We always confirm it with you before anything is charged. Tell me what it's for and I'll start the right request.",
       chips:['Get a quote', 'Request a ride', 'Send a delivery'] },
@@ -80,7 +84,7 @@ const ASSISTANT = {
       actions:[{label:'Browse stays', href:'#/properties'}] },
 
     { id:'stay', words:['stay*','apartment*','airbnb','room*','hotel','night*','accommodation','mombasa','nairobi','beach','book*','holiday','vacation'],
-      reply:"We have homes in Nairobi and Mombasa, from a cozy studio to a beachfront house. Open one to see photos and its map, then check availability.",
+      reply:"We have a cozy furnished studio apartment in Nairobi from KES 3,500 per night. Open it to see photos and its map, then check availability.",
       actions:[{label:'Browse stays', href:'#/properties'}] },
 
     { id:'quote', words:['quote*','estimate*','request*','enquir*','inquir*'],

@@ -103,7 +103,8 @@ const FAQS = {
   transport: [
     {q:'What can you carry?', a:'Bulk and heavy cargo on our truck. Tell us what you are moving and we confirm it fits.'},
     {q:'Can you handle regular deliveries?', a:'Yes. We can set up recurring runs for shops, farms and businesses. Mention it in your request.'},
-    {q:'How is transport priced?', a:'By distance, load and vehicle. You get a clear price before the trip begins.'},
+    {q:'How is transport priced?', a:'Container trucking from the Nairobi ICD / CFS depots follows our published rate card, per destination and before 16% VAT. Other jobs are priced by distance, load and vehicle. Either way you get a clear price before the trip begins.'},
+    {q:'Is VAT included in the rate card?', a:'No. All rates are subject to 16% VAT. Switch the rate card to With VAT to see the total. Parking charges, delays in offloading or pre-advice, and excess weight at the weighbridge are chargeable.'},
   ],
   mobility: [
     {q:'How do I book a ride?', a:'Tap Request a ride, tell us where from, where to and when. We confirm the vehicle and price.'},

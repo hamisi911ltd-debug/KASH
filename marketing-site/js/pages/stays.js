@@ -31,19 +31,19 @@ function pageProperties(){
     actions:'<button class="btn btn-amber" data-scroll="propGrid">Browse stays</button><a class="btn btn-ghost" href="#/contact">Ask a question</a>',
     card:slideCard(PAGE_SLIDES.properties)}) + `
   <section class="section pt-0"><div class="wrap">
-    <div class="finder" role="search">
+    ${PROPERTIES.length > 1 ? `<div class="finder" role="search">
       <div class="field"><label for="pf_city">Where</label>${sel('city', cities.map((c) => [c, c || 'Anywhere']), propFilter.city)}</div>
       <div class="field"><label for="pf_beds">Bedrooms</label>${sel('beds', [['', 'Any'], [1, '1+'], [2, '2+'], [3, '3+']], propFilter.beds)}</div>
       <div class="field"><label for="pf_guests">Guests</label>${sel('guests', [['', 'Any'], [2, '2+'], [4, '4+'], [6, '6+']], propFilter.guests)}</div>
       <div class="field"><label for="pf_sort">Sort by</label>${sel('sort', [['', 'Recommended'], ['low', 'Price: low to high'], ['high', 'Price: high to low']], propFilter.sort)}</div>
       <button class="btn btn-navy" data-scroll="propGrid" type="button">${ico('search')} Show homes</button>
-    </div>
+    </div>` : ''}
     <div id="propGrid" style="margin-top:40px">${secHead('Featured stays', 'Handpicked homes and apartments for your comfort.', 'Stay with KASH')}
       <div class="grid g4" id="propCards">${propGridHtml()}</div></div>
   </div></section>
-  <section class="section pt-0"><div class="wrap">${secHead('Where we stay', 'Pick a city to see the homes there.', 'Locations')}
-    <div class="grid g2">${CITY_PHOTOS.map((c) => `<button class="loc" data-city="${c.city}" aria-label="Show stays in ${c.city}"><img src="${imgSrc(c.img)}" alt="" loading="lazy"><span class="loc-cap"><b>${c.city}</b><span>${c.line}</span></span></button>`).join('')}</div></div></section>
-  <section class="section alt"><div class="wrap">${secHead('Stay your way', '', 'Short or long')}${featTiles(STAY_TYPES, 'g3')}</div></section>
+  ${new Set(PROPERTIES.map((p) => p.city)).size > 1 ? `<section class="section pt-0"><div class="wrap">${secHead('Where we stay', 'Pick a city to see the homes there.', 'Locations')}
+    <div class="grid g2">${CITY_PHOTOS.map((c) => `<button class="loc" data-city="${c.city}" aria-label="Show stays in ${c.city}"><img src="${imgSrc(c.img)}" alt="" loading="lazy"><span class="loc-cap"><b>${c.city}</b><span>${c.line}</span></span></button>`).join('')}</div></div></section>` : ''}
+  <section class="section alt"><div class="wrap">${secHead('Stay your way', '', 'Short or long')}${featTiles(STAY_TYPES, 'g2')}</div></section>
   <section class="section"><div class="wrap">${secHead('How booking works', 'Four simple steps to your stay.', 'Simple process')}${steps(STAY_STEPS)}</div></section>
   <section class="section alt"><div class="wrap split"><div>${secHead('House rules at a glance', '', 'Good to know')}${checks(HOUSE_RULES)}</div>
     <div><h2 class="sm mb-16">Stay questions</h2>${faq(FAQS.stays)}</div></div></section>

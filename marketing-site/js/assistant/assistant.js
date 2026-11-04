@@ -156,8 +156,9 @@ const Assistant = (function () {
     try {
       if (isHeavy(raw, text)){ await startHandoff(raw, text); }
       else {
-        const intent = pickIntent(text);
-        if (intent){ missed = 0; await answer(intent, raw); }
+        const intent = pickIntent(text), rate = rateLookup(text);
+        if (rate){ missed = 0; await botSay(rate.reply, {actions:rate.actions, chips:['Request a truck', 'Talk to a person']}); }
+        else if (intent){ missed = 0; await answer(intent, raw); }
         else {
           const ai = CONF.endpoint ? await askAI(raw) : null;
           if (ai && ai.reply){

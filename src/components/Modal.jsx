@@ -296,7 +296,8 @@ function Field({ field, value, onChange, error, onUploadImage, onDeleteImage, di
 /**
  * Data-driven create/edit modal.
  * `config.fields` supports: text, number, date, email, tel, select, textarea, toggle.
- * A field may set `computed(values)` to derive a live read-only preview line,
+ * A field may set `onPick(value, values)` to return other values to fill in when it changes,
+ * `computed(values)` to derive a live read-only preview line,
  * and `visibleIf(values)` to conditionally show/hide itself.
  */
 export function FormModal({ config, initial, onClose, onSubmit, onUploadImage, onDeleteImage }) {
@@ -321,7 +322,11 @@ export function FormModal({ config, initial, onClose, onSubmit, onUploadImage, o
   }, []);
 
   const handleChange = (key, val) => {
-    setValues((prev) => ({ ...prev, [key]: val }));
+    // A field may fill others in when it changes (see `onPick`: e.g. a rate card destination fills the trip's destination and fare).
+    setValues((prev) => {
+      const picked = config.fields.find((f) => f.key === key)?.onPick?.(val, prev) || {};
+      return { ...prev, ...picked, [key]: val };
+    });
     setErrors((prev) => (prev[key] ? { ...prev, [key]: null } : prev));
   };
 

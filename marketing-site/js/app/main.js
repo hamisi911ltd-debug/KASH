@@ -29,5 +29,8 @@
 
   render();
   Assistant.init();
-  loadErpListings().then((changed) => { if (changed && route().name !== 'home') render(true); }); /* the home page shows no ERP listings, so don't restart its banner */
+  loadErpReviews().then((ok) => { if (ok) showReviews(); });
+  loadErpListings().then((changed) => { if (changed && route().name !== 'home') render(true); });
+  /* Fresh rates: redraw the Transport page, but only refresh the truck form's picker in place so nothing typed is lost. */
+  loadErpRates().then((changed) => { if (!changed) return; const n = route().name; if (n === 'transport') render(true); else if (n === 'quote') refreshRatePicker(); }); /* the home page shows no ERP listings, so don't restart its banner */
 })();

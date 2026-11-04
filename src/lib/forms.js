@@ -16,6 +16,7 @@ import {
 } from "./constants";
 import { capsForRole } from "./auth";
 import { daysBetween } from "./format";
+import { sortRates } from "./rates";
 
 const opt = (arr) => arr.map((v) => ({ value: v, label: v }));
 
@@ -23,6 +24,14 @@ export function buildForms(data, session) {
   const vehicleOpts = () => data.vehicles.map((v) => ({ value: v.id, label: `${v.reg} - ${v.model}` }));
   const driverOpts = () => data.drivers.map((d) => ({ value: d.id, label: d.name }));
   const roomOpts = () => data.rooms.map((r) => ({ value: r.id, label: `Room ${r.number} - ${r.type} (KSh ${r.price.toLocaleString()})` }));
+  /* The Transport rate card, as trip-form choices: picking one fills the destination and the fare (before 16% VAT). */
+  const rateRows = () => sortRates((data.rates || []).filter((r) => r.active !== false));
+  const rateOpts = () => [{ value: "", label: "Other / not on the rate card" }, ...rateRows().map((r) => ({ value: r.id, label: `${r.destination} - KSh ${Number(r.amount).toLocaleString()}` }))];
+  const pickRate = (id, values) => {
+    const r = rateRows().find((x) => x.id === id);
+    if (!r) return {};
+    return { destination: r.destination, amount: String(r.amount), ...(!values.origin || values.origin === "Nairobi" ? { origin: "Nairobi ICD / CFS depot" } : {}) };
+  };
   const menuOpts = () => data.menu.filter((m) => m.active).map((m) => ({ value: m.id, label: `${m.name} - KSh ${m.price.toLocaleString()}` }));
 
   /* A worker (Driver / Agro Attendant / Hospitality Attendant) can only
@@ -72,6 +81,10 @@ export function buildForms(data, session) {
         { key: "date", label: "Date", type: "date", default: TODAY, required: true },
         { key: "vehicleId", label: "Vehicle", type: "select", options: vehicleOpts, required: true },
         { key: "driverId", label: "Driver", type: "select", options: driverOpts, required: true },
+        {
+          key: "rateId", label: "Rate card destination", type: "select", options: rateOpts, onPick: pickRate,
+          hint: "Optional. Fills the destination and the fare from the rate card (the fare is before 16% VAT).",
+        },
         { key: "origin", label: "Origin", type: "text", default: "Nairobi", required: true },
         { key: "destination", label: "Destination", type: "text", placeholder: "e.g. Kisumu", required: true },
         { key: "client", label: "Client / charter", type: "text", placeholder: "Walk-in" },
@@ -397,14 +410,32 @@ export function buildForms(data, session) {
       collection: "users",
       label: "Add User",
       icon: Users,
-      title: "Invite a user",
-      submitLabel: "Send invite",
+      title: "Add a user",
+      editTitle: "Edit user",
+      submitLabel: "Save user",
       fields: [
         { key: "name", label: "Full name", type: "text", required: true },
         { key: "email", label: "Work email", type: "email", required: true },
-        { key: "role", label: "Role", type: "select", options: opt(ROLES) },
+        { key: "role", label: "Role", type: "select", options: opt(ROLES), default: "Staff" },
         { key: "division", label: "Division", type: "select", options: divisionOptions(["All", ...DIVISIONS.filter((d) => d !== "General")]) },
-        { key: "status", label: "Status", type: "select", options: opt(["Invited", "Active", "Suspended"]), default: "Invited", hint: "A new invite always starts as Invited; they become Active when they set a password." },
+        { key: "password", label: "Password", type: "password", placeholder: "At least 8 characters", hint: "Set the password they will sign in with. When editing, leave blank to keep the current one." },
+        { key: "status", label: "Status", type: "select", options: opt(["Active", "Suspended", "Invited"]), default: "Active", hint: "Active people can sign in now. A person saved without a password stays Invited until you give them one." },
+      ],
+    },
+    /* ---------------- Transport rate card ---------------- */
+    rate: {
+      key: "rate",
+      collection: "rates",
+      view: "rates",
+      label: "Add Rate",
+      icon: Truck,
+      title: "Add a rate card destination",
+      editTitle: "Edit rate card destination",
+      submitLabel: "Save rate",
+      fields: [
+        { key: "destination", label: "Destination", type: "text", placeholder: "e.g. Westlands", required: true },
+        { key: "amount", label: "Rate (KSh, before 16% VAT)", type: "number", min: 0, required: true },
+        { key: "active", label: "Show on the website", type: "toggle", default: true },
       ],
     },
     /* ---------------- Website (a division Manager's own listings on the

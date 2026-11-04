@@ -16,15 +16,16 @@ function pageTransport(){
   const freight = VEHICLES.filter((v) => v.group === 'freight');
   return heroPage({accent:'blue', crumbs:[['Services', '#/services'], ['Transport & logistics']], title:'Your cargo, on time, every time.',
     lead:'A branded, well-maintained fleet moving goods across Kenya, from daily deliveries to long-haul freight.',
-    actions:'<a class="btn btn-amber" href="#/quote/truck">Request transport</a><a class="btn btn-ghost" href="#/fleet">See our fleet</a>',
+    actions:'<a class="btn btn-amber" href="#/quote/truck">Request transport</a><a class="btn btn-ghost" href="#/transport/rates">See the rate card</a><a class="btn btn-ghost" href="#/fleet">See our fleet</a>',
     card:slideCard(PAGE_SLIDES.transport)}) + `
   <section class="section pt-20"><div class="wrap">${secHead('What we move', 'Safe handling and honest timelines, whatever the load.', 'Transport & logistics')}${featTiles(FREIGHT_SERVICES, 'g3')}</div></section>
-  <section class="section alt"><div class="wrap">
+  ${rateSection()}
+  <section class="section"><div class="wrap">
     ${secHead('Our truck', 'Tell us the load and we will confirm it fits.', 'Our fleet', '<a class="link-arrow" href="#/fleet">Full fleet</a>')}
     <div class="grid g3">${freight.map(vehicleCard).join('')}</div></div></section>
-  <section class="section"><div class="wrap">${secHead('Who we move for', '', 'Built for you')}${featTiles(FREIGHT_WHO)}</div></section>
-  <section class="section alt"><div class="wrap">${secHead('How it works', 'From request to delivery in four steps.', 'Simple process')}${steps(FREIGHT_STEPS)}</div></section>
-  <section class="section"><div class="wrap split">
+  <section class="section alt"><div class="wrap">${secHead('Who we move for', '', 'Built for you')}${featTiles(FREIGHT_WHO)}</div></section>
+  <section class="section"><div class="wrap">${secHead('How it works', 'From request to delivery in four steps.', 'Simple process')}${steps(FREIGHT_STEPS)}</div></section>
+  <section class="section alt"><div class="wrap split">
     <div>${secHead('Reliable from pickup to drop-off', '', 'Why choose us')}${checks(FREIGHT_WHY)}</div>
     <div><h2 class="sm mb-16">Transport questions</h2>${faq(FAQS.transport)}</div></div></section>
   ${deliveryAd()}

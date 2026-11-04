@@ -41,7 +41,7 @@ name = "kash-api-live"
 enabled = true
 [env.live.vars]
 # Only these websites may call the live API from a browser.
-ALLOWED_ORIGINS = "https://kashgeneralservices.com,https://erp.kashgeneralservices.com,https://kash-live-eux.pages.dev"
+ALLOWED_ORIGINS = "https://kashgeneralsuppliers.com,https://erp.kashgeneralsuppliers.com,https://kash-live-eux.pages.dev"
 [[env.live.kv_namespaces]]
 binding = "KASH_KV"
 id = "1495886fa54e4e0c9591b49882b9f131"

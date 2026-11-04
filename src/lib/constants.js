@@ -115,17 +115,27 @@ export const ROLE_VIEWS = {
   "Super Admin": "*",
   Admin: "*",
   Director: "*",
-  "Transport Manager": ["transport", "maintenance", "payments", "expenses", "reports", "updates", "settings"],
-  Driver: ["transport", "maintenance", "payments", "updates", "settings"],
-  "Agro Manager": ["food", "payments", "expenses", "reports", "updates", "settings"],
+  "Transport Manager": ["transport", "maintenance", "rates", "payments", "expenses", "accounts", "reports", "updates", "settings"],
+  Driver: ["transport", "maintenance", "rates", "payments", "updates", "settings"],
+  "Agro Manager": ["food", "payments", "expenses", "accounts", "reports", "updates", "settings"],
   "Agro Attendant": ["food", "payments", "updates", "settings"],
-  "Hospitality Manager": ["hospitality", "payments", "expenses", "reports", "updates", "settings"],
+  "Hospitality Manager": ["hospitality", "payments", "expenses", "accounts", "reports", "updates", "settings"],
   "Hospitality Attendant": ["hospitality", "payments", "updates", "settings"],
-  Accountant: ["overview", "all", "payments", "expenses", "reports", "approvals", "updates", "settings"],
+  Accountant: ["overview", "all", "rates", "payments", "expenses", "accounts", "reports", "approvals", "updates", "settings"],
   // The IT Officer can open every page (read-only: write stays false below) and is the one role that publishes to the website.
   "IT Officer": "*",
   Staff: ["overview", "payments", "updates", "settings"],
 };
+
+/* Who may change the Transport rate card (it is published on the website):
+   company leadership, the IT Officer and the Transport Manager. Everyone who
+   can open the page can read it. Enforced server-side too (see the Worker). */
+export const RATE_EDITORS = ["Super Admin", "Admin", "Director", "IT Officer", "Transport Manager"];
+export const canEditRates = (role) => RATE_EDITORS.includes(role);
+
+/* Customer reviews are checked by an admin before they appear on the website. */
+export const REVIEW_MODERATORS = ["Super Admin", "Admin", "Director"];
+export const canModerateReviews = (role) => REVIEW_MODERATORS.includes(role);
 
 /* Roles allowed to create/edit/delete records, and to manage people.
    `write` = full management of the division (add vehicles/rooms/menu
@@ -175,7 +185,7 @@ export const ROLE_CAPS = {
    WebsiteView's "View live site" link and by the marketing site itself
    when it asks the API for a division's listings. */
 export const DIVISION_SITE_PAGE = { Transport: "transport", Food: "agro", Hospitality: "hospitality" };
-export const MARKETING_SITE_URL = "https://kashgeneralservices.com";
+export const MARKETING_SITE_URL = "https://kashgeneralsuppliers.com";
 
 /* Records at or above these amounts (KSh) are created "Pending" and need an
    approver's explicit decision. This is a governance record only - it does

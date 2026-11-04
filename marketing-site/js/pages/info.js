@@ -10,7 +10,7 @@ function pageAbout(){
     actions:'<a class="btn btn-amber" href="#/contact">Talk to our team</a>', card:slideCard(PAGE_SLIDES.about)}) + `
   <section class="section about pt-20"><div class="wrap about-grid">
     <div><h2>Who we are.</h2>${paras(COMPANY.intro)}</div>
-    <div><figure class="photo m-0"><img src="${imgSrc('tea-farm.jpg')}" alt="A farmer picking tea leaves in Kericho" loading="lazy">${brandBar()}</figure>
+    <div><figure class="photo m-0"><img src="${imgSrc('fallback/tea-farm.webp')}" alt="A farmer picking tea leaves in Kericho" loading="lazy">${brandBar()}</figure>
       <div class="pillars">
         <div class="pillar"><div class="badge c-amber">${ico('eye')}</div><div><h3>Our vision</h3><p>${COMPANY.vision}</p></div></div>
         <div class="pillar"><div class="badge c-teal">${ico('target')}</div><div><h3>Our mission</h3><p>${COMPANY.mission}</p></div></div>

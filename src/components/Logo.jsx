@@ -1,39 +1,43 @@
-/* KASH wordmark - four brand-coloured letter tiles. */
+/* KASH wordmark - the official logo artwork (public/logo.png), background
+   removed so it drops cleanly onto any surface (light sidebar, dark mode,
+   the login screen's gradient panel). `size` sets its height; width follows
+   the artwork's own aspect ratio automatically. Below it, "GENERAL SUPPLIERS"
+   is stretched to exactly the logo's width, as on the website. */
 import React from "react";
 
-export const KASH_TILES = [
-  { ch: "K", bg: "#1E6CA8" },
-  { ch: "A", bg: "#159C8C" },
-  { ch: "S", bg: "#DFA21C" },
-  { ch: "H", bg: "#C82E58" },
-];
+const ASPECT = 700 / 269; // logo.png's own width/height
 
-export function KashLogo({ size = 24, gap = 3, tagline = false, onDark = false }) {
-  const radius = Math.max(3, Math.round(size * 0.18));
+export function KashLogo({ size = 24, tagline = false, onDark = false, caption = true }) {
+  const height = size; // this artwork is cropped tight to the glyphs, no padding to compensate for
+  const width = Math.round(height * ASPECT);
+  const capH = Math.max(7, Math.round(width * 0.112));
   return (
-    <div className="inline-flex flex-col">
-      <div className="flex" style={{ gap }}>
-        {KASH_TILES.map((t) => (
-          <span
-            key={t.ch}
-            className="inline-flex items-center justify-center font-display font-extrabold select-none"
-            style={{
-              width: size,
-              height: size,
-              borderRadius: radius,
-              background: t.bg,
-              color: "#fff",
-              fontSize: Math.round(size * 0.58),
-              lineHeight: 1,
-            }}
+    <div className="inline-flex flex-col" style={{ width }}>
+      <img
+        src="/logo.png"
+        alt="KASH"
+        draggable={false}
+        style={{ height, width, objectFit: "contain" }}
+      />
+      {caption && size >= 22 && (
+        <svg width={width} height={capH + 2} viewBox={`0 0 ${width} ${capH + 2}`} role="img" aria-label="General Suppliers" style={{ display: "block", marginTop: 1 }}>
+          <text
+            x="0"
+            y={capH}
+            textLength={width}
+            lengthAdjust="spacingAndGlyphs"
+            fontFamily="inherit"
+            fontWeight="800"
+            fontSize={capH}
+            fill={onDark ? "#fff" : "var(--ink)"}
           >
-            {t.ch}
-          </span>
-        ))}
-      </div>
+            GENERAL SUPPLIERS
+          </text>
+        </svg>
+      )}
       {tagline && (
         <span
-          className="mt-1.5 font-medium tracking-wide"
+          className="mt-1.5 font-medium tracking-wide whitespace-nowrap"
           style={{ fontSize: 10.5, color: onDark ? "rgba(255,255,255,0.5)" : "var(--muted)" }}
         >
           One Platform. Many Solutions.

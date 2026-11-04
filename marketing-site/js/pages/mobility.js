@@ -14,7 +14,6 @@ function mobilityHero(){
     </div>
     <div class="mobility-hero-shade"></div>
     <div class="mobility-hero-content">
-      <a class="page-back" href="#/services"><span>Back to Services</span></a>
       <nav class="crumbs" aria-label="Breadcrumb"><a href="#/">Home</a><a href="#/services">Services</a><span>Mobility & ride services</span></nav>
       <span class="mobility-hero-kicker">EXPLORE KENYA WITH KASH</span>
       <h1>Getting around, made simple.</h1>

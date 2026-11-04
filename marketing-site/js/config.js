@@ -10,7 +10,7 @@ window.KASH_CONFIG = {
     phoneDisplay: "+254142426451",
     phoneTel:     "+254142426451",
     whatsapp:     "254142426451",
-    email:        "info@kashgeneralservices.com",
+    email:        "info@kashgeneralsuppliers.com",
     location:     "Nairobi, Kenya",
     hours:        "Mon to Sat, 8AM to 6PM",
     /* Where your cars start from. Used for the "how far is the car" estimate.

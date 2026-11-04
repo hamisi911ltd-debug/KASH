@@ -10,3 +10,6 @@ worker/.seed-bulk.json
 # Source maps kept locally for decoding crash reports - never publish these
 sourcemaps
 .dev.vars
+
+# Generated bundle for the combined website + ERP worker
+web/public

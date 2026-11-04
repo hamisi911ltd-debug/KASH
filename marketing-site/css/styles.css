@@ -1181,3 +1181,115 @@ input,select,textarea{font-size:16px} /* stops iOS zooming into fields */
 .deep-link .hero-shell{display:none}
 .deep-link #app{min-height:100vh}
 .hero-shell{margin-bottom:100vh}
+
+/* ride and delivery forms: pin a place on the map, choose when */
+.with-btn .btn-outline{background:var(--surface)}
+.geo-list{list-style:none;margin:6px 0 0;padding:4px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:0 14px 30px -22px rgba(10,31,61,.6)}
+.geo-list[hidden]{display:none}
+.geo-list button{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:0;background:transparent;color:var(--text);padding:10px 12px;border-radius:10px;font:inherit;font-size:.92rem;cursor:pointer}
+.geo-list button:hover,.geo-list button:focus-visible{background:var(--bg)}
+.geo-list button svg{width:18px;height:18px;flex:none;margin-top:2px;color:var(--red)}
+.geo-list .geo-none{padding:10px 12px;color:var(--muted);font-size:.9rem}
+.later-row[hidden]{display:none}
+.trip-note{color:var(--muted);font-size:.84rem;margin-top:10px}
+.live-stats.three{grid-template-columns:repeat(3,1fr)}
+.live-stats.three b{font-size:1.25rem}
+@media (max-width:520px){.live-stats.three{grid-template-columns:1fr 1fr}.live-stats.three div:last-child{grid-column:1/-1}}
+
+/* Transport rate card */
+.rate-tools{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin:6px 0 12px}
+.rate-tools .field{flex:1;min-width:min(100%,260px);max-width:420px}
+.rate-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media (max-width:900px){.rate-grid{grid-template-columns:1fr}}
+.rate-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;font-size:.95rem}
+.rate-table th,.rate-table td{padding:.7rem .9rem;text-align:left;border-top:1px solid var(--line)}
+.rate-table thead th{background:var(--navy);color:#fff;border-top:0;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase}
+.rate-table tbody th{font-weight:700}
+.rate-table td:first-child{width:2.6rem;color:var(--muted)}
+.rate-table .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rate-table td:last-child{text-align:right;white-space:nowrap}
+.rate-go{font-weight:700;color:var(--link);text-decoration:none;font-size:.85rem}
+.rate-go:hover{text-decoration:underline}
+.rate-table .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:520px){.rate-table td:first-child,.rate-table thead th:first-child{display:none}.rate-table th,.rate-table td{padding:.62rem .7rem}}
+.rate-quote{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:14px;padding:14px 16px;display:grid;gap:6px}
+.rate-quote[hidden]{display:none}
+.rq-row{display:flex;justify-content:space-between;gap:12px}
+.rq-row.total{border-top:1px solid var(--line);padding-top:6px;font-size:1.05rem}
+
+/* Header: never wrap the menu or the quote button; tighten gently as the screen narrows. */
+.menu a,.nav-cta .btn,.nav-cta a{white-space:nowrap}
+.nav-cta .btn{flex:none}
+@media (min-width:961px) and (max-width:1240px){.nav{gap:12px}.menu{gap:2px}.menu a{padding:.55rem .62rem;font-size:.86rem}.menu a.active::after{left:.62rem;right:.62rem}.nav-cta{gap:8px}.nav-cta .btn{padding-inline:1rem}}
+@media (min-width:961px) and (max-width:1060px){.menu a{padding:.5rem .5rem;font-size:.82rem}.menu a.active::after{left:.5rem;right:.5rem}}
+
+/* The words under the logo are exactly as wide as the logo: the picture sizes itself to the caption. */
+.brand{width:max-content}
+.brand img,.nav .brand img,.scrolled .brand img{width:0;min-width:100%;height:auto !important}
+.brand-sub{text-align:justify;text-align-last:justify;font-size:.64rem;letter-spacing:.06em}
+.scrolled .brand-sub{font-size:.52rem;letter-spacing:.05em}
+.foot-logo img{width:0;min-width:100%;height:auto !important}
+.foot-logo .brand-sub{font-size:.8rem;letter-spacing:.07em}
+@media (max-width:1030px){.brand-sub{font-size:.58rem}.scrolled .brand-sub{font-size:.5rem}}
+@media (max-width:640px){.brand-sub{font-size:.54rem;letter-spacing:.07em;margin-top:2px}.scrolled .brand-sub{font-size:.48rem}.foot .brand-sub{font-size:.62rem}}
+
+/* Back arrow in the header: a round arrow like other sites, shown on every page except home. */
+.nav-back{flex:none;width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);color:#fff;text-decoration:none;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);margin-right:-6px;transition:background .2s,transform .2s}
+.nav-back[hidden]{display:none}
+.nav-back:hover{background:rgba(255,255,255,.24);transform:translateX(-2px)}
+.nav-back:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+@media (max-width:640px){.nav-back{width:38px;height:38px;margin-right:-10px}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.field input:focus-visible,.field select:focus-visible,.field textarea:focus-visible{outline:none}
+.field.invalid input,.field.invalid select,.field.invalid textarea{background:color-mix(in srgb,var(--red) 7%,var(--surface))}
+
+/* ---- Customer reviews ---- */
+.review-summary{display:flex;flex-wrap:wrap;align-items:center;gap:18px 28px;padding:20px 24px;border:1px solid var(--line);border-radius:18px;background:var(--surface);margin-bottom:22px}
+.review-score{font-size:2.6rem;font-weight:800;line-height:1}
+.review-score small{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-top:4px}
+.stars{display:inline-flex;gap:2px;color:#f5a800}
+.stars svg{width:18px;height:18px;fill:currentColor;stroke:currentColor}
+.stars .off{color:color-mix(in srgb,var(--muted) 45%,transparent)}
+.review-bars{flex:1;min-width:200px;display:grid;gap:5px;font-size:.82rem;color:var(--muted)}
+.review-bars div{display:grid;grid-template-columns:14px 1fr 28px;gap:8px;align-items:center}
+.review-bars i{display:block;height:7px;border-radius:99px;background:color-mix(in srgb,var(--muted) 25%,transparent);overflow:hidden}
+.review-bars i b{display:block;height:100%;background:#f5a800;border-radius:99px}
+.review-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.review-card{display:flex;flex-direction:column;gap:10px;padding:22px;border:1px solid var(--line);border-radius:18px;background:var(--surface);box-shadow:0 10px 30px -22px rgba(0,0,0,.5)}
+.review-card h3{margin:0;font-size:1.02rem}
+.review-card p{margin:0;color:var(--text);line-height:1.6;overflow-wrap:anywhere}
+.review-who{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:6px}
+.review-avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--blue),var(--teal))}
+.review-who b{display:block;font-size:.92rem}
+.review-who span{font-size:.78rem;color:var(--muted)}
+.review-empty{padding:26px;border:1px dashed var(--line);border-radius:18px;text-align:center;color:var(--muted)}
+.review-more{margin-top:18px}
+.review-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:32px;align-items:start}
+.review-form-card{padding:26px;border:1px solid var(--line);border-radius:20px;background:var(--surface);box-shadow:0 18px 40px -28px rgba(0,0,0,.55);position:sticky;top:96px}
+.review-form-card h2{margin:0 0 4px}
+.review-form-card .sub{margin:0 0 18px;color:var(--muted)}
+.rating-field{display:grid;gap:6px;margin:0;padding:0;border:0}
+.rating-field legend{font-weight:700;font-size:.9rem;padding:0;margin-bottom:6px}
+.star-input{display:inline-flex;flex-direction:row-reverse;justify-content:flex-end;gap:4px}
+.star-input input{position:absolute;opacity:0;width:1px;height:1px}
+.star-input label{cursor:pointer;color:color-mix(in srgb,var(--muted) 45%,transparent);transition:color .15s,transform .15s;line-height:0}
+.star-input label svg{width:34px;height:34px;fill:currentColor;stroke:currentColor}
+.star-input label:hover,.star-input label:hover~label,.star-input input:checked~label{color:#f5a800}
+.star-input label:hover{transform:scale(1.12)}
+.star-input input:focus-visible+label{outline:3px solid var(--blue);outline-offset:3px;border-radius:6px}
+.rating-word{font-size:.88rem;font-weight:700;color:var(--muted);min-height:1.2em}
+.rating-field .err{display:none;color:var(--red);font-size:.82rem;font-weight:600}
+.rating-field.invalid .err{display:block}
+.char-count{font-size:.78rem;color:var(--muted);text-align:right}
+.check-field{display:grid;gap:6px}
+.check-field label{display:flex;gap:10px;align-items:flex-start;font-weight:500;font-size:.88rem;line-height:1.45;cursor:pointer}
+.check-field input{width:20px;height:20px;margin-top:1px;flex:none;accent-color:var(--blue)}
+.check-field .err{display:none;color:var(--red);font-size:.82rem;font-weight:600}
+.check-field.invalid .err{display:block}
+.review-thanks{text-align:center;padding:14px 4px}
+.review-thanks .tick{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px;background:color-mix(in srgb,var(--teal) 22%,transparent);color:var(--teal)}
+.review-thanks .tick svg{width:30px;height:30px}
+@media (max-width:960px){.review-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.review-layout{grid-template-columns:1fr}.review-form-card{position:static}}
+@media (max-width:640px){.review-grid{grid-template-columns:1fr}.review-form-card{padding:20px 16px}.star-input label svg{width:38px;height:38px}}
+
+.review-form-card .form{border:0;padding:0;box-shadow:none;background:none}

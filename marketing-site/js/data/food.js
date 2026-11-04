@@ -16,15 +16,15 @@ const PRODUCT_CATEGORIES = [
   {key:'Eggs',    label:'Eggs',    icon:'egg',  note:'Farm-fresh eggs'},
 ];
 const PRODUCTS = [
-  {id:'f1', name:'Whole chicken',    category:'Chicken', tag:'Farm fresh',      price:null, unit:'kg',    img:'chicken-whole.jpg',      desc:'A whole fresh chicken, hygienically packed and ready to cook.'},
-  {id:'f2', name:'Chicken wings',    category:'Chicken', tag:'Fresh & healthy', price:null, unit:'kg',    img:'chicken-wings.jpg',      desc:'Fresh chicken wings, perfect for the grill, oven or frying pan.'},
-  {id:'f3', name:'Chicken thighs',   category:'Chicken', tag:'Fresh & healthy', price:null, unit:'kg',    img:'chicken-thighs.jpg',     desc:'Juicy chicken thighs, a favourite for stews and roasting.'},
-  {id:'f4', name:'Chicken drumsticks',category:'Chicken',tag:'Fresh & healthy', price:null, unit:'kg',    img:'chicken-drumsticks.jpg', desc:'Fresh drumsticks, well packed and delivered cold.'},
-  {id:'f5', name:'Beef steak',       category:'Beef',    tag:'Premium quality', price:null, unit:'kg',    img:'beef-steak.jpg',         desc:'Premium beef steak cuts for grilling and pan-frying.'},
-  {id:'f6', name:'Beef ribs',        category:'Beef',    tag:'Premium quality', price:null, unit:'kg',    img:'beef-ribs.jpg',          desc:'Meaty beef ribs, ideal for slow cooking and the braai.'},
-  {id:'f7', name:'Fresh beef',       category:'Beef',    tag:'Natural & fresh', price:null, unit:'kg',    img:'beef-fresh.jpg',         desc:'Fresh beef pieces for stews, curries and everyday cooking.'},
-  {id:'f8', name:'Goat meat',        category:'Goat',    tag:'Fresh goat meat', price:null, unit:'kg',    img:'goat-meat.jpg',                       desc:'Fresh goat meat, cut and packed to your order.'},
-  {id:'f9', name:'Fresh eggs',       category:'Eggs',    tag:'Farm fresh',      price:null, unit:'tray',  img:'eggs-fresh.jpg',         desc:'Clean, farm-fresh eggs in trays for homes, shops and kitchens.'},
+  {id:'f1', name:'Whole chicken',    category:'Chicken', tag:'Farm fresh',      price:null, unit:'kg',    img:'fallback/chicken-whole.webp',      desc:'A whole fresh chicken, hygienically packed and ready to cook.'},
+  {id:'f2', name:'Chicken wings',    category:'Chicken', tag:'Fresh & healthy', price:null, unit:'kg',    img:'fallback/chicken-wings.webp',      desc:'Fresh chicken wings, perfect for the grill, oven or frying pan.'},
+  {id:'f3', name:'Chicken thighs',   category:'Chicken', tag:'Fresh & healthy', price:null, unit:'kg',    img:'fallback/chicken-thighs.webp',     desc:'Juicy chicken thighs, a favourite for stews and roasting.'},
+  {id:'f4', name:'Chicken drumsticks',category:'Chicken',tag:'Fresh & healthy', price:null, unit:'kg',    img:'fallback/chicken-drumsticks.webp', desc:'Fresh drumsticks, well packed and delivered cold.'},
+  {id:'f5', name:'Beef steak',       category:'Beef',    tag:'Premium quality', price:null, unit:'kg',    img:'fallback/beef-steak.webp',         desc:'Premium beef steak cuts for grilling and pan-frying.'},
+  {id:'f6', name:'Beef ribs',        category:'Beef',    tag:'Premium quality', price:null, unit:'kg',    img:'fallback/beef-ribs.webp',          desc:'Meaty beef ribs, ideal for slow cooking and the braai.'},
+  {id:'f7', name:'Fresh beef',       category:'Beef',    tag:'Natural & fresh', price:null, unit:'kg',    img:'fallback/beef-fresh.webp',         desc:'Fresh beef pieces for stews, curries and everyday cooking.'},
+  {id:'f8', name:'Goat meat',        category:'Goat',    tag:'Fresh goat meat', price:null, unit:'kg',    img:'fallback/goat-meat.webp',                       desc:'Fresh goat meat, cut and packed to your order.'},
+  {id:'f9', name:'Fresh eggs',       category:'Eggs',    tag:'Farm fresh',      price:null, unit:'tray',  img:'fallback/eggs-fresh.webp',         desc:'Clean, farm-fresh eggs in trays for homes, shops and kitchens.'},
 ];
 const HOME_PRODUCT_IDS = ['f1','f5','f8','f9','f2','f6'];   /* the six shown on the home page */
 const AGRO_WHO = [

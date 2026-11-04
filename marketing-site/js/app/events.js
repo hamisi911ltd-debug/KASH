@@ -18,6 +18,15 @@ function setQuickActions(open){
   if (open) quickActionsTimer = setTimeout(() => setQuickActions(false), 8000);
 }
 
+/* Back arrow: step back through the pages the visitor has seen; if there are none, go home. */
+let inAppNavs = 0;
+window.addEventListener('hashchange', () => { inAppNavs++; });
+document.addEventListener('click', (e) => {
+  const back = e.target.closest('#navBack');
+  if (!back) return;
+  e.preventDefault();
+  if (inAppNavs > 0){ inAppNavs = Math.max(0, inAppNavs - 2); history.back(); } else location.hash = '#/';
+});
 document.addEventListener('click', (e) => {
   const quickToggle = e.target.closest('#quickActions');
   if (quickToggle){ setQuickActions(!document.body.classList.contains('quick-actions-open')); return; }

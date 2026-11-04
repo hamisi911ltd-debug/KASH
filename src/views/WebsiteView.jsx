@@ -14,6 +14,24 @@ import { PageHeader, Page } from "../components/Page.jsx";
 
 const SITE_DIVISIONS = ["Transport", "Food", "Hospitality"];
 
+/* What a visitor filled in, as readable lines plus map links. Anyone on the internet can send these
+   values, so a link is only ever shown when it points at Google Maps. */
+const DETAIL_LABELS = {
+  pickup: "Pickup", dropoff: "To", when: "When", passengers: "Passengers", vehicle: "Vehicle", details: "Notes",
+  tripDistanceKm: "Trip km (est.)", tripMinutes: "Trip min (est.)", etaMinutes: "Car to pickup (min)", distanceFromBaseKm: "Base to pickup (km)",
+};
+const HIDDEN_DETAILS = /^(lat|lng|dropLat|dropLng|items|estimatedTotal|service|mode|pickupSource|dropSource|pickupAccuracy|mapLink|dropMapLink|routeLink)$/;
+const MAP_LINKS = [["mapLink", "Pickup map"], ["dropMapLink", "Drop-off map"], ["routeLink", "Route"]];
+const isMapLink = (u) => /^https:\/\/www\.google\.com\/maps\//.test(String(u || ""));
+function readDetails(details = {}) {
+  const lines = Object.entries(details)
+    .filter(([k]) => !HIDDEN_DETAILS.test(k))
+    .slice(0, 9)
+    .map(([k, v]) => `${DETAIL_LABELS[k] || k}: ${String(v).slice(0, 90)}`);
+  const pinned = details.pickupSource ? `Pickup pinned (${details.pickupSource === "gps" ? "GPS" : "searched"}${details.pickupAccuracy ? `, ~${details.pickupAccuracy} m` : ""})` : "";
+  return { lines: pinned ? [...lines, pinned] : lines, links: MAP_LINKS.filter(([k]) => isMapLink(details[k])).map(([k, label]) => [label, details[k]]) };
+}
+
 export default function WebsiteView() {
   const { data, session, patchRecord } = useStore();
   const { openForm, editRecord, deleteRecord, caps } = useActions();
@@ -70,9 +88,19 @@ export default function WebsiteView() {
       render: (r) => (
         <div className="min-w-0">
           <p className="font-medium">{r.summary}</p>
-          <p className="text-xs" style={{ color: C.faint }}>
-            {Object.entries(r.details || {}).filter(([k]) => !["lat", "lng", "items", "estimatedTotal"].includes(k)).slice(0, 4).map(([k, v]) => `${k}: ${String(v).slice(0, 60)}`).join(" · ")}
-          </p>
+          {(() => {
+            const { lines, links } = readDetails(r.details);
+            return (
+              <>
+                <ul className="text-xs mt-0.5" style={{ color: C.faint }}>{lines.map((l) => <li key={l}>{l}</li>)}</ul>
+                {links.length > 0 && (
+                  <p className="text-xs mt-1 flex flex-wrap gap-x-3">
+                    {links.map(([label, url]) => <a key={label} href={url} target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: C.blue }}>{label}</a>)}
+                  </p>
+                )}
+              </>
+            );
+          })()}
         </div>
       ),
     },

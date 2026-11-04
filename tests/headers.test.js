@@ -35,6 +35,23 @@ describe("public/_headers", () => {
   });
 });
 
+describe("marketing-site/_headers", () => {
+  const headers = read("marketing-site/_headers");
+
+  /* The ride and delivery forms' "Use my location" button needs the browser's location permission;
+     "geolocation=()" would switch it off for the whole site, so the button could never work. */
+  it("lets the site's own pages ask for the visitor's location, and nobody else", () => {
+    const policy = headers.split(/\r?\n/).find((l) => l.includes("Permissions-Policy:"));
+    expect(policy).toContain("geolocation=(self)");
+    expect(policy).toContain("camera=()");
+  });
+
+  it("keeps the map lookup the forms use inside the allowed connections", () => {
+    expect(headers.match(/connect-src[^;]*/)[0]).toMatch(/https:/);
+    expect(headers.match(/frame-src[^;]*/)[0]).toContain("https://www.openstreetmap.org");
+  });
+});
+
 describe("legal pages", () => {
   it.each(["public/privacy.html", "public/terms.html"])("%s exists and states the 18+ rule", (file) => {
     expect(read(file)).toMatch(/18 or older/);

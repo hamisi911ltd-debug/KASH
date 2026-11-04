@@ -1,7 +1,7 @@
 /* ============================================================
    App shell + router + modal orchestration.
    ============================================================ */
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useStore } from "./lib/store.jsx";
 import { ActionsContext } from "./lib/actions.jsx";
 import { canOpenView, capsForRole, viewsForRole, login, demoAccountForRole, DEMO_PASSWORD, DEMO_MODE } from "./lib/auth";
@@ -17,6 +17,9 @@ import FoodView from "./views/FoodView.jsx";
 import HospitalityView from "./views/HospitalityView.jsx";
 import ExpensesView from "./views/ExpensesView.jsx";
 import ReportsView from "./views/ReportsView.jsx";
+import AccountsView from "./views/AccountsView.jsx";
+import RatesView from "./views/RatesView.jsx";
+import ReviewsView from "./views/ReviewsView.jsx";
 import UsersView from "./views/UsersView.jsx";
 import MessagesView from "./views/MessagesView.jsx";
 import SettingsView from "./views/SettingsView.jsx";
@@ -31,7 +34,7 @@ import CommandPalette from "./components/CommandPalette.jsx";
 import DivisionTabs from "./components/DivisionTabs.jsx";
 import { KashLogo } from "./components/Logo.jsx";
 import { Spinner } from "./components/ui.jsx";
-import { C } from "./lib/constants";
+import { C, canEditRates } from "./lib/constants";
 
 const VIEWS = {
   overview: OverviewView,
@@ -42,6 +45,9 @@ const VIEWS = {
   hospitality: HospitalityView,
   payments: PaymentsView,
   expenses: ExpensesView,
+  accounts: AccountsView,
+  rates: RatesView,
+  reviews: ReviewsView,
   reports: ReportsView,
   approvals: ApprovalsView,
   website: WebsiteView,
@@ -58,6 +64,11 @@ export default function App() {
   } = store;
 
   const [activeView, setActiveView] = useState("overview");
+  /* Pages visited this session, so Previous / Next (and the browser's own back and
+     forward buttons) step through them. `i` is where we are in `stack`. */
+  const [nav, setNav] = useState({ stack: ["overview"], i: 0 });
+  const navRef = useRef(nav);
+  navRef.current = nav;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [modal, setModal] = useState(null); // { formKey, initial? }
@@ -101,6 +112,7 @@ export default function App() {
       if (form.alwaysAllowed) return true; // e.g. messaging - not a write privilege, just needs the page
       if (form.key === "payment") return caps.payments;
       if (form.key === "listing") return caps.manageListings;
+      if (form.key === "rate") return canEditRates(role);
       return caps.write || (form.ownAllowed && caps.writeOwn);
     },
     [role, caps.write, caps.writeOwn, caps.payments, caps.manageListings]
@@ -123,11 +135,42 @@ export default function App() {
         toast("You don't have access to that section", { tone: "warn" });
         return;
       }
+      const { stack, i } = navRef.current;
+      if (stack[i] !== key) {
+        const next = [...stack.slice(0, i + 1), key];
+        setNav({ stack: next, i: next.length - 1 });
+        window.history.pushState({ kashNav: next.length - 1 }, "");
+      }
       setActiveView(key);
       setDrawerOpen(false);
     },
     [role, toast]
   );
+
+  /* Previous / Next: the browser's history does the stepping, popstate keeps the view in step. */
+  const goBack = useCallback(() => { if (navRef.current.i > 0) window.history.back(); }, []);
+  const goForward = useCallback(() => { const { stack, i } = navRef.current; if (i < stack.length - 1) window.history.forward(); }, []);
+  React.useEffect(() => {
+    window.history.replaceState({ kashNav: 0 }, "");
+    const onPop = (e) => {
+      const idx = e.state?.kashNav;
+      const { stack } = navRef.current;
+      if (typeof idx !== "number" || !stack[idx]) return;
+      setNav({ stack, i: idx });
+      if (canOpenView(role, stack[idx])) setActiveView(stack[idx]);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [role]);
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (!e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === "ArrowLeft") { e.preventDefault(); goBack(); }
+      if (e.key === "ArrowRight") { e.preventDefault(); goForward(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goBack, goForward]);
 
   const ensureAllowed = useCallback(() => {
     if (session && !canOpenView(role, activeView)) {
@@ -351,6 +394,10 @@ export default function App() {
             session={session}
             onMenu={() => setDrawerOpen(true)}
             onNavigate={navigate}
+            canBack={nav.i > 0}
+            canForward={nav.i < nav.stack.length - 1}
+            onBack={goBack}
+            onForward={goForward}
             onOpenPalette={() => setPaletteOpen(true)}
             onQuickAction={(k) => openForm(k)}
             quickActions={quickActions}

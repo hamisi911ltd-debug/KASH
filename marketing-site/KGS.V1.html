@@ -7,7 +7,10 @@
 <script src="js/theme-init.js"></script>
 <title>KASH General Suppliers | Your Needs, Our Priority</title>
 <meta name="description" content="KASH General Suppliers is a registered Kenyan company with over a decade of experience in agriculture and food, transport and logistics, and hospitality and accommodation across Kenya.">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="preload" as="image" href="images/hero/poultry-farm.webp" media="(max-width:960px)" fetchpriority="high">
+<link rel="preload" as="image" href="images/hero/d-poultry-farm.webp" media="(min-width:961px)" fetchpriority="high">
+<link rel="preconnect" href="https://kash-api-live.johndrekuz.workers.dev" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
@@ -20,7 +23,8 @@
 <!-- ============ HEADER ============ -->
 <header class="site-header">
   <div class="nav">
-    <a class="brand" href="#/" aria-label="KASH General Suppliers home"><img src="images/logo.svg" alt="KASH" width="175" height="40"><span class="brand-sub">General Suppliers</span></a>
+    <a class="nav-back" id="navBack" href="#/" aria-label="Go back" title="Go back" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></a>
+    <a class="brand" href="#/" aria-label="KASH General Suppliers home"><img src="images/logo.webp" alt="KASH" width="150" height="58"><span class="brand-sub">General Suppliers</span></a>
     <ul class="menu" id="menu">
       <li><a href="#/" data-nav="home">Home</a></li>
       <li class="has-sub"><a href="#/services" data-nav="services">Services</a>
@@ -35,7 +39,7 @@
       <li><a href="#/products" data-nav="products">Products</a></li>
       <li><a href="#/about" data-nav="about">About us</a></li>
       <li><a href="#/contact" data-nav="contact">Contact</a></li>
-      <li><a href="#/account/reviews" class="review-nav-link">Leave a review</a></li>
+      <li><a href="#/reviews" class="review-nav-link">Leave a review</a></li>
       <li><a href="#/account/login">Sign in</a></li>
       <li class="menu-cta"><a href="#/quote" class="btn btn-amber" style="color:#1a1200;margin-top:8px;justify-content:center">Get a quote</a></li>
     </ul>
@@ -54,7 +58,7 @@
 </header>
 
 <main id="app" tabindex="-1"><section class="hero hero-shell" aria-label="KASH highlights">
-  <div class="hero-bg"><picture><source media="(max-width:960px)" srcset="images/hero/poultry-farm.webp"><img class="hs on" src="images/fallback/poultry-farm.jpg" alt="Hens roaming at a modern poultry farm at sunset" fetchpriority="high" style="--pos:center;--mpos:50% 50%;--ox:70%;--oy:50%;--sc:1.1"></picture></div><div class="hero-shade"></div>
+  <div class="hero-bg"><picture><source media="(max-width:960px)" srcset="images/hero/poultry-farm.webp"><img class="hs on" src="images/hero/d-poultry-farm.webp" width="1536" height="798" decoding="async" alt="Hens roaming at a modern poultry farm at sunset" fetchpriority="high" style="--pos:center;--mpos:50% 50%;--ox:70%;--oy:50%;--sc:1.1"></picture></div><div class="hero-shade"></div>
   <div class="hero-inner"><div class="hero-copy"><div class="tag"><div class="brandbar" aria-hidden="true"><i></i><i></i><i></i><i></i></div>Kenya's trusted supplier</div>
     <div class="slides"><div class="slide is-active"><h1>From our farms to your table.</h1><p>Quality food, reliable transport, modern mobility and comfortable stays, all in one place.</p>
       <div class="hero-actions"><a class="btn btn-amber" href="#/services">Explore our services</a><a class="btn btn-ghost" href="#/quote">Get a quote</a></div></div></div>
@@ -67,7 +71,7 @@
   <div class="wrap">
     <div class="foot">
       <div>
-        <div class="foot-logo"><img src="images/logo.svg" alt="KASH" width="140" height="32"><span class="brand-sub">General Suppliers</span></div>
+        <div class="foot-logo"><img src="images/logo.webp" alt="KASH" width="140" height="54"><span class="brand-sub">General Suppliers</span></div>
         <div><span class="script">Your Needs, Our Priority</span></div>
         <p>Your reliable partner in agriculture and food, transport and logistics, and hospitality and accommodation.</p>
         <div class="socials" id="footerSocial" role="group" aria-label="KASH social media profiles"></div>
@@ -80,7 +84,7 @@
           <li><a href="#/products">Products</a></li>
           <li><a href="#/fleet">Fleet</a></li>
           <li><a href="#/properties">Properties</a></li>
-          <li><a href="#/account/reviews">Leave a review</a></li>
+          <li><a href="#/reviews">Leave a review</a></li>
           <li><a href="#/faq">FAQs</a></li>
           <li><a href="#/quote">Get a quote</a></li>
         </ul>
@@ -110,6 +114,7 @@
 <script src="js/data/ribbon.js"></script>
 <script src="js/data/icons.js"></script>
 <script src="js/data/services.js"></script>
+<script src="js/data/rates.js"></script>
 <script src="js/data/stays.js"></script>
 <script src="js/data/food.js"></script>
 <script src="js/data/content.js"></script>
@@ -120,12 +125,15 @@
 <script src="js/core/cart.js"></script>
 <script src="js/core/backend.js"></script>
 <script src="js/core/maps.js"></script>
+<script src="js/core/geo.js"></script>
 <script src="js/core/ui.js"></script>
 <script src="js/components/templates.js"></script>
 <script src="js/components/forms.js"></script>
 <script src="js/components/delivery.js"></script>
 <script src="js/pages/home.js"></script>
 <script src="js/pages/services.js"></script>
+<script src="js/pages/rates.js"></script>
+<script src="js/pages/reviews.js"></script>
 <script src="js/pages/transport.js"></script>
 <script src="js/pages/mobility.js"></script>
 <script src="js/pages/stays.js"></script>
@@ -139,12 +147,14 @@
 <script src="js/app/slideshows.js"></script>
 <script src="js/app/router.js"></script>
 <script src="js/app/events.js"></script>
+<script src="js/app/ride.js"></script>
 <script src="js/app/submit.js"></script>
 <script src="js/assistant/assistant-data.js"></script>
 <script src="js/assistant/assistant.js"></script>
 <script src="js/app/account.js"></script>
 <script src="js/app/staff.js"></script>
 <script src="js/core/erp.js"></script>
+<script src="js/core/preload.js"></script>
 <script src="js/app/main.js"></script>
 </body>
 </html>

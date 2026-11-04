@@ -6,9 +6,12 @@
 
 function field({label, name, type='text', req=false, ph='', hint='', value='', ac='', attrs='', id}){
   const fid = id || ('f_' + name);
-  return `<div class="field"><label for="${fid}">${label}${req ? ' <span class="req">*</span>' : ''}</label>
-    <input id="${fid}" name="${name}" type="${type}" ${req ? 'required' : ''} placeholder="${esc(ph)}" value="${esc(value)}" ${ac ? 'autocomplete="' + ac + '"' : ''} ${attrs}>
-    ${hint ? `<span class="hint">${hint}</span>` : ''}<span class="err">${req ? 'This field is required.' : ''}</span></div>`;
+  /* Every phone and email box says what a good answer looks like. */
+  const mode = type === 'tel' ? 'inputmode="tel"' : type === 'email' ? 'inputmode="email" autocapitalize="none" spellcheck="false"' : '';
+  const help = hint || (type === 'tel' ? 'We call or WhatsApp this number, so use one that works. Example: 0712 345 678.' : type === 'email' && !req ? 'Optional. We only use it to reply to you.' : '');
+  return `<div class="field"><label for="${fid}">${label}${req ? ' <span class="req" aria-hidden="true">*</span><span class="sr-only"> (required)</span>' : ''}</label>
+    <input id="${fid}" name="${name}" type="${type}" ${req ? 'required' : ''} placeholder="${esc(ph)}" value="${esc(value)}" ${ac ? 'autocomplete="' + ac + '"' : ''} ${mode} aria-describedby="${fid}_h" ${attrs}>
+    <span class="hint" id="${fid}_h">${help}</span><span class="err" role="alert">${req ? 'This field is required.' : ''}</span></div>`;
 }
 function selectField({label, name, options, value='', id}){
   const fid = id || ('f_' + name);
@@ -55,7 +58,7 @@ function heroPage({accent='blue', crumbs=[], title, lead='', actions='', card=''
   const parent = crumbs.length > 1 ? crumbs[crumbs.length - 2] : null;
   const backHref = parent && parent[1] ? parent[1] : '#/';
   const backLabel = parent ? parent[0] : 'Home';
-  return `<section class="page-hero acc-${accent} ${card ? '' : 'no-card'}"><div class="ph-grid"><div><a class="page-back" href="${backHref}"><span>Back to ${backLabel}</span></a>${crumbs.length ? trail : ''}<h1>${title}</h1>
+  return `<section class="page-hero acc-${accent} ${card ? '' : 'no-card'}"><div class="ph-grid"><div>${crumbs.length ? trail : ''}<h1>${title}</h1>
     ${lead ? `<p class="lead">${lead}</p>` : ''}${actions ? `<div class="hero-actions">${actions}</div>` : ''}</div>${card ? `<div>${card}</div>` : ''}</div>${HERO_RIBBON}</section>`;
 }
 function photoCard(img, alt, strip=false, pos=''){ return `<div class="hero-card ${strip ? 'strip' : ''}"><img src="${imgSrc(img)}" alt="${esc(alt)}" ${pos ? 'style="object-position:' + pos + '"' : ''}>${brandBar()}</div>`; }
@@ -106,17 +109,18 @@ function socialLinks(){
     }
     return {key, name, url:profile.href, action:'profile'};
   });
-  const message = 'Discover KASH General Suppliers: ' + window.location.href;
-  links.push({
+  // WhatsApp opens a chat with KASH itself (the business number in config.js).
+  const wa = String((window.KASH_CONFIG && window.KASH_CONFIG.business && window.KASH_CONFIG.business.whatsapp) || '').replace(/\D/g, '');
+  if (wa) links.push({
     key:'whatsapp',
     name:'WhatsApp',
-    url:'https://wa.me/?text=' + encodeURIComponent(message),
-    action:'share'
+    url:'https://wa.me/' + wa + '?text=' + encodeURIComponent('Hello KASH General Suppliers, I would like to make an enquiry.'),
+    action:'chat'
   });
   return links;
 }
 const socialAnchors = (list) => list.map((l) =>
-  `<a href="${esc(l.url)}" data-network="${l.key}" target="_blank" rel="noopener noreferrer" aria-label="${l.action === 'profile' ? 'KASH on ' + l.name : l.action === 'share' ? 'Share KASH on ' + l.name : 'Open ' + l.name + ' (KASH profile coming soon)'} (opens in a new tab)" title="${l.action === 'profile' ? 'KASH on ' + l.name : l.action === 'share' ? 'Share KASH on ' + l.name : l.name + ' — KASH profile coming soon'}">${ICONS[l.key] || ICONS.whatsappLogo}</a>`).join('');
+  `<a href="${esc(l.url)}" data-network="${l.key}" target="_blank" rel="noopener noreferrer" aria-label="${l.action === 'profile' ? 'KASH on ' + l.name : l.action === 'chat' ? 'Chat with KASH on ' + l.name : l.action === 'share' ? 'Share KASH on ' + l.name : 'Open ' + l.name + ' (KASH profile coming soon)'} (opens in a new tab)" title="${l.action === 'profile' ? 'KASH on ' + l.name : l.action === 'chat' ? 'Chat with KASH on ' + l.name : l.action === 'share' ? 'Share KASH on ' + l.name : l.name + ' — KASH profile coming soon'}">${ICONS[l.key] || ICONS.whatsappLogo}</a>`).join('');
 const socialPanel = () => {
   const links = socialLinks();
   return links.length ? `<div class="panel mt-22"><h3 style="font-weight:800;font-size:1.2rem">Follow KASH</h3><div class="socials socials-row">${socialAnchors(links)}</div></div>` : '';

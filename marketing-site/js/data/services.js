@@ -5,9 +5,9 @@
 /* ---------- The four services (same as the home page) ---------- */
 const SERVICES = [
   {key:'Agro & Food',                 route:'agro',       title:'Agriculture & food',     short:'Farm produce and bulk food supply.', img:'hens.webp',          color:'teal',  icon:'leaf'},
-  {key:'Transport & Logistics',       route:'transport',  title:'Transport & logistics',  short:'Goods, cargo and logistics support.', img:'truck.jpg',         color:'blue',  icon:'truck'},
-  {key:'Mobility & Ride Services',    route:'mobility',   title:'Mobility & ride services',short:'Uber rides, cabs and tuk-tuks for local trips.', img:'car.jpg',           color:'amber', icon:'car'},
-  {key:'Hospitality & Airbnb',        route:'properties', title:'Hospitality & accommodation', short:'Stays, venues, catering and events.', img:'alina-studio-1.jpg', color:'red',   icon:'bed'},
+  {key:'Transport & Logistics',       route:'transport',  title:'Transport & logistics',  short:'Goods, cargo and logistics support.', img:'fallback/truck.webp',         color:'blue',  icon:'truck'},
+  {key:'Mobility & Ride Services',    route:'mobility',   title:'Mobility & ride services',short:'Uber rides, cabs and tuk-tuks for local trips.', img:'fallback/car.webp',           color:'amber', icon:'car'},
+  {key:'Hospitality & Airbnb',        route:'properties', title:'Hospitality & accommodation', short:'Stays, venues, catering and events.', img:'stay-living.webp', color:'red',   icon:'bed'},
 ];
 const SERVICE_OPTIONS = SERVICES.map(s => s.key).concat(['Something else']);
 
@@ -41,9 +41,9 @@ const FREIGHT_WHO = [
    Our fleet today: a truck, tuk-tuks and Uber/cab rides.
    Add a vehicle by copying a block. `img` is optional, `pos` = photo focus (CSS object-position). */
 const VEHICLES = [
-  {id:'v1', group:'freight', category:'Trucks',       mode:'truck',    name:'KASH Truck',  sub:'Cargo truck', capacity:'Heavy & bulk cargo',   best:'Bulk loads and long-haul freight',           available:true, img:'truck.jpg',   pos:''},
-  {id:'v2', group:'ride',    category:'Uber & cabs',  mode:'uber',     name:'Uber / cab',  sub:'Cab',         capacity:'Up to 4 passengers',   best:'City rides, meetings and airport runs',      available:true, img:'car.jpg',     pos:''},
-  {id:'v3', group:'ride',    category:'Tuktuks',      mode:'tuktuk',   name:'Tuk-tuk',     sub:'Tuk-tuk',     capacity:'Up to 3 passengers',   best:'Short, quick local trips',                   available:true, img:'tuktuk.jpg',  pos:'50% 82%'},
+  {id:'v1', group:'freight', category:'Trucks',       mode:'truck',    name:'KASH Truck',  sub:'Cargo truck', capacity:'Heavy & bulk cargo',   best:'Bulk loads and long-haul freight',           available:true, img:'fallback/truck.webp',   pos:''},
+  {id:'v2', group:'ride',    category:'Uber & cabs',  mode:'uber',     name:'Uber / cab',  sub:'Cab',         capacity:'Up to 4 passengers',   best:'City rides, meetings and airport runs',      available:true, img:'fallback/car.webp',     pos:''},
+  {id:'v3', group:'ride',    category:'Tuktuks',      mode:'tuktuk',   name:'Tuk-tuk',     sub:'Tuk-tuk',     capacity:'Up to 3 passengers',   best:'Short, quick local trips',                   available:true, img:'fallback/tuktuk.webp',  pos:'50% 82%'},
 ];
 const VEHICLE_ICON = {'Trucks':'truck', 'Uber & cabs':'car', 'Tuktuks':'tuktuk'};
 const FLEET_FILTERS = ['All','Trucks','Uber & cabs','Tuktuks'];

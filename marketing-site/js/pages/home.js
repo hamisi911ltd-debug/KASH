@@ -34,10 +34,10 @@ function pageHome(){
     <div><p><b>${p.name}</b><span>${p.tag}</span></p></div></a>`).join('');
 
   const tiles = [
-    {href:'#/fleet', img:'truck.jpg', t:'Our fleet', d:'A modern, well-maintained fleet for safe and timely delivery.', go:'See the fleet'},
-    {href:'#/properties', img:'alina-studio-1.jpg', t:'Our properties', d:'Comfortable stays in prime locations.', go:'Browse stays'},
-    {href:'#/about', img:'tea-farm.jpg', t:'Our impact', d:'Supporting farmers, businesses and communities.', go:'Our story', pos:'75% 85%'},
-    {href:'#/contact', img:'mombasa.jpg', t:'Talk to us', d:'Questions, quotes or partnerships. We reply fast.', go:'Get in touch'},
+    {href:'#/fleet', img:'fallback/truck.webp', t:'Our fleet', d:'A modern, well-maintained fleet for safe and timely delivery.', go:'See the fleet'},
+    {href:'#/properties', img:'stay-living.webp', pos:'50% 72%', t:'Our properties', d:'Comfortable stays in prime locations.', go:'Browse stays'},
+    {href:'#/about', img:'fallback/tea-farm.webp', t:'Our impact', d:'Supporting farmers, businesses and communities.', go:'Our story', pos:'75% 85%'},
+    {href:'#/contact', img:'fallback/mombasa.webp', t:'Talk to us', d:'Questions, quotes or partnerships. We reply fast.', go:'Get in touch'},
   ].map((t) => `<a class="tile" href="${t.href}"><img src="${imgSrc(t.img)}" alt="" loading="lazy" ${t.pos ? 'style="object-position:' + t.pos + '"' : ''}><h3>${t.t}</h3><p>${t.d}</p><span class="go">${t.go}</span></a>`).join('');
 
   return `
@@ -54,7 +54,7 @@ function pageHome(){
         <div class="pillar"><div class="badge c-red">${ico('heart')}</div><div><h3>Our values</h3><p>${COMPANY.valuesShort}</p></div></div>
       </div>
       <a class="btn btn-navy" href="#/about">About KASH</a></div>
-    <figure class="photo m-0"><img src="${imgSrc('tea-farm.jpg')}" alt="A farmer picking tea leaves on a hillside tea farm in Kericho" loading="lazy">${brandBar()}</figure>
+    <figure class="photo m-0"><img src="${imgSrc('fallback/tea-farm.webp')}" alt="A farmer picking tea leaves on a hillside tea farm in Kericho" loading="lazy">${brandBar()}</figure>
   </div></section>
 
   <section class="section products" id="products"><div class="wrap">
@@ -64,9 +64,11 @@ function pageHome(){
   </div></section>
 
   <section class="section customer-reviews" aria-labelledby="customerReviewsTitle"><div class="wrap">
-    <div class="section-head"><div><h2 id="customerReviewsTitle">What our customers say</h2><p class="lede">Feedback from customers after their completed KASH services.</p></div>
-      <a class="btn btn-outline" href="#/account/reviews">Leave a review</a></div>
-    <div class="public-review-grid" data-public-reviews aria-live="polite">Loading customer reviews…</div>
+    <div class="section-head"><div><h2 id="customerReviewsTitle">What our customers say</h2><p class="lede">Honest feedback from people who have used KASH. Every review is read by our team before it is shown.</p></div>
+      <a class="btn btn-amber" href="#/reviews">Write a review</a></div>
+    <div class="review-summary-slot" data-review-summary></div>
+    <div class="review-grid" data-public-reviews data-limit="3" aria-live="polite">Loading customer reviews…</div>
+    <p class="review-more"><a class="link-arrow" href="#/reviews">Read all reviews</a></p>
   </div></section>
 
   <section id="more" aria-label="More from KASH"><div class="tiles">${tiles}</div></section>

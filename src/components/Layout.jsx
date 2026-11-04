@@ -5,7 +5,7 @@
    ============================================================ */
 import React, { useMemo, useRef, useState } from "react";
 import {
-  LogOut, Menu, X, Search, Plus, ChevronDown, ChevronUp, Sun, Moon,
+  LogOut, Menu, X, Search, Plus, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Sun, Moon,
   Command, Calendar, Settings as SettingsIcon,
 } from "lucide-react";
 import { C } from "../lib/constants";
@@ -240,6 +240,7 @@ function QuickCreateMenu({ actions, onPick }) {
 
 export function Topbar({
   session, onMenu, onNavigate,
+  canBack, canForward, onBack, onForward,
   onOpenPalette, onQuickAction, quickActions,
 }) {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
@@ -257,6 +258,27 @@ export function Topbar({
       >
         <KashLogo size={20} />
       </button>
+
+      {/* Previous / Next page */}
+      <div className="shrink-0 flex items-center gap-1">
+        {[
+          { label: "Previous page", icon: ChevronLeft, on: canBack, click: onBack },
+          { label: "Next page", icon: ChevronRight, on: canForward, click: onForward },
+        ].map(({ label, icon: Icon, on, click }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={click}
+            disabled={!on}
+            aria-label={label}
+            title={`${label} (Alt + ${label === "Previous page" ? "Left" : "Right"})`}
+            className="h-9 w-9 grid place-items-center rounded-lg transition-colors"
+            style={{ background: C.surface2, color: on ? C.ink : C.faint, opacity: on ? 1 : 0.55, cursor: on ? "pointer" : "default" }}
+          >
+            <Icon size={18} />
+          </button>
+        ))}
+      </div>
 
       <button
         onClick={onOpenPalette}

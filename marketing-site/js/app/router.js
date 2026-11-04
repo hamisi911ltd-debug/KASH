@@ -14,11 +14,11 @@ const ROUTES = {
   properties:() => pageProperties(), property:(p) => pageProperty(p), agro:() => pageAgro(),
   products:(p) => { if (p && (p === 'All' || PRODUCT_CATEGORIES.some((c) => c.key === p))) productFilter = p; return pageProducts(); },
   quote:(p) => pageQuote(p), about:() => pageAbout(), contact:() => pageContact(), faq:() => pageFaq(), account:(p) => pageAccount(p), staff:() => pageStaff(),
-  privacy:() => pagePrivacy(), terms:() => pageTerms(), cookies:() => pageCookies()
+  privacy:() => pagePrivacy(), terms:() => pageTerms(), cookies:() => pageCookies(), reviews:() => pageReviews()
 };
-const TITLES = {home:'KASH General Suppliers | Your Needs, Our Priority', services:'Services', transport:'Transport & Logistics', fleet:'Our Fleet', mobility:'Mobility & Ride Services',
+const TITLES = {home:'KASH General Suppliers | Food, Transport & Logistics and Stays in Kenya', services:'Services', transport:'Transport & Logistics', fleet:'Our Fleet', mobility:'Mobility & Ride Services',
   properties:'Hospitality & Airbnb', property:'Stay details', agro:'Agro & Food', products:'Products', quote:'Get a quote', about:'About us', contact:'Contact', faq:'FAQs',
-  privacy:'Privacy Policy', terms:'Terms & Conditions', cookies:'Cookies & storage', account:'Your KASH account', staff:'Staff requests'};
+  privacy:'Privacy Policy', terms:'Terms & Conditions', cookies:'Cookies & storage', account:'Your KASH account', staff:'Staff requests', reviews:'Customer reviews'};
 const SERVICE_PAGES = ['services', 'transport', 'fleet', 'mobility', 'properties', 'property', 'agro'];
 
 let heroTimer = null, showTimers = [], lastName = '';
@@ -40,10 +40,11 @@ function render(keep){
   const stay = keep || (r.name === 'quote' && lastName === 'quote');
   if (!stay) window.scrollTo(0, 0);
   if (r.name === 'home') initHero();
+  if (r.name === 'transport' && r.param === 'rates'){ const el = $('#rates'); if (el) el.scrollIntoView(); }
   initShows(); prefillLocation();
   if (r.name === 'account' && r.param === 'dashboard') loadAccountDashboard();
-  if (r.name === 'account' && r.param === 'reviews') loadAccountReviews();
-  if (r.name === 'home') loadPublicReviews();
+  if (r.name === 'home' || r.name === 'reviews') showReviews();
+  const back = $('#navBack'); if (back) back.hidden = r.name === 'home';
   if (r.name === 'staff') loadStaffRequests();
   if (r.name === 'quote' && r.param && !keep){ const mp = $('#modePanel'); if (mp) setTimeout(() => mp.scrollIntoView({behavior:'smooth', block:'start'}), 80); }
   lastName = r.name;

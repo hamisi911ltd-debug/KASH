@@ -4,6 +4,7 @@
    Deterministic (seeded PRNG) => the same demo on every first load.
    ============================================================ */
 import { toISODate, addDays, genId } from "./format.js";
+import { standardRates } from "./rates.js";
 
 function mulberry32(a) {
   return function () {
@@ -565,5 +566,6 @@ export function buildSeedData() {
     users: SEED_USERS,
     reminders: SEED_REMINDERS,
     notifications: buildNotifications(),
+    rates: standardRates(),
   };
 }

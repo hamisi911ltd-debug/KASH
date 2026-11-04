@@ -19,7 +19,8 @@
    of "what can this role do", not two that can drift apart.
    ============================================================ */
 import { COLLECTIONS, ID_PREFIX, normalisers } from "../../src/lib/schema.js";
-import { APPROVABLE_COLLECTIONS, MESSAGE_EVERYONE } from "../../src/lib/constants.js";
+import { APPROVABLE_COLLECTIONS, MESSAGE_EVERYONE, canEditRates, canModerateReviews } from "../../src/lib/constants.js";
+import { standardRates, sortRates } from "../../src/lib/rates.js";
 import { capsForRole, canOpenView } from "../../src/lib/auth.js";
 import { setToday } from "../../src/lib/seed.js";
 import { toISODate } from "../../src/lib/format.js";
@@ -129,13 +130,31 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 const IMAGE_EXT_FOR_TYPE = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
 const SITE_DIVISIONS = ["Transport", "Food", "Hospitality"];
 
+/** Where listing photos live: the IMAGES R2 bucket when the account has R2,
+    otherwise the same KV store as everything else (fine for the handful of
+    5MB-or-smaller photos a website needs). Same three calls either way. */
+function imageStore(env) {
+  if (env.IMAGES) return env.IMAGES;
+  return {
+    async put(key, bytes, opts) {
+      await env.KASH_KV.put("img:" + key, bytes, { metadata: { contentType: opts?.httpMetadata?.contentType || "application/octet-stream" } });
+    },
+    async get(key) {
+      const { value, metadata } = await env.KASH_KV.getWithMetadata("img:" + key, { type: "arrayBuffer" });
+      if (!value) return null;
+      return { body: value, httpMetadata: { contentType: metadata?.contentType }, httpEtag: `"${key.split("/").pop()}"` };
+    },
+    async delete(key) { await env.KASH_KV.delete("img:" + key); },
+  };
+}
+
 /** GET /uploads/<key> - public, no auth, so an image can show on the public
     marketing site as well as inside the app. Everything else about images
     (uploading, deleting) needs a session; only serving them is open. */
 async function serveUpload(env, pathname) {
   const key = decodeURIComponent(pathname.slice("/uploads/".length));
   if (!key) return err("Not found.", 404);
-  const obj = await env.IMAGES.get(key);
+  const obj = await imageStore(env).get(key);
   if (!obj) return err("Not found.", 404);
   return new Response(obj.body, {
     headers: {
@@ -495,6 +514,9 @@ function scopeData(full, user) {
     d.bookings = []; d.rooms = [];
   }
 
+  // Reviews, with their reviewers' emails, are only for the people who approve them.
+  if (!canModerateReviews(user.role)) d.reviews = [];
+
   // Website requests: only roles that manage the website (or write) see them,
   // and a division-locked manager only their own division's.
   if (!caps.write && !caps.manageListings) d.webRequests = [];
@@ -582,6 +604,60 @@ const app = {
           .filter((l) => l.active && (!division || l.division === division))
           .map((l) => ({ id: l.id, division: l.division, title: l.title, description: l.description, price: l.price, meta: l.meta, imageUrl: l.imageUrl, images: l.images || (l.imageUrl ? [l.imageUrl] : []), amenities: l.amenities || [] }));
         return json(pub, 200, { "Cache-Control": "public, max-age=60" });
+      }
+
+      // The Transport rate card, as published on the website's Transport
+      // page: the destinations staff have switched on, in card order. Public,
+      // read-only, and carries nothing but a destination and its rate.
+      if (url.pathname === "/api/public/rates" && request.method === "GET") {
+        const pub = sortRates(await getCollection(env, "rates"))
+          .filter((r) => r.active !== false)
+          .map((r) => ({ id: r.id, destination: r.destination, amount: r.amount }));
+        return json(pub, 200, { "Cache-Control": "public, max-age=60" });
+      }
+
+      // Approved customer reviews, as shown on the website. Public and
+      // read-only; carries a first name and initial, never an email.
+      if (url.pathname === "/api/public/reviews" && request.method === "GET") {
+        const approved = (await getCollection(env, "reviews")).filter((r) => r.status === "Approved");
+        const shortName = (n) => { const p = String(n || "").trim().split(/\s+/); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0].toUpperCase()}.` : p[0] || "Customer"; };
+        const pub = approved
+          .sort((a, b) => String(b.decidedAt || b.submittedAt).localeCompare(String(a.decidedAt || a.submittedAt)))
+          .slice(0, 60)
+          .map((r) => ({ id: r.id, name: shortName(r.name), service: r.service, rating: r.rating, title: r.title, body: r.body, date: String(r.submittedAt || "").slice(0, 10) }));
+        return json(pub, 200, { "Cache-Control": "public, max-age=60" });
+      }
+
+      // A customer leaves a review. Always saved as "Pending": nothing is
+      // published until an admin approves it in the ERP. Name and a valid
+      // email are required; the email is for KASH only and is never shown.
+      if (url.pathname === "/api/public/reviews" && request.method === "POST") {
+        const ip = clientIp(request);
+        if ((await readCount(env, `rl:rev:${ip}`)) >= 3) {
+          return err("You've sent a few reviews already. Please try again in a little while.", 429, { "Retry-After": String(RL_WINDOW_SECONDS) });
+        }
+        const body = await readJson(request);
+        if (body.website) return json({ ok: true }, 201); // honeypot: pretend success
+        const name = String(body.name || "").trim();
+        const email = String(body.email || "").trim().toLowerCase();
+        const text = String(body.body || "").trim();
+        const rating = Number(body.rating);
+        if (name.length < 2) return err("Please enter your name.", 422);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return err("Please enter a valid email address, for example name@example.com.", 422);
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) return err("Please choose a star rating from 1 to 5.", 422);
+        if (text.length < 20) return err("Please write at least 20 characters about your experience.", 422);
+        if (text.length > 800) return err("Please keep your review under 800 characters.", 422);
+        if (body.consent !== true) return err("Please tick the box to confirm you agree to your review being published.", 422);
+        const existing = await getCollection(env, "reviews");
+        if (existing.some((r) => r.email === email && r.body === text)) return json({ ok: true }, 201); // same review sent twice
+        await bump(env, `rl:rev:${ip}`);
+        const record = {
+          id: `${ID_PREFIX.reviews}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+          ...normalisers.reviews({ name, email, service: body.service, rating, title: body.title, body: text, status: "Pending" }),
+        };
+        await putCollection(env, "reviews", [record, ...existing].slice(0, 1000));
+        audit("review.received", { id: record.id, rating: record.rating });
+        return json({ ok: true, id: record.id }, 201);
       }
 
       // The public website's quote / ride / delivery / booking forms land
@@ -752,7 +828,7 @@ const app = {
         }
 
         const key = `listings/${requestedDivision}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-        await env.IMAGES.put(key, bytes, { httpMetadata: { contentType } });
+        await imageStore(env).put(key, bytes, { httpMetadata: { contentType } });
         audit("image.uploaded", { by: user.id, division: requestedDivision, key, bytes: bytes.byteLength });
         return json({ url: `${url.origin}/uploads/${key}`, key }, 201);
       }
@@ -768,7 +844,7 @@ const app = {
         if (user.division && user.division !== "All" && user.division !== keyDivision) {
           return err("You can only remove images for your own division.", 403);
         }
-        await env.IMAGES.delete(key);
+        await imageStore(env).delete(key);
         audit("image.deleted", { by: user.id, key });
         return json({ ok: true });
       }
@@ -817,6 +893,17 @@ const app = {
         return json({ ...existing, approval });
       }
 
+      // One-time start for a new system: the standard KASH rate card, loaded
+      // only while the rate card is still empty, so it can never overwrite
+      // rates staff have already set.
+      if (url.pathname === "/api/rates/load-standard" && request.method === "POST") {
+        if (!canEditRates(user.role)) return err("You don't have access to change the rate card.", 403);
+        if ((await getCollection(env, "rates")).length) return err("The rate card already has destinations.", 409);
+        await putCollection(env, "rates", standardRates());
+        audit("rates.loaded_standard", { by: user.id });
+        return json(standardRates(), 201);
+      }
+
       // /api/:collection[/:id]
       const [collection, id] = parts;
       if (!COLLECTIONS.includes(collection)) return err("Unknown collection.", 404);
@@ -836,8 +923,18 @@ const app = {
       // its own (it would let the Accountant publish to the site), and a
       // division Manager may only ever touch their own division's listings.
       if (collection === "listings" && !caps.manageListings) return err("You don't have access to manage the website's listings.", 403);
+      // The rate card is company-wide reference data: `write` (which every
+      // division Manager holds) isn't enough, only RATE_EDITORS may change it.
+      if (collection === "rates" && request.method !== "GET" && !canEditRates(user.role)) return err("You don't have access to change the rate card.", 403);
       const listingDivisionOk = (division) => !user.division || user.division === "All" || user.division === division;
       const rows = await getCollection(env, collection);
+
+      // Reviews arrive only from the public form (above). Only an admin may read,
+      // approve, reject or delete them - nobody can create or reword one here.
+      if (collection === "reviews") {
+        if (request.method === "POST" || request.method === "PUT") return err("Reviews arrive from the website.", 405);
+        if (!canModerateReviews(user.role)) return err("Only an admin can moderate reviews.", 403);
+      }
 
       // Website requests arrive only from the public form (above); staff may
       // work through them (change status) or clear them, within their division.
@@ -856,7 +953,8 @@ const app = {
         const canMsg = collection === "messages"; // anyone signed in - checked properly below
         const canListing = collection === "listings" && caps.manageListings;
         const canUsers = collection === "users" && caps.manageUsers;
-        if (!caps.write && !canOwn && !canPay && !canMsg && !canListing && !canUsers) return err("You don't have access to add that.", 403);
+        const canRate = collection === "rates"; // role already checked above
+        if (!caps.write && !canOwn && !canPay && !canMsg && !canListing && !canUsers && !canRate) return err("You don't have access to add that.", 403);
 
         let body = await readJson(request);
         if (collection === "messages") {
@@ -865,14 +963,24 @@ const app = {
           }
           body.from = user.name; // never trust a client-supplied sender
         }
+        let firstHash = "";
         if (collection === "users") {
           const email = String(body.email || "").trim().toLowerCase();
           if (!email) return err("An email is required to invite someone.");
           if (rows.some((u) => u.email === email)) return err("Someone with that email is already on the team.", 409);
           assertMayChangeUser({ actor: user, target: null, incoming: { role: body.role }, users: rows });
-          // An invitation can only ever be an unclaimed, passwordless placeholder.
+          // The admin may set the person's first password right here; they can
+          // then sign in straight away. Without one it stays an unclaimed invitation.
+          const firstPassword = String(body.password || "");
           body = { ...stripServerFields(body, SERVER_ONLY_USER_FIELDS), status: "Invited" };
-          audit("user.invited", { by: user.id, email, role: body.role || "Staff" });
+          delete body.password;
+          if (firstPassword) {
+            const weak = passwordProblem(firstPassword, email);
+            if (weak) return err(weak);
+            firstHash = await hashPassword(firstPassword, iterationsFor(env));
+            body.status = "Active";
+          }
+          audit(firstPassword ? "user.created" : "user.invited", { by: user.id, email, role: body.role || "Staff" });
         }
         if (collection === "listings") {
           // A division-locked manager's own request may not even send a
@@ -892,9 +1000,10 @@ const app = {
           values.status = values.method === "M-Pesa" ? "Pending" : "Recorded";
         }
         const shaped = normalisers[collection] ? normalisers[collection](values, { menu: await getCollection(env, "menu"), rooms: await getCollection(env, "rooms") }) : values;
-        const record = { id: `${ID_PREFIX[collection] || "x"}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, ...shaped, createdBy: user.name };
+        const record = { id: `${ID_PREFIX[collection] || "x"}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, ...shaped, ...(firstHash ? { passwordHash: firstHash } : {}), createdBy: user.name };
         await putCollection(env, collection, [record, ...rows]);
-        return json(record, 201);
+        if (collection === "users" && record.passwordHash) await env.KASH_KV.put(`email:${record.email}`, record.id);
+        return json(stripSecret(record), 201);
       }
 
       if (!id) return err("Missing record id.", 400);
@@ -902,20 +1011,29 @@ const app = {
       if (request.method === "PUT") {
         const existing = rows.find((r) => r.id === id);
         if (!existing) return err("Not found.", 404);
-        const allowed = caps.write || (collection === "listings" && caps.manageListings) || (caps.writeOwn && ownsRecord(collection, existing, user));
+        const allowed = caps.write || collection === "rates" || (collection === "listings" && caps.manageListings) || (caps.writeOwn && ownsRecord(collection, existing, user));
         if (!allowed) return err("You don't have access to edit that.", 403);
         if (collection === "listings" && !listingDivisionOk(existing.division)) {
           return err("You can only edit listings for your own division.", 403);
         }
         const body = stripServerFields(await readJson(request), collection === "users" ? SERVER_ONLY_USER_FIELDS : ["id"]);
+        const newPassword = collection === "users" ? String(body.password || "") : "";
+        delete body.password;
         const shaped = normalisers[collection] ? normalisers[collection]({ ...existing, ...body }, {}) : body;
         if (collection === "users") {
           assertMayChangeUser({ actor: user, target: existing, incoming: shaped, users: rows });
+          if (newPassword) {
+            const weak = passwordProblem(newPassword, existing.email);
+            if (weak) return err(weak);
+            shaped.passwordHash = await hashPassword(newPassword, iterationsFor(env));
+            if (existing.status === "Invited") shaped.status = "Active";
+            await env.KASH_KV.put(`email:${existing.email}`, existing.id);
+          }
           audit("user.updated", { by: user.id, target: existing.id, role: shaped.role, status: shaped.status });
         }
         const next = rows.map((r) => (r.id === id ? { ...r, ...shaped } : r));
         await putCollection(env, collection, next);
-        return json(next.find((r) => r.id === id));
+        return json(collection === "users" ? stripSecret(next.find((r) => r.id === id)) : next.find((r) => r.id === id));
       }
 
       if (request.method === "PATCH") {
@@ -924,8 +1042,10 @@ const app = {
         // writeOwn workers - anyone in the thread (either side) can do it.
         const allowed =
           caps.write ||
+          collection === "rates" ||
           (collection === "listings" && caps.manageListings) ||
           (collection === "webRequests" && caps.manageListings) ||
+          (collection === "reviews" && canModerateReviews(user.role)) ||
           (collection === "users" && caps.manageUsers) ||
           FREE_PATCH_COLLECTIONS.has(collection) ||
           (existing && ownsRecord(collection, existing, user) && (collection === "messages" || caps.writeOwn));
@@ -937,10 +1057,16 @@ const app = {
         // A patch can never rewrite who a record is, who made it, or (for
         // people) anything only the server sets - that includes passwordHash.
         let body = stripServerFields(await readJson(request), [...(collection === "users" ? SERVER_ONLY_USER_FIELDS : ["id"]), "createdBy"]);
+        if (collection === "users") delete body.password;
         // All staff may change on a website request is its status.
         if (collection === "webRequests") {
           if (!["New", "Contacted", "Done", "Spam"].includes(body.status)) return err("Choose a valid status.", 400);
           body = { status: body.status };
+        }
+        // All an admin changes on a review is its decision.
+        if (collection === "reviews") {
+          if (!["Pending", "Approved", "Rejected"].includes(body.status)) return err("Choose Approved, Rejected or Pending.", 400);
+          body = { status: body.status, decidedAt: new Date().toISOString(), decidedBy: user.name };
         }
         if (collection === "users") {
           assertMayChangeUser({ actor: user, target: existing, incoming: { ...existing, ...body }, users: rows });
@@ -948,7 +1074,7 @@ const app = {
         }
         const next = rows.map((r) => (r.id === id ? { ...r, ...body } : r));
         await putCollection(env, collection, next);
-        return json(next.find((r) => r.id === id));
+        return json(collection === "users" ? stripSecret(next.find((r) => r.id === id)) : next.find((r) => r.id === id));
       }
 
       if (request.method === "DELETE") {
@@ -957,7 +1083,7 @@ const app = {
           const existing = rows.find((r) => r.id === id);
           if (!existing) return err("Not found.", 404);
           if (!listingDivisionOk(existing.division)) return err("You can only remove listings for your own division.", 403);
-        } else if (!caps.deleteAny) {
+        } else if (collection !== "rates" && collection !== "reviews" && !caps.deleteAny) { // rate card and reviews: role already checked above
           return err("You don't have access to delete that.", 403);
         }
         if (collection === "users") {

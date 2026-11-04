@@ -3,7 +3,7 @@
 function accountFrame(title, intro, content){
   return `<section class="section account-section"><div class="account-card">
     <a class="account-brand" href="#/" aria-label="KASH General Suppliers home">
-      <img src="images/logo.svg" alt="KASH General Suppliers" width="140" height="32">
+      <img src="images/logo.webp" alt="KASH General Suppliers" width="140" height="54">
     </a>
     <div class="account-heading"><h1>${title}</h1><p>${intro}</p></div>
     ${content}
@@ -61,7 +61,7 @@ function accountPage(view){
       </aside>
       <div class="account-card login-card">
         <a class="account-brand" href="#/" aria-label="KASH General Suppliers home">
-          <img src="images/logo.svg" alt="KASH General Suppliers" width="140" height="32">
+          <img src="images/logo.webp" alt="KASH General Suppliers" width="140" height="54">
         </a>
         <div class="account-heading">
           <span class="login-eyebrow">CUSTOMER SIGN IN</span>
