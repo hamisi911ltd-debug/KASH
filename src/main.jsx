@@ -7,6 +7,14 @@ import { installGlobalErrorHandlers, newRef, reportError, RELEASE } from "./lib/
 
 installGlobalErrorHandlers();
 
+/* The typeface loads without holding up the first screen. */
+(() => {
+  const l = document.createElement("link");
+  l.rel = "stylesheet";
+  l.href = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap";
+  document.head.appendChild(l);
+})();
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -57,16 +65,21 @@ createRoot(document.getElementById("root")).render(
 /* Dismiss the launch splash once the app has painted (with a short
    minimum so the logo animation always gets to play). */
 (() => {
-  const START = performance.now();
-  const MIN_MS = 3000; // the KASH mark gets a full 3s on screen before the app takes over
+  const START = 0; /* performance.now() counts from when the page began loading */
+  const MIN_MS = 2600; // the logo animation plays out, and the fade finishes at about 3s
   const dismiss = () => {
     const el = document.getElementById("kash-splash");
     if (!el || el.classList.contains("hide")) return;
     el.classList.add("hide");
-    setTimeout(() => el.remove(), 500);
+    setTimeout(() => el.remove(), 450);
   };
   requestAnimationFrame(() => {
     const wait = Math.max(0, MIN_MS - (performance.now() - START));
     setTimeout(dismiss, wait);
   });
 })();
+
+/* Installable app: the service worker lets KASH ERP be added to a phone or computer. */
+if ("serviceWorker" in navigator && window.location.protocol === "https:") {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}

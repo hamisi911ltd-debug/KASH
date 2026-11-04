@@ -19,7 +19,7 @@
    of "what can this role do", not two that can drift apart.
    ============================================================ */
 import { COLLECTIONS, ID_PREFIX, normalisers } from "../../src/lib/schema.js";
-import { APPROVABLE_COLLECTIONS, MESSAGE_EVERYONE, canEditRates, canModerateReviews } from "../../src/lib/constants.js";
+import { APPROVABLE_COLLECTIONS, MESSAGE_EVERYONE, canEditRates, canModerateReviews, canViewAudit } from "../../src/lib/constants.js";
 import { standardRates, sortRates } from "../../src/lib/rates.js";
 import { capsForRole, canOpenView } from "../../src/lib/auth.js";
 import { setToday } from "../../src/lib/seed.js";
@@ -184,7 +184,39 @@ async function readJson(request) {
     `wrangler tail` or the Workers logs dashboard (observability is on in
     wrangler.toml). Never log passwords, tokens or hashes. */
 function audit(event, details = {}) {
-  console.log(JSON.stringify({ audit: event, at: new Date().toISOString(), ...details }));
+  const entry = { audit: event, at: new Date().toISOString(), ...details };
+  console.log(JSON.stringify(entry));
+  // Also kept in KV for the ERP's Audit log page (see flushAudit). The raw IP
+  // address stays in the Worker logs only.
+  const { ip, ...kept } = entry;
+  pendingAudit.push(kept);
+}
+let pendingAudit = [];
+/* A short, human name for a record, so the audit log can say which one. */
+const recLabel = (r) => String(r?.name || r?.title || r?.destination || r?.reference || r?.summary || r?.text || "").slice(0, 80);
+/* Day-to-day records that would only add noise to the audit log. */
+const AUDIT_QUIET = new Set(["messages", "notifications", "reminders", "webRequests"]);
+const AUDIT_KEEP = 500;
+/** Saves this request's audit events, newest first. Best-effort: never breaks a request. */
+async function flushAudit(env) {
+  if (!pendingAudit.length || !env?.KASH_KV) return;
+  const batch = pendingAudit.reverse();
+  pendingAudit = [];
+  try {
+    // Stamp each entry with who did it (name, email, role) as they are right now,
+    // so the log still reads correctly after a person is renamed or removed.
+    const users = await getCollection(env, "users");
+    const who = (id) => { const u = users.find((x) => x.id === id); return u ? { name: u.name, email: u.email, role: u.role } : null; };
+    for (const e of batch) {
+      const actor = who(e.by || e.userId);
+      if (actor) e.actor = actor;
+      if (e.target) { const t = who(e.target); if (t) e.targetName = t.name || t.email; }
+    }
+    const cur = JSON.parse((await env.KASH_KV.get("audit:log")) || "[]");
+    await env.KASH_KV.put("audit:log", JSON.stringify([...batch, ...cur].slice(0, AUDIT_KEEP)));
+  } catch (e) {
+    console.error("audit log not saved", e?.message);
+  }
 }
 
 /* ---------------------------------------------------------- login throttling */
@@ -801,6 +833,13 @@ const app = {
         return json(next);
       }
 
+      // The audit log: who did what, newest first. Top managers and the IT Officer only.
+      if (url.pathname === "/api/audit" && request.method === "GET") {
+        if (!canViewAudit(user.role)) return err("Only an admin or the IT Officer can see the audit log.", 403);
+        const entries = JSON.parse((await env.KASH_KV.get("audit:log")) || "[]");
+        return json({ entries });
+      }
+
       if (url.pathname === "/api/sync" && request.method === "GET") {
         const full = { company: await getCompany(env) };
         for (const name of COLLECTIONS) full[name] = await getCollection(env, name);
@@ -1003,6 +1042,7 @@ const app = {
         const record = { id: `${ID_PREFIX[collection] || "x"}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, ...shaped, ...(firstHash ? { passwordHash: firstHash } : {}), createdBy: user.name };
         await putCollection(env, collection, [record, ...rows]);
         if (collection === "users" && record.passwordHash) await env.KASH_KV.put(`email:${record.email}`, record.id);
+        if (!AUDIT_QUIET.has(collection)) audit("record.created", { by: user.id, collection, id: record.id, label: record.name || record.title || record.destination || record.reference || "" });
         return json(stripSecret(record), 201);
       }
 
@@ -1033,6 +1073,7 @@ const app = {
         }
         const next = rows.map((r) => (r.id === id ? { ...r, ...shaped } : r));
         await putCollection(env, collection, next);
+        if (!AUDIT_QUIET.has(collection) && collection !== "users") audit("record.updated", { by: user.id, collection, id, label: recLabel(existing) });
         return json(collection === "users" ? stripSecret(next.find((r) => r.id === id)) : next.find((r) => r.id === id));
       }
 
@@ -1074,6 +1115,8 @@ const app = {
         }
         const next = rows.map((r) => (r.id === id ? { ...r, ...body } : r));
         await putCollection(env, collection, next);
+        if (collection === "reviews") audit("review.decided", { by: user.id, id, status: body.status, label: existing ? `${existing.name} (${existing.rating} stars)` : "" });
+        else if (!AUDIT_QUIET.has(collection) && collection !== "users") audit("record.updated", { by: user.id, collection, id, label: recLabel(existing) });
         return json(collection === "users" ? stripSecret(next.find((r) => r.id === id)) : next.find((r) => r.id === id));
       }
 
@@ -1094,6 +1137,7 @@ const app = {
           audit("user.deleted", { by: user.id, target: target.id });
         }
         await putCollection(env, collection, rows.filter((r) => r.id !== id));
+        if (!AUDIT_QUIET.has(collection)) audit("record.deleted", { by: user.id, collection, id, label: recLabel(rows.find((r) => r.id === id)) });
         return json({ ok: true });
       }
 
@@ -1113,7 +1157,11 @@ const app = {
 };
 
 export default {
-  async fetch(request, env) {
-    return decorate(await app.fetch(request, env), request, env);
+  async fetch(request, env, ctx) {
+    try {
+      return decorate(await app.fetch(request, env), request, env);
+    } finally {
+      if (ctx?.waitUntil) ctx.waitUntil(flushAudit(env)); else await flushAudit(env);
+    }
   },
 };

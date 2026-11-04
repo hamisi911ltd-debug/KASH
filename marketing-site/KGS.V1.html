@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a1f3d">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KASH">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="js/theme-init.js"></script>
 <title>KASH General Suppliers | Your Needs, Our Priority</title>
 <meta name="description" content="KASH General Suppliers is a registered Kenyan company with over a decade of experience in agriculture and food, transport and logistics, and hospitality and accommodation across Kenya.">
@@ -13,11 +18,14 @@
 <link rel="preconnect" href="https://kash-api-live.johndrekuz.workers.dev" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <script src="js/image-fallback.js"></script>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body id="top">
+<div class="launch-splash" aria-hidden="true"><div class="lw"><img src="images/logo.webp" width="240" height="92" alt=""><span class="shine"></span></div>
+      <div class="gs"><svg viewBox="0 0 240 17" width="100%" role="img" aria-label="General Suppliers"><text x="0" y="14" textLength="240" lengthAdjust="spacingAndGlyphs" font-weight="800" font-size="16" fill="#ffffff" font-family="Plus Jakarta Sans, system-ui, sans-serif">GENERAL SUPPLIERS</text></svg></div>
+      <div class="tag">Food, transport and stays across Kenya</div>
+      <div class="bar"><i></i></div></div>
 <a class="skip" href="#app">Skip to content</a>
 
 <!-- ============ HEADER ============ -->
@@ -39,9 +47,10 @@
       <li><a href="#/products" data-nav="products">Products</a></li>
       <li><a href="#/about" data-nav="about">About us</a></li>
       <li><a href="#/contact" data-nav="contact">Contact</a></li>
-      <li><a href="#/reviews" class="review-nav-link">Leave a review</a></li>
-      <li><a href="#/account/login">Sign in</a></li>
-      <li class="menu-cta"><a href="#/quote" class="btn btn-amber" style="color:#1a1200;margin-top:8px;justify-content:center">Get a quote</a></li>
+      <li><a href="#/reviews" class="review-nav-link" data-nav="reviews">Leave a review</a></li>
+      <li class="menu-cta"><a href="#/products" class="btn btn-amber" style="color:#1a1200;margin-top:8px;justify-content:center">Order from Agro</a></li>
+      <li class="menu-cta"><a href="#/properties" class="btn btn-amber" style="color:#1a1200;margin-top:8px;justify-content:center">Book a BnB</a></li>
+      <li class="menu-cta"><a href="#/quote/truck" class="btn btn-amber" style="color:#1a1200;margin-top:8px;justify-content:center">Book transport</a></li>
     </ul>
     <div class="nav-cta">
       <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch to night mode" title="Day / night">
@@ -49,7 +58,7 @@
         <svg class="ico i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
       <a href="#/quote/food" class="quote-btn" id="cartBtn" aria-label="Your quote list" title="Your quote list"><svg class="ico" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span class="cart-count" id="cartCount">0</span></a>
-      <a href="#/quote" class="btn btn-amber">Get a quote</a>
+      <details class="book-menu"><summary class="btn btn-amber">Order &amp; book <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><ul><li><a href="#/products"><b>Order from Agro</b><span>Chicken, eggs, goat and beef</span></a></li><li><a href="#/properties"><b>Book a BnB</b><span>Furnished studio in Nairobi</span></a></li><li><a href="#/quote/truck"><b>Book transport</b><span>Trucks, rides and delivery</span></a></li><li><a href="#/quote"><b>Get a quote</b><span>Any other request</span></a></li></ul></details>
       <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="menu">
         <svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
@@ -155,6 +164,7 @@
 <script src="js/app/staff.js"></script>
 <script src="js/core/erp.js"></script>
 <script src="js/core/preload.js"></script>
+<script src="js/core/install.js"></script>
 <script src="js/app/main.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 /* Navigation model, shared by the sidebar, top tabs, mobile nav and command palette. */
 import {
   LayoutDashboard, LayoutGrid, Truck, Beef, BedDouble, Wrench,
-  Users, BarChart3, Wallet, BookOpen, Tags, Bell, Settings, ArrowLeftRight, MessagesSquare, ClipboardCheck, Globe, Star,
+  Users, BarChart3, Wallet, BookOpen, Tags, Bell, Settings, ArrowLeftRight, MessagesSquare, ClipboardCheck, Globe, Star, ScrollText,
 } from "lucide-react";
 import { C } from "../lib/constants";
 
@@ -25,6 +25,8 @@ export const NAV = [
   { key: "website", label: "Website", icon: Globe, group: "operations" },
   // Customer reviews wait here for an admin to approve them before the website shows them.
   { key: "reviews", label: "Reviews", icon: Star, group: "admin" },
+  // Who did what and when. Super Admin, Admin, Director and the IT Officer only (they hold "*" in ROLE_VIEWS).
+  { key: "audit", label: "Audit log", icon: ScrollText, group: "admin" },
   { key: "users", label: "Users & Roles", icon: Users, group: "admin" },
   { key: "updates", label: "Messages", icon: MessagesSquare, group: "admin" },
   { key: "settings", label: "Settings", icon: Settings, group: "admin" },

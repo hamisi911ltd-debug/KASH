@@ -43,6 +43,15 @@ function pageHome(){
   return `
   ${heroHtml()}
 
+  <section class="section quick-book" aria-labelledby="quickBookTitle"><div class="wrap">
+    <h2 id="quickBookTitle" class="sr-only">Order or book</h2>
+    <div class="quick-grid">
+      <a class="quick-card q-teal" href="#/products"><span class="q-ico">${ico('leaf')}</span><span><b>Order from Agro</b><small>Fresh chicken, eggs, goat and beef</small></span><i aria-hidden="true">&rarr;</i></a>
+      <a class="quick-card q-red" href="#/properties"><span class="q-ico">${ico('bed')}</span><span><b>Book a BnB</b><small>Furnished studio from KES 3,500 a night</small></span><i aria-hidden="true">&rarr;</i></a>
+      <a class="quick-card q-blue" href="#/quote/truck"><span class="q-ico">${ico('truck')}</span><span><b>Book transport</b><small>Trucks, rides and delivery across Kenya</small></span><i aria-hidden="true">&rarr;</i></a>
+    </div>
+  </div></section>
+
   <section class="section services" id="services"><div class="wrap"><div class="svc-grid">${svc}</div></div></section>
 
   <section class="section about" id="about" style="padding-top:28px"><div class="wrap about-grid">

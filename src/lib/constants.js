@@ -133,6 +133,10 @@ export const ROLE_VIEWS = {
 export const RATE_EDITORS = ["Super Admin", "Admin", "Director", "IT Officer", "Transport Manager"];
 export const canEditRates = (role) => RATE_EDITORS.includes(role);
 
+/* The audit log (who did what, and when) is for the top managers and the IT Officer. */
+export const AUDIT_VIEWERS = ["Super Admin", "Admin", "Director", "IT Officer"];
+export const canViewAudit = (role) => AUDIT_VIEWERS.includes(role);
+
 /* Customer reviews are checked by an admin before they appear on the website. */
 export const REVIEW_MODERATORS = ["Super Admin", "Admin", "Director"];
 export const canModerateReviews = (role) => REVIEW_MODERATORS.includes(role);

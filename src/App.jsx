@@ -19,6 +19,7 @@ import ExpensesView from "./views/ExpensesView.jsx";
 import ReportsView from "./views/ReportsView.jsx";
 import AccountsView from "./views/AccountsView.jsx";
 import RatesView from "./views/RatesView.jsx";
+import AuditView from "./views/AuditView.jsx";
 import ReviewsView from "./views/ReviewsView.jsx";
 import UsersView from "./views/UsersView.jsx";
 import MessagesView from "./views/MessagesView.jsx";
@@ -30,6 +31,7 @@ import WebsiteView from "./views/WebsiteView.jsx";
 import { Sidebar, MobileDrawer, MobileBottomNav, Topbar } from "./components/Layout.jsx";
 import { FormModal, ConfirmDialog, MpesaPrompt } from "./components/Modal.jsx";
 import Toasts from "./components/Toasts.jsx";
+import InstallPrompt from "./components/InstallPrompt.jsx";
 import CommandPalette from "./components/CommandPalette.jsx";
 import DivisionTabs from "./components/DivisionTabs.jsx";
 import { KashLogo } from "./components/Logo.jsx";
@@ -48,6 +50,7 @@ const VIEWS = {
   accounts: AccountsView,
   rates: RatesView,
   reviews: ReviewsView,
+  audit: AuditView,
   reports: ReportsView,
   approvals: ApprovalsView,
   website: WebsiteView,
@@ -411,7 +414,8 @@ export default function App() {
           <MobileBottomNav role={role} activeView={activeView} onNavigate={navigate} onMore={() => setDrawerOpen(true)} />
         </div>
 
-        <Toasts />
+        <InstallPrompt />
+      <Toasts />
 
         {modal && forms[modal.formKey] && (
           <FormModal

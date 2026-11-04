@@ -1293,3 +1293,76 @@ input,select,textarea{font-size:16px} /* stops iOS zooming into fields */
 @media (max-width:640px){.review-grid{grid-template-columns:1fr}.review-form-card{padding:20px 16px}.star-input label svg{width:38px;height:38px}}
 
 .review-form-card .form{border:0;padding:0;box-shadow:none;background:none}
+
+/* ---- Order & book ---- */
+.book-menu{position:relative}
+.book-menu summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.book-menu summary::-webkit-details-marker{display:none}
+.book-menu[open] summary svg{transform:rotate(180deg)}
+.book-menu ul{position:absolute;right:0;top:calc(100% + 10px);z-index:60;min-width:270px;margin:0;padding:8px;list-style:none;border-radius:16px;background:var(--surface);color:var(--text);border:1px solid var(--line);box-shadow:0 22px 50px -18px rgba(0,0,0,.55)}
+.book-menu li a{display:grid;gap:1px;padding:10px 14px;border-radius:12px;text-decoration:none;color:inherit}
+.book-menu li a:hover{background:color-mix(in srgb,var(--amber) 16%,transparent)}
+.book-menu li b{font-size:.95rem}
+.book-menu li span{font-size:.8rem;color:var(--muted)}
+@media (max-width:960px){.book-menu{display:none}}
+.quick-book{padding:22px 0 6px}
+.quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:-6px}
+.quick-card{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:18px;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--line);box-shadow:0 14px 34px -24px rgba(0,0,0,.55);transition:transform .2s,box-shadow .2s}
+.quick-card:hover{transform:translateY(-3px);box-shadow:0 20px 40px -22px rgba(0,0,0,.6)}
+.quick-card b{display:block;font-size:1.02rem}
+.quick-card small{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+.quick-card i{margin-left:auto;font-style:normal;font-size:1.3rem;font-weight:800;color:var(--muted)}
+.q-ico{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff}
+.q-ico svg{width:24px;height:24px}
+.q-teal .q-ico{background:var(--teal)}.q-red .q-ico{background:var(--red)}.q-blue .q-ico{background:var(--blue)}
+@media (max-width:860px){.quick-grid{grid-template-columns:1fr}.quick-card{padding:14px 16px}}
+
+/* ---- Install the app pop-up ---- */
+.install-pop{position:fixed;z-index:80;left:50%;bottom:22px;width:min(440px,calc(100vw - 28px));transform:translate(-50%,24px);opacity:0;pointer-events:none;padding:18px 18px 16px;border-radius:22px;background:linear-gradient(160deg,#0f2b52,#0a1f3d);color:#fff;border:1px solid rgba(255,255,255,.16);box-shadow:0 28px 60px -20px rgba(0,0,0,.75);transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.install-pop.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+.install-row{display:flex;gap:14px;align-items:center}
+.install-row img{flex:none;border-radius:14px;box-shadow:0 8px 20px -8px rgba(0,0,0,.6)}
+.install-row h3{margin:0 0 3px;font-size:1.08rem}
+.install-row p{margin:0;font-size:.88rem;line-height:1.5;color:rgba(255,255,255,.82)}
+.install-row p svg{vertical-align:-3px}
+.install-actions{display:flex;gap:10px;margin-top:14px}
+.install-actions .btn{flex:1;justify-content:center}
+.btn-ghost-dark{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.22)}
+.btn-ghost-dark:hover{background:rgba(255,255,255,.18)}
+.install-x{position:absolute;top:8px;right:10px;width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:rgba(255,255,255,.7);font-size:1.4rem;line-height:1;cursor:pointer}
+.install-x:hover{background:rgba(255,255,255,.12);color:#fff}
+@media (max-width:640px){.install-pop{bottom:14px}.install-row p{font-size:.84rem}}
+@media (prefers-reduced-motion:reduce){.install-pop{transition:none}}
+/* ---- Launch screen (installed app only) ---- */
+      .launch-splash {
+        display: none; position: fixed; inset: 0; z-index: 9999;
+        flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+        background: radial-gradient(120% 90% at 50% 38%, #14396b 0%, #0a1f3d 55%, #06142a 100%);
+        transition: opacity .4s ease;
+        font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+      }
+      .launch-splash.hide { opacity: 0; pointer-events: none; }
+      .launch-splash .lw { position: relative; width: min(240px, 62vw); aspect-ratio: 700 / 269; opacity: 0; transform: scale(.72) translateY(10px); filter: blur(6px);
+        animation: kashLogoIn .7s cubic-bezier(.2, 1.1, .3, 1) .05s forwards, kashGlow 2.4s ease-in-out .8s infinite; }
+      .launch-splash .lw img { display: block; width: 100%; height: 100%; }
+      .launch-splash .shine { position: absolute; inset: 0; pointer-events: none;
+        -webkit-mask: url(images/logo.webp) center / contain no-repeat; mask: url(images/logo.webp) center / contain no-repeat;
+        background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.95) 50%, transparent 62%) no-repeat; background-size: 260% 100%; background-position: 160% 0;
+        animation: kashShine 1s ease .65s forwards; }
+      .launch-splash .gs { width: min(240px, 62vw); font-weight: 800; font-size: 13px; letter-spacing: .07em; color: #fff; text-transform: uppercase; white-space: nowrap;
+        opacity: 0; transform: translateY(6px); animation: kashRise .5s ease .95s forwards; }
+      .launch-splash .tag { font-size: 12.5px; font-weight: 600; color: #9fb6d6; letter-spacing: .02em; opacity: 0; animation: kashRise .5s ease 1.3s forwards; }
+      .launch-splash .bar { width: min(240px, 62vw); height: 4px; border-radius: 99px; background: rgba(255,255,255,.14); overflow: hidden; margin-top: 10px; opacity: 0; animation: kashRise .4s ease 1.1s forwards; }
+      .launch-splash .bar i { display: block; height: 100%; width: 100%; border-radius: 99px; transform: scaleX(0); transform-origin: left;
+        background: linear-gradient(90deg, #1e6cc8 0 25%, #17b6a3 25% 50%, #f5a800 50% 75%, #e0244a 75% 100%); animation: kashFill 1.25s cubic-bezier(.4, 0, .2, 1) 1.15s forwards; }
+      @keyframes kashLogoIn { to { opacity: 1; transform: none; filter: blur(0); } }
+      @keyframes kashGlow { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255,196,40,0)); } 50% { filter: drop-shadow(0 6px 22px rgba(255,196,40,.35)); } }
+      @keyframes kashShine { to { background-position: -60% 0; } }
+      @keyframes kashRise { to { opacity: 1; transform: none; } }
+      @keyframes kashFill { to { transform: scaleX(1); } }
+      @media (prefers-reduced-motion: reduce) {
+        .launch-splash .lw, .launch-splash .gs, .launch-splash .tag, .launch-splash .bar { animation: kashRise .2s ease forwards; transform: none; filter: none; }
+        .launch-splash .shine { display: none; }
+        .launch-splash .bar i { animation: kashFill .4s ease forwards; }
+      }
+html.launching .launch-splash { display: flex; }

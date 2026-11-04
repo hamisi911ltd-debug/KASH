@@ -18,6 +18,10 @@ function setQuickActions(open){
   if (open) quickActionsTimer = setTimeout(() => setQuickActions(false), 8000);
 }
 
+/* The Order & book menu closes when you pick something or click elsewhere. */
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('.book-menu[open]').forEach((m) => { if (!m.contains(e.target) || e.target.closest('a')) m.open = false; });
+});
 /* Back arrow: step back through the pages the visitor has seen; if there are none, go home. */
 let inAppNavs = 0;
 window.addEventListener('hashchange', () => { inAppNavs++; });
