@@ -69,9 +69,9 @@ function pageReviews(){
   return heroPage({accent:'amber', crumbs:[['Customer reviews']], title:'Customer reviews',
     lead:'Real feedback from people who have used KASH. Share your own experience and help others choose with confidence.'}) + `
   <section class="section pt-20"><div class="wrap review-layout">
-    <div><h2 class="sm mb-16 rv" data-rv>What customers say</h2><div data-review-summary></div>
+    <div class="review-panel rv" data-rv><div class="review-panel-head compact"><div class="review-logo"><div class="rl-wrap"><img src="images/logo.webp" alt="KASH" width="150" height="58"><svg viewBox="0 0 240 17" width="100%" role="img" aria-label="General Suppliers"><text x="0" y="14" textLength="240" lengthAdjust="spacingAndGlyphs" font-weight="800" font-size="16" fill="currentColor" font-family="Plus Jakarta Sans, system-ui, sans-serif">GENERAL SUPPLIERS</text></svg></div></div><div class="rp-text"><h2>What customers say</h2><p>Every review is checked by our team first.</p></div></div><div data-review-summary></div>
       <div class="review-grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))" data-public-reviews aria-live="polite">Loading customer reviews…</div></div>
-    <aside class="review-form-card rv rv-right" id="reviewFormCard" data-rv><h2>Write a review</h2><p class="sub">It takes about a minute. Fields marked <span class="req">*</span> are required.</p>${reviewForm()}</aside>
+    <aside class="review-form-card rv rv-right" id="reviewFormCard" data-rv><div class="rf-head"><div class="review-logo"><div class="rl-wrap"><img src="images/logo.webp" alt="KASH" width="150" height="58"><svg viewBox="0 0 240 17" width="100%" role="img" aria-label="General Suppliers"><text x="0" y="14" textLength="240" lengthAdjust="spacingAndGlyphs" font-weight="800" font-size="16" fill="currentColor" font-family="Plus Jakarta Sans, system-ui, sans-serif">GENERAL SUPPLIERS</text></svg></div></div><h2>Write a review</h2></div><p class="sub">It takes about a minute. Fields marked <span class="req">*</span> are required.</p>${reviewForm()}</aside>
   </div></section>`;
 }
 

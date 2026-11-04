@@ -43,14 +43,6 @@ function pageHome(){
   return `
   ${heroHtml()}
 
-  <section class="section quick-book" aria-labelledby="quickBookTitle"><div class="wrap">
-    <h2 id="quickBookTitle" class="sr-only">Order or book</h2>
-    <div class="quick-grid">
-      <a class="quick-card q-teal" href="#/products"><span class="q-ico">${ico('leaf')}</span><span><b>Order from Agro</b><small>Fresh chicken, eggs, goat and beef</small></span><i aria-hidden="true">&rarr;</i></a>
-      <a class="quick-card q-red" href="#/properties"><span class="q-ico">${ico('bed')}</span><span><b>Book a BnB</b><small>Furnished studio from KES 3,500 a night</small></span><i aria-hidden="true">&rarr;</i></a>
-      <a class="quick-card q-blue" href="#/quote/truck"><span class="q-ico">${ico('truck')}</span><span><b>Book transport</b><small>Trucks, rides and delivery across Kenya</small></span><i aria-hidden="true">&rarr;</i></a>
-    </div>
-  </div></section>
 
   <section class="section services" id="services"><div class="wrap"><div class="svc-grid">${svc}</div></div></section>
 
@@ -73,11 +65,16 @@ function pageHome(){
   </div></section>
 
   <section class="section customer-reviews" aria-labelledby="customerReviewsTitle"><div class="wrap">
-    <div class="section-head"><div><h2 id="customerReviewsTitle">What our customers say</h2><p class="lede">Honest feedback from people who have used KASH. Every review is read by our team before it is shown.</p></div>
-      <a class="btn btn-amber" href="#/reviews">Write a review</a></div>
-    <div class="review-summary-slot" data-review-summary></div>
-    <div class="review-grid" data-public-reviews data-limit="3" aria-live="polite">Loading customer reviews…</div>
-    <p class="review-more"><a class="link-arrow" href="#/reviews">Read all reviews</a></p>
+    <div class="review-panel rv" data-rv>
+      <div class="review-panel-head">
+        <div class="review-logo"><div class="rl-wrap"><img src="images/logo.webp" alt="KASH" width="150" height="58"><svg viewBox="0 0 240 17" width="100%" role="img" aria-label="General Suppliers"><text x="0" y="14" textLength="240" lengthAdjust="spacingAndGlyphs" font-weight="800" font-size="16" fill="currentColor" font-family="Plus Jakarta Sans, system-ui, sans-serif">GENERAL SUPPLIERS</text></svg></div></div>
+        <div class="rp-text"><span class="eyebrow-light">Customer reviews</span><h2 id="customerReviewsTitle">What our customers say</h2><p>Honest feedback from people who have used KASH. Every review is read by our team before it is shown.</p></div>
+        <a class="btn btn-amber" href="#/reviews">Write a review</a>
+      </div>
+      <div class="review-summary-slot" data-review-summary></div>
+      <div class="review-grid" data-public-reviews data-limit="3" aria-live="polite">Loading customer reviews…</div>
+      <p class="review-more"><a class="link-arrow-light" href="#/reviews">Read all reviews</a></p>
+    </div>
   </div></section>
 
   <section id="more" aria-label="More from KASH"><div class="tiles">${tiles}</div></section>

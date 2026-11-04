@@ -31,7 +31,6 @@ import WebsiteView from "./views/WebsiteView.jsx";
 import { Sidebar, MobileDrawer, MobileBottomNav, Topbar } from "./components/Layout.jsx";
 import { FormModal, ConfirmDialog, MpesaPrompt } from "./components/Modal.jsx";
 import Toasts from "./components/Toasts.jsx";
-import InstallPrompt from "./components/InstallPrompt.jsx";
 import CommandPalette from "./components/CommandPalette.jsx";
 import DivisionTabs from "./components/DivisionTabs.jsx";
 import { KashLogo } from "./components/Logo.jsx";
@@ -414,8 +413,7 @@ export default function App() {
           <MobileBottomNav role={role} activeView={activeView} onNavigate={navigate} onMore={() => setDrawerOpen(true)} />
         </div>
 
-        <InstallPrompt />
-      <Toasts />
+        <Toasts />
 
         {modal && forms[modal.formKey] && (
           <FormModal

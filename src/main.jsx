@@ -79,7 +79,8 @@ createRoot(document.getElementById("root")).render(
   });
 })();
 
-/* Installable app: the service worker lets KASH ERP be added to a phone or computer. */
-if ("serviceWorker" in navigator && window.location.protocol === "https:") {
-  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+/* No installable-app service worker: clean up the one earlier visits may have left behind. */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
+  if (window.caches) caches.keys().then((ks) => ks.filter((k) => k.startsWith("kash-erp")).forEach((k) => caches.delete(k))).catch(() => {});
 }
