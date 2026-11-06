@@ -1,0 +1,2 @@
+#!/bin/sh
+node scripts/deploy-guard.mjs || exit 1
