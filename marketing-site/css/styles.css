@@ -1360,3 +1360,12 @@ input,select,textarea{font-size:16px} /* stops iOS zooming into fields */
 .rf-head h2{margin:0}
 .review-form-card{border-top:5px solid transparent;border-image:linear-gradient(90deg,#1e6cc8 0 25%,#17b6a3 25% 50%,#f5a800 50% 75%,#e0244a 75% 100%) 1}
 @media (max-width:640px){.review-panel{padding:22px 16px;border-radius:22px}.rl-wrap{width:104px}.review-panel-head .btn{width:100%;justify-content:center}}
+
+/* ---- Temporary picture pop-up (remove with js/core/spotlight.js) ---- */
+.spot{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:20px;background:rgba(4,12,26,.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;transition:opacity .3s}
+.spot.show{opacity:1}
+.spot-card{position:relative;max-width:min(420px,92vw);max-height:92vh;border-radius:22px;overflow:hidden;box-shadow:0 40px 90px -30px rgba(0,0,0,.9);transform:scale(.92) translateY(14px);transition:transform .4s cubic-bezier(.2,.9,.3,1.1)}
+.spot.show .spot-card{transform:none}
+.spot-card img{display:block;width:100%;height:auto;max-height:92vh;object-fit:contain}
+.spot-x{position:absolute;top:10px;right:10px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:1.6rem;line-height:1;cursor:pointer}
+.spot-x:hover{background:rgba(0,0,0,.8)}

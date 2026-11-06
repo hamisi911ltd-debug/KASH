@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { StoreProvider } from "./lib/store.jsx";
 import App from "./App.jsx";
+import Spotlight from "./components/Spotlight.jsx";
 import "./index.css";
 import { installGlobalErrorHandlers, newRef, reportError, RELEASE } from "./lib/monitor.js";
 
@@ -57,6 +58,7 @@ createRoot(document.getElementById("root")).render(
     <ErrorBoundary>
       <StoreProvider>
         <App />
+        <Spotlight />
       </StoreProvider>
     </ErrorBoundary>
   </React.StrictMode>
