@@ -117,6 +117,7 @@ function html(p) {
 <link rel="canonical" href="${url}">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#0a1f3d">
+<script src="/js/core/spotlight.js"></script>
 <link rel="icon" type="image/png" href="/images/favicon.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
 <meta property="og:type" content="website">
